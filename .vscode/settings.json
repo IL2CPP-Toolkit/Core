@@ -1,0 +1,14 @@
+{
+    "files.exclude": {
+        "**/.vs": true,
+        "**/bin": true,
+        "**/obj": true
+    },
+    "editor.formatOnSave": true,
+    "editor.formatOnSaveMode": "file",
+    "csharp.format.enable": true,
+    "[csharp]": {
+        "editor.defaultFormatter": "ms-dotnettools.csharp"
+    },
+    "omnisharp.enableEditorConfigSupport": false
+}
