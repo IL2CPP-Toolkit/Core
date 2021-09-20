@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Il2CppDumper
+namespace Il2CppToolkit.Model
 {
 	public class Il2CppExecutor
 	{

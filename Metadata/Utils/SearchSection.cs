@@ -3,20 +3,20 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Il2CppDumper
+namespace Il2CppToolkit.Model
 {
-    public enum SearchSectionType
-    {
-        Exec,
-        Data,
-        Bss
-    }
+	public enum SearchSectionType
+	{
+		Exec,
+		Data,
+		Bss
+	}
 
-    public class SearchSection
-    {
-        public ulong offset;
-        public ulong offsetEnd;
-        public ulong address;
-        public ulong addressEnd;
-    }
+	public class SearchSection
+	{
+		public ulong offset;
+		public ulong offsetEnd;
+		public ulong address;
+		public ulong addressEnd;
+	}
 }
