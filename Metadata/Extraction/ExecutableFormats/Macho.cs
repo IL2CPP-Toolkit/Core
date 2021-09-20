@@ -70,8 +70,8 @@ namespace Il2CppToolkit.Model
 		public override void Init(ulong codeRegistration, ulong metadataRegistration)
 		{
 			base.Init(codeRegistration, metadataRegistration);
-			methodPointers = methodPointers.Select(x => x - 1).ToArray();
-			customAttributeGenerators = customAttributeGenerators.Select(x => x - 1).ToArray();
+			MethodPointers = MethodPointers.Select(x => x - 1).ToArray();
+			CustomAttributeGenerators = CustomAttributeGenerators.Select(x => x - 1).ToArray();
 		}
 
 		public override ulong MapVATR(ulong addr)
@@ -197,7 +197,7 @@ namespace Il2CppToolkit.Model
 			var data = sections.Where(x => x.sectname == "__const").ToArray();
 			var code = sections.Where(x => x.flags == 0x80000400).ToArray();
 			var bss = sections.Where(x => x.flags == 1u).ToArray();
-			var sectionHelper = new SectionHelper(this, methodCount, typeDefinitionsCount, maxMetadataUsages, imageCount);
+			var sectionHelper = new SectionHelper(this, methodCount, typeDefinitionsCount, m_maxMetadataUsages, imageCount);
 			sectionHelper.SetSection(SearchSectionType.Exec, code);
 			sectionHelper.SetSection(SearchSectionType.Data, data);
 			sectionHelper.SetSection(SearchSectionType.Bss, bss);

@@ -117,7 +117,7 @@ namespace Il2CppToolkit.Model
 						break;
 				}
 			}
-			var sectionHelper = new SectionHelper(this, methodCount, typeDefinitionsCount, maxMetadataUsages, imageCount);
+			var sectionHelper = new SectionHelper(this, methodCount, typeDefinitionsCount, m_maxMetadataUsages, imageCount);
 			var data = dataList.ToArray();
 			var exec = execList.ToArray();
 			sectionHelper.SetSection(SearchSectionType.Exec, imageBase, exec);

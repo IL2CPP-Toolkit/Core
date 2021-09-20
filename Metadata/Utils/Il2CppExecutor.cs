@@ -42,7 +42,7 @@ namespace Il2CppToolkit.Model
 				foreach (var imageDef in metadata.imageDefs)
 				{
 					var imageDefName = metadata.GetStringFromIndex(imageDef.nameIndex);
-					var codeGenModule = il2Cpp.codeGenModules[imageDefName];
+					var codeGenModule = il2Cpp.CodeGenModules[imageDefName];
 					if (imageDef.customAttributeCount > 0)
 					{
 						var pointers = il2Cpp.ReadClassArray<ulong>(il2Cpp.MapVATR(codeGenModule.customAttributeCacheGenerator), imageDef.customAttributeCount);
@@ -52,7 +52,7 @@ namespace Il2CppToolkit.Model
 			}
 			else
 			{
-				customAttributeGenerators = il2Cpp.customAttributeGenerators;
+				customAttributeGenerators = il2Cpp.CustomAttributeGenerators;
 			}
 		}
 
@@ -100,7 +100,7 @@ namespace Il2CppToolkit.Model
 						}
 						if (typeDef.declaringTypeIndex != -1)
 						{
-							str += GetTypeName(il2Cpp.types[typeDef.declaringTypeIndex], addNamespace, true);
+							str += GetTypeName(il2Cpp.Types[typeDef.declaringTypeIndex], addNamespace, true);
 							str += '.';
 						}
 						else if (addNamespace)
@@ -149,7 +149,7 @@ namespace Il2CppToolkit.Model
 			var prefix = string.Empty;
 			if (typeDef.declaringTypeIndex != -1)
 			{
-				prefix = GetTypeName(il2Cpp.types[typeDef.declaringTypeIndex], addNamespace, true) + ".";
+				prefix = GetTypeName(il2Cpp.Types[typeDef.declaringTypeIndex], addNamespace, true) + ".";
 			}
 			else if (addNamespace)
 			{
@@ -207,13 +207,13 @@ namespace Il2CppToolkit.Model
 			var typeName = GetTypeDefName(typeDef, addNamespace, false);
 			if (methodSpec.classIndexIndex != -1)
 			{
-				var classInst = il2Cpp.genericInsts[methodSpec.classIndexIndex];
+				var classInst = il2Cpp.GenericInsts[methodSpec.classIndexIndex];
 				typeName += GetGenericInstParams(classInst);
 			}
 			var methodName = metadata.GetStringFromIndex(methodDef.nameIndex);
 			if (methodSpec.methodIndexIndex != -1)
 			{
-				var methodInst = il2Cpp.genericInsts[methodSpec.methodIndexIndex];
+				var methodInst = il2Cpp.GenericInsts[methodSpec.methodIndexIndex];
 				methodName += GetGenericInstParams(methodInst);
 			}
 			return (typeName, methodName);
@@ -225,11 +225,11 @@ namespace Il2CppToolkit.Model
 			var methodInstPointer = 0ul;
 			if (methodSpec.classIndexIndex != -1)
 			{
-				classInstPointer = il2Cpp.genericInstPointers[methodSpec.classIndexIndex];
+				classInstPointer = il2Cpp.GenericInstPointers[methodSpec.classIndexIndex];
 			}
 			if (methodSpec.methodIndexIndex != -1)
 			{
-				methodInstPointer = il2Cpp.genericInstPointers[methodSpec.methodIndexIndex];
+				methodInstPointer = il2Cpp.GenericInstPointers[methodSpec.methodIndexIndex];
 			}
 			return new Il2CppGenericContext { class_inst = classInstPointer, method_inst = methodInstPointer };
 		}
@@ -239,7 +239,7 @@ namespace Il2CppToolkit.Model
 			Il2CppRGCTXDefinition[] collection = null;
 			if (il2Cpp.Version >= 24.2)
 			{
-				il2Cpp.rgctxsDictionary[imageName].TryGetValue(typeDef.token, out collection);
+				il2Cpp.RGCTXDictionary[imageName].TryGetValue(typeDef.token, out collection);
 			}
 			else
 			{
@@ -257,7 +257,7 @@ namespace Il2CppToolkit.Model
 			Il2CppRGCTXDefinition[] collection = null;
 			if (il2Cpp.Version >= 24.2)
 			{
-				il2Cpp.rgctxsDictionary[imageName].TryGetValue(methodDef.token, out collection);
+				il2Cpp.RGCTXDictionary[imageName].TryGetValue(methodDef.token, out collection);
 			}
 			else
 			{

@@ -3,7 +3,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
-using static Il2CppToolkit.Model.LoaderOptions;
 
 namespace Il2CppToolkit.Model
 {
@@ -60,7 +59,7 @@ namespace Il2CppToolkit.Model
 				case 0xBEBAFECA:
 					MachoFat machofat = new(new MemoryStream(il2cppBytes));
 
-					ResolveFatPlatformEventArgs eventArgs = new(machofat.fats);
+					LoaderOptions.ResolveFatPlatformEventArgs eventArgs = new(machofat.fats);
 					Options.FireResolveFatPlatform(this, eventArgs);
 					if (eventArgs.ResolveToIndex == -1)
 					{

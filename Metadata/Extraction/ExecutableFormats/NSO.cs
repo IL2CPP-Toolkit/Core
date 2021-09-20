@@ -214,7 +214,7 @@ namespace Il2CppToolkit.Model
 
 		public override SectionHelper GetSectionHelper(int methodCount, int typeDefinitionsCount, int imageCount)
 		{
-			var sectionHelper = new SectionHelper(this, methodCount, typeDefinitionsCount, maxMetadataUsages, imageCount);
+			var sectionHelper = new SectionHelper(this, methodCount, typeDefinitionsCount, m_maxMetadataUsages, imageCount);
 			sectionHelper.SetSection(SearchSectionType.Exec, header.TextSegment);
 			sectionHelper.SetSection(SearchSectionType.Data, header.DataSegment, header.RoDataSegment);
 			sectionHelper.SetSection(SearchSectionType.Bss, header.BssSegment);

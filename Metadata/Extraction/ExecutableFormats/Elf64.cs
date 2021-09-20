@@ -320,7 +320,7 @@ namespace Il2CppToolkit.Model
 			}
 			var data = dataList.ToArray();
 			var exec = execList.ToArray();
-			var sectionHelper = new SectionHelper(this, methodCount, typeDefinitionsCount, maxMetadataUsages, imageCount);
+			var sectionHelper = new SectionHelper(this, methodCount, typeDefinitionsCount, m_maxMetadataUsages, imageCount);
 			sectionHelper.SetSection(SearchSectionType.Exec, exec);
 			sectionHelper.SetSection(SearchSectionType.Data, data);
 			sectionHelper.SetSection(SearchSectionType.Bss, data);

@@ -11,10 +11,10 @@ namespace Il2CppToolkit.Model
 			public ResolveFatPlatformEventArgs(Fat[] fats) => Fats = fats;
 		}
 
+		public event EventHandler<ResolveFatPlatformEventArgs> ResolveFatPlatform;
+
 		public double? ForceVersion { get; set; }
 		public ulong? GlobalMetadataDumpAddress { get; set; }
-
-		public event EventHandler<ResolveFatPlatformEventArgs> ResolveFatPlatform;
 
 		internal void FireResolveFatPlatform(object sender, ResolveFatPlatformEventArgs args)
 		{

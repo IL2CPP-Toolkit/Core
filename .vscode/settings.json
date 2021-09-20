@@ -11,5 +11,6 @@
         "editor.defaultFormatter": "ms-dotnettools.csharp"
     },
     "cSpell.enabled": false,
-    "omnisharp.enableEditorConfigSupport": false
+    "omnisharp.enableEditorConfigSupport": false,
+    "editor.formatOnType": true
 }
