@@ -225,51 +225,6 @@ namespace Il2CppToolkit.Model
 			return ReadClassArray<T>(MapVATR(addr), count);
 		}
 
-		public int GetFieldOffsetFromIndex(int typeIndex, int fieldIndexInType, int fieldIndex, bool isValueType, bool isStatic)
-		{
-			try
-			{
-				var offset = -1;
-				if (FieldOffsetsArePointers)
-				{
-					var ptr = FieldOffsets[typeIndex];
-					if (ptr > 0)
-					{
-						ptr = MapVATR(ptr);
-						if (ptr == 0)
-						{
-							return 0;
-						}
-						Position = ptr + 4ul * (ulong)fieldIndexInType;
-						offset = ReadInt32();
-					}
-				}
-				else
-				{
-					offset = (int)FieldOffsets[fieldIndex];
-				}
-				if (offset > 0)
-				{
-					if (isValueType && !isStatic)
-					{
-						if (Is32Bit)
-						{
-							offset -= 8;
-						}
-						else
-						{
-							offset -= 16;
-						}
-					}
-				}
-				return offset;
-			}
-			catch
-			{
-				return -1;
-			}
-		}
-
 		public Il2CppType GetIl2CppType(ulong pointer)
 		{
 			return m_typeDic[pointer];
