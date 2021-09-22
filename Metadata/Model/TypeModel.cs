@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.InteropServices;
+using Il2CppToolkit.Common;
 
 namespace Il2CppToolkit.Model
 {
-	public class TypeModel
+	public partial class TypeModel
 	{
 		private Loader Loader;
 		private ulong[] FieldOffsets;
@@ -18,10 +20,10 @@ namespace Il2CppToolkit.Model
 			Load();
 		}
 
-		#region Load
 		private void Load()
 		{
 			LoadFieldOffsets();
+			IndexTypeDescriptors();
 		}
 
 		private void LoadFieldOffsets()
@@ -49,6 +51,5 @@ namespace Il2CppToolkit.Model
 				FieldOffsets = Loader.Il2Cpp.FieldOffsets;
 			}
 		}
-		#endregion
 	}
 }

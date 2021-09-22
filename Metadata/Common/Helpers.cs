@@ -23,6 +23,7 @@ namespace Il2CppToolkit.Common
 			}
 			throw new ApplicationException(errorMessage);
 		}
+
 		public static void Assert(bool condition, string message)
 		{
 			if (condition)
@@ -60,7 +61,6 @@ namespace Il2CppToolkit.Common
 
 		public static TypeAttributes GetTypeAttributes(Il2CppTypeDefinition typeDef)
 		{
-			//return (TypeAttributes)typeDef.flags;
 			TypeAttributes attrs = default;
 			uint visibility = typeDef.flags & TYPE_ATTRIBUTE_VISIBILITY_MASK;
 			switch (visibility)

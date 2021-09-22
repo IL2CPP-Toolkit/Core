@@ -12,7 +12,7 @@ namespace Il2CppToolkit.Model
 	{
 		public string Name { get; }
 		public Type Type { get; }
-		DotNetTypeReference(Type type)
+		public DotNetTypeReference(Type type)
 		{
 			Name = type.FullName;
 			Type = type;
