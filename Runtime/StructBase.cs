@@ -15,7 +15,7 @@ namespace IL2CS.Runtime
 		public Il2CsRuntimeContext Context { get; set; }
 		public ulong Address { get; set; }
 
-		// ReSharper disable once UnusedMember.Global
+		public virtual ClassDefinition ClassDefinition
 		{
 			get
 			{
@@ -40,8 +40,8 @@ namespace IL2CS.Runtime
 
 		public T As<T>()
 		{
-			
 			// avoid double-indirection used to get to this type by passing indirection=0
+			T cast = (T)Context.ReadValue(typeof(T), Address, 0);
 			return cast;
 		}
 
