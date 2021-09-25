@@ -5,7 +5,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace IL2CS.Runtime.Types.Reflection
+namespace Il2CppToolkit.Runtime.Types.Reflection
 {
 	public class MethodDefinition
 	{
@@ -16,7 +16,7 @@ namespace IL2CS.Runtime.Types.Reflection
 			m_address = address;
 			m_moduleName = moduleName;
 		}
-		
+
 		public NativeMethodInfo GetMethodInfo(Il2CsRuntimeContext context)
 		{
 			ulong address = m_address + context.GetModuleAddress(m_moduleName);

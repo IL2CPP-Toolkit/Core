@@ -1,8 +1,8 @@
 ﻿using System.Diagnostics;
-using IL2CS.Core;
-using IL2CS.Runtime.Types.corelib;
+using Il2CppToolkit.Core;
+using Il2CppToolkit.Runtime.Types.corelib;
 
-namespace IL2CS.Runtime.Types.Reflection
+namespace Il2CppToolkit.Runtime.Types.Reflection
 {
 	[Size(4376)]
 	[DebuggerDisplay("{DebuggerDisplay,nq}")]
@@ -30,7 +30,7 @@ namespace IL2CS.Runtime.Types.Reflection
 
 #pragma warning restore 649
 		[field: Offset(184)] public UnknownClass StaticFields { get; }
-		
+
 		[field: Offset(0x10c)] public uint Token { get; }
 	}
 }

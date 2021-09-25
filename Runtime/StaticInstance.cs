@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Reflection;
-using IL2CS.Core;
-using IL2CS.Runtime.Types.Reflection;
+using Il2CppToolkit.Core;
+using Il2CppToolkit.Runtime.Types.Reflection;
+using Il2CppToolkit.Common.Errors;
 
-namespace IL2CS.Runtime
+namespace Il2CppToolkit.Runtime
 {
 	public class StaticInstance<T> : StructBase
 	{
@@ -23,10 +24,7 @@ namespace IL2CS.Runtime
 		public static T GetInstance(Il2CsRuntimeContext context)
 		{
 			AddressAttribute attr = typeof(T).GetCustomAttribute<AddressAttribute>();
-			if (attr == null)
-			{
-				throw new ApplicationException("Class does not have a known address defined in metadata");
-			}
+			ErrorHandler.VerifyElseThrow(attr == null, RuntimeError.StaticAddressMissing, "Class does not have a known address defined in metadata");
 			ulong address = attr.Address + context.GetModuleAddress(attr.RelativeToModule);
 			return context.ReadValue<T>(address);
 		}

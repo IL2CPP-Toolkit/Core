@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using IL2CS.Core;
+using Il2CppToolkit.Core;
 
-namespace IL2CS.Runtime.Types.corelib
+namespace Il2CppToolkit.Runtime.Types.corelib
 {
 	[TypeMapping(typeof(DateTime))]
 	public struct Native__DateTime

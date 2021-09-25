@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace IL2CS.Runtime.Types
+namespace Il2CppToolkit.Runtime.Types
 {
 	[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, Inherited = true, AllowMultiple = false)]
 	public class TypeMappingAttribute : Attribute

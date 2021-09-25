@@ -4,10 +4,11 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
-using IL2CS.Core;
-using IL2CS.Runtime.Types.Reflection;
+using Il2CppToolkit.Core;
+using Il2CppToolkit.Common.Errors;
+using Il2CppToolkit.Runtime.Types.Reflection;
 
-namespace IL2CS.Runtime.Types
+namespace Il2CppToolkit.Runtime.Types
 {
 	public static class LoadedTypes
 	{
@@ -30,7 +31,7 @@ namespace IL2CS.Runtime.Types
 					TagAttribute attr = type.GetCustomAttribute<TagAttribute>();
 					if (attr == null) continue;
 
-					DebugHelpers.Assert(!s_tokenToType.ContainsKey(attr.Tag), "Duplicate type by token");
+					ErrorHandler.Assert(!s_tokenToType.ContainsKey(attr.Tag), "Duplicate type by token");
 					s_tokenToType.Add(attr.Tag, type);
 				}
 			}

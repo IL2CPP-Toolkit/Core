@@ -1,4 +1,4 @@
-﻿using IL2CS.Core;
+﻿using Il2CppToolkit.Core;
 using ProcessMemoryUtilities.Managed;
 using ProcessMemoryUtilities.Native;
 using System;
@@ -6,11 +6,12 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
-using IL2CS.Runtime.Types;
-using IL2CS.Runtime.Types.corelib;
-using static IL2CS.Runtime.Types.Types;
+using Il2CppToolkit.Common.Errors;
+using Il2CppToolkit.Runtime.Types;
+using Il2CppToolkit.Runtime.Types.corelib;
+using static Il2CppToolkit.Runtime.Types.Types;
 
-namespace IL2CS.Runtime
+namespace Il2CppToolkit.Runtime
 {
 	public class Il2CsRuntimeContext
 	{
@@ -51,15 +52,13 @@ namespace IL2CS.Runtime
 				}
 				return address;
 			}
-			
+
 			OffsetAttribute offsetAttr = field.GetCustomAttribute<OffsetAttribute>(inherit: true);
-			if (offsetAttr == null)
-			{
-				throw new ApplicationException($"Field {field.Name} requires an OffsetAttribute");
-			}
+			ErrorHandler.VerifyElseThrow(offsetAttr != null, RuntimeError.OffsetRequired, $"Field {field.Name} requires an OffsetAttribute");
+
 			return offsetAttr.OffsetBytes;
 		}
-		
+
 		public virtual void ReadFields(Type type, object target, ulong targetAddress)
 		{
 			MethodInfo readFieldsOverride = type.GetMethod(
@@ -67,7 +66,7 @@ namespace IL2CS.Runtime
 				BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public,
 				null,
 				CallingConventions.HasThis,
-				new []
+				new[]
 				{
 					typeof(Il2CsRuntimeContext),
 					typeof(ulong),
@@ -76,7 +75,7 @@ namespace IL2CS.Runtime
 
 			if (readFieldsOverride != null)
 			{
-				readFieldsOverride.Invoke(target, new object[]{ this, targetAddress });
+				readFieldsOverride.Invoke(target, new object[] { this, targetAddress });
 				return;
 			}
 
@@ -112,7 +111,7 @@ namespace IL2CS.Runtime
 		{
 			return (T)ReadValue(typeof(T), address, indirection);
 		}
-		
+
 		public object ReadValue(Type type, ulong address, byte indirection = 1)
 		{
 			if (!type.IsValueType)
@@ -151,7 +150,7 @@ namespace IL2CS.Runtime
 			Native__String? str = ReadValue<Native__String>(address);
 			return str?.Value;
 		}
-		
+
 		public object ReadStruct(Type type, ulong address)
 		{
 			if (address == 0)
@@ -161,12 +160,12 @@ namespace IL2CS.Runtime
 			if (type.IsInterface || type.IsAbstract)
 			{
 				UnknownClass unk = (UnknownClass)ReadStruct(typeof(UnknownClass), address);
-				
+
 				if (unk?.ClassDefinition == null)
 					return null;
 
 				type = LoadedTypes.GetType(unk.ClassDefinition);
-				
+
 				if (type == null)
 					return null;
 				if (type.IsGenericType)
@@ -212,7 +211,8 @@ namespace IL2CS.Runtime
 
 			PropertyInfo pi = type.GetProperty("NativeSize", BindingFlags.Static | BindingFlags.NonPublic);
 			ulong? value = (ulong?)pi?.GetValue(type);
-			if (value.HasValue) {
+			if (value.HasValue)
+			{
 				return value.Value;
 			}
 
@@ -221,11 +221,11 @@ namespace IL2CS.Runtime
 
 		internal ulong GetModuleAddress(string moduleName)
 		{
-			if (moduleAddresses.ContainsKey(moduleName)) 
+			if (moduleAddresses.ContainsKey(moduleName))
 				return moduleAddresses[moduleName];
 
 			ProcessModule module = TargetProcess.Modules.OfType<ProcessModule>().FirstOrDefault(m => m.ModuleName == moduleName);
-			
+
 			if (module == null)
 				throw new Exception("Unable to locate GameAssembly.dll in memory");
 
@@ -249,7 +249,7 @@ namespace IL2CS.Runtime
 			byte[] buffer = new byte[size];
 			if (!NativeWrapper.ReadProcessMemoryArray(processHandle, (IntPtr)address, buffer))
 			{
-				throw new ApplicationException("Failed to read memory location");
+				RuntimeError.ReadProcessMemoryReadFailed.Throw("Failed to read memory location");
 			}
 			return buffer;
 		}
@@ -264,7 +264,7 @@ namespace IL2CS.Runtime
 			byte[] buffer = new byte[size];
 			if (!NativeWrapper.ReadProcessMemoryArray(processHandle, (IntPtr)address, buffer))
 			{
-				throw new ApplicationException("Failed to read memory location");
+				RuntimeError.ReadProcessMemoryReadFailed.Throw("Failed to read memory location");
 			}
 			return rpmCache.Store(address, buffer);
 		}

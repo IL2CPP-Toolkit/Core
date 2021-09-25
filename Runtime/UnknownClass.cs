@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using IL2CS.Runtime.Types;
+using Il2CppToolkit.Runtime.Types;
 
-namespace IL2CS.Runtime
+namespace Il2CppToolkit.Runtime
 {
 	public class UnknownClass : StructBase
 	{

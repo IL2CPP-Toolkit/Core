@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace IL2CS.Runtime.Types.Reflection
+namespace Il2CppToolkit.Runtime.Types.Reflection
 {
 	public class StaticPropertyDefinition<T> : MethodDefinition
 	{

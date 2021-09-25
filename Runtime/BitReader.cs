@@ -4,11 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace IL2CS.Runtime
+namespace Il2CppToolkit.Runtime
 {
 	public static class BitReader
 	{
-		private static readonly Dictionary<Type, Func<Il2CsRuntimeContext, ulong, object>> s_impl = new ();
+		private static readonly Dictionary<Type, Func<Il2CsRuntimeContext, ulong, object>> s_impl = new();
 		static BitReader()
 		{
 			// ReSharper disable BuiltInTypeReferenceStyle

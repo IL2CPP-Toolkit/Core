@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.Reflection;
 // ReSharper disable InconsistentNaming
 
-namespace IL2CS.Runtime.Types.corelib
+namespace Il2CppToolkit.Runtime.Types.corelib
 {
 	[TypeMapping(typeof(Nullable<>))]
 	public struct Native__Nullable<T>

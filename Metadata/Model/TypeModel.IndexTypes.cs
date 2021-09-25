@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Il2CppToolkit.Common;
+using Il2CppToolkit.Common.Errors;
 
 namespace Il2CppToolkit.Model
 {
@@ -68,13 +69,13 @@ namespace Il2CppToolkit.Model
 				// nested within type (parent)
 				if (td.TypeDef.declaringTypeIndex != -1)
 				{
-					Helpers.Assert((attribs & TypeAttributes.VisibilityMask) > TypeAttributes.Public, "Nested attribute missing");
+					ErrorHandler.Assert((attribs & TypeAttributes.VisibilityMask) > TypeAttributes.Public, "Nested attribute missing");
 					Il2CppType cppType = Loader.Il2Cpp.Types[td.TypeDef.declaringTypeIndex];
 					td.DeclaringParent = m_typeCache[(int)cppType.data.klassIndex];
 				}
 				else
 				{
-					Helpers.Assert((attribs & TypeAttributes.VisibilityMask) <= TypeAttributes.Public, "Unexpected nested attribute");
+					ErrorHandler.Assert((attribs & TypeAttributes.VisibilityMask) <= TypeAttributes.Public, "Unexpected nested attribute");
 				}
 
 				// nested types (children)
@@ -91,7 +92,7 @@ namespace Il2CppToolkit.Model
 				{
 					Il2CppGenericContainer genericContainer = Loader.Metadata.genericContainers[td.TypeDef.genericContainerIndex];
 					td.GenericParameterNames = GetGenericContainerParamNames(genericContainer);
-					Helpers.Assert(td.GenericParameterNames.Length > 0, "Generic class must have template arguments");
+					ErrorHandler.Assert(td.GenericParameterNames.Length > 0, "Generic class must have template arguments");
 				}
 
 				// base class
@@ -114,7 +115,7 @@ namespace Il2CppToolkit.Model
 				}
 				else
 				{
-					Helpers.Assert(!td.TypeDef.IsValueType, "Unexpected value type");
+					ErrorHandler.Assert(!td.TypeDef.IsValueType, "Unexpected value type");
 				}
 
 				// interfaces

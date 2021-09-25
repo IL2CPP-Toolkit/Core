@@ -1,6 +1,6 @@
 using System;
 
-namespace IL2CS.Core
+namespace Il2CppToolkit.Core
 {
 	[AttributeUsage(AttributeTargets.Assembly)]
 	public class GeneratedAttribute : Attribute

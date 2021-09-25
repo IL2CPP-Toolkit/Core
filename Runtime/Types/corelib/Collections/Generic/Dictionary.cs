@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using IL2CS.Core;
+using Il2CppToolkit.Core;
 
-namespace IL2CS.Runtime.Types.corelib.Collections.Generic
+namespace Il2CppToolkit.Runtime.Types.corelib.Collections.Generic
 {
 	[TypeMapping(typeof(Dictionary<,>))]
 	public class Native__Dictionary<TKey, TValue> : StructBase, IReadOnlyDictionary<TKey, TValue>

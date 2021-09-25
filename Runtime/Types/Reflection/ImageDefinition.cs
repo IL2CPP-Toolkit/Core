@@ -1,8 +1,8 @@
 ﻿using System;
-using IL2CS.Core;
-using IL2CS.Runtime.Types.corelib;
+using Il2CppToolkit.Core;
+using Il2CppToolkit.Runtime.Types.corelib;
 
-namespace IL2CS.Runtime.Types.Reflection
+namespace Il2CppToolkit.Runtime.Types.Reflection
 {
 	// https://github.com/Orkanelf/MRRemoteGuiding/blob/fdb2d48b9e14e25505a00fa3dfa611be36f4bae5/AR-Application-Scherf_neu/Builds/Il2CppOutputProject/IL2CPP/libil2cpp/il2cpp-class-internals.h
 	public class ImageDefinition

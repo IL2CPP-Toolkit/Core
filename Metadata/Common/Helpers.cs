@@ -3,40 +3,13 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
 using Il2CppToolkit.Model;
+using Il2CppToolkit.Common.Errors;
 using static Il2CppToolkit.Model.Il2CppConstants;
 
 namespace Il2CppToolkit.Common
 {
 	internal static class Helpers
 	{
-		public static void VerifyElseThrow(bool condition, string message)
-		{
-			if (condition)
-			{
-				return;
-			}
-			string errorMessage = $"Fatal error: {message}";
-			Trace.WriteLine(errorMessage);
-			if (Debugger.IsAttached)
-			{
-				Debugger.Break();
-			}
-			throw new ApplicationException(errorMessage);
-		}
-
-		public static void Assert(bool condition, string message)
-		{
-			if (condition)
-			{
-				return;
-			}
-			Trace.WriteLine($"Assertion failed: {message}");
-			if (Debugger.IsAttached)
-			{
-				Debugger.Break();
-			}
-		}
-
 		public static readonly Dictionary<int, Type> TypeMap = new Dictionary<int, Type>
 		{
 			{1,typeof(void)},

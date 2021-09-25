@@ -2,10 +2,10 @@
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using IL2CS.Core;
-using IL2CS.Runtime.Types.corelib.Collections.Generic;
+using Il2CppToolkit.Core;
+using Il2CppToolkit.Runtime.Types.corelib.Collections.Generic;
 
-namespace IL2CS.Runtime.Types.corelib.Collections.Concurrent
+namespace Il2CppToolkit.Runtime.Types.corelib.Collections.Concurrent
 {
 	[TypeMapping(typeof(ConcurrentDictionary<,>))]
 	public class Native__ConcurrentDictionary<TKey, TValue> : StructBase, IReadOnlyDictionary<TKey, TValue>

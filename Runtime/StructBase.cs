@@ -1,11 +1,12 @@
-﻿using IL2CS.Core;
+﻿using Il2CppToolkit.Core;
 using ProcessMemoryUtilities.Managed;
 using ProcessMemoryUtilities.Native;
 using System;
 using System.Reflection;
-using IL2CS.Runtime.Types.Reflection;
+using Il2CppToolkit.Common.Errors;
+using Il2CppToolkit.Runtime.Types.Reflection;
 
-namespace IL2CS.Runtime
+namespace Il2CppToolkit.Runtime
 {
 	public abstract class StructBase
 	{
@@ -67,7 +68,7 @@ namespace IL2CS.Runtime
 			byte[] buffer = new byte[size.Value];
 			if (!NativeWrapper.ReadProcessMemoryArray(handle, (IntPtr)Address, buffer))
 			{
-				throw new ApplicationException("Failed to read memory location");
+				RuntimeError.ReadProcessMemoryReadArrayFailed.Throw("Failed to read memory location");
 			}
 			m_cache = Context.CacheMemory(Address, size.Value);
 		}

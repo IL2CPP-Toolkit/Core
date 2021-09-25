@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Il2CppToolkit.Common.Errors;
 
-namespace IL2CS.Runtime.Types.corelib
+namespace Il2CppToolkit.Runtime.Types.corelib
 {
 	public struct Native__String
 	{
@@ -15,7 +16,7 @@ namespace IL2CS.Runtime.Types.corelib
 			if (strlen <= 0)
 			{
 				Value = string.Empty;
-				DebugHelpers.Assert(strlen == 0, "Invalid string length");
+				ErrorHandler.Assert(strlen == 0, "Invalid string length");
 				return;
 			}
 

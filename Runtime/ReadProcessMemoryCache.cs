@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Il2CppToolkit.Common.Errors;
 
-namespace IL2CS.Runtime
+namespace Il2CppToolkit.Runtime
 {
 	internal class MemoryCacheEntry
 	{
@@ -38,7 +39,7 @@ namespace IL2CS.Runtime
 		{
 			if (!Contains(address, size))
 			{
-				throw new ApplicationException("Requested memory is not contained within this range");
+				RuntimeError.ReadProcessMemoryCacheRangeError.Throw("Requested memory is not contained within this range");
 			}
 			return Data.Slice((int)(address - Address), (int)size);
 		}

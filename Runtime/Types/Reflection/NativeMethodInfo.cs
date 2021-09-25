@@ -1,6 +1,6 @@
-﻿using IL2CS.Core;
+﻿using Il2CppToolkit.Core;
 
-namespace IL2CS.Runtime.Types.Reflection
+namespace Il2CppToolkit.Runtime.Types.Reflection
 {
 	[Size(80)]
 	public class NativeMethodInfo : StructBase
