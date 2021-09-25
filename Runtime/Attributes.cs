@@ -18,11 +18,6 @@ namespace Il2CppToolkit.Core
 		}
 	}
 
-	[AttributeUsage(AttributeTargets.Field)]
-	public class IgnoreAttribute : Attribute
-	{
-	}
-
 	[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
 	public class TokenAttribute : Attribute
 	{
