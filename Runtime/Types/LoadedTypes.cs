@@ -4,7 +4,6 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
-using Il2CppToolkit.Core;
 using Il2CppToolkit.Common.Errors;
 using Il2CppToolkit.Runtime.Types.Reflection;
 

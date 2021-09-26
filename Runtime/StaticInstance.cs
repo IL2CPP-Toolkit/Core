@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Reflection;
-using Il2CppToolkit.Core;
 using Il2CppToolkit.Runtime.Types.Reflection;
 using Il2CppToolkit.Common.Errors;
 

@@ -1,5 +1,4 @@
-﻿using Il2CppToolkit.Core;
-using ProcessMemoryUtilities.Managed;
+﻿using ProcessMemoryUtilities.Managed;
 using ProcessMemoryUtilities.Native;
 using System;
 using System.Collections.Generic;

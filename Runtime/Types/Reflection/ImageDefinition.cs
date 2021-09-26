@@ -1,5 +1,4 @@
 ﻿using System;
-using Il2CppToolkit.Core;
 using Il2CppToolkit.Runtime.Types.corelib;
 
 namespace Il2CppToolkit.Runtime.Types.Reflection

@@ -1,0 +1,3 @@
+[submodule "ILPack"]
+	path = ILPack
+	url = https://github.com/Lokad/ILPack.git
