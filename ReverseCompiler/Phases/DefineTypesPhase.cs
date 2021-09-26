@@ -23,8 +23,6 @@ namespace Il2CppToolkit.ReverseCompiler
         private AssemblyBuilder m_asm;
         private ModuleBuilder m_module;
         private readonly Dictionary<TypeDescriptor, Type> m_generatedTypes = new();
-        private readonly Dictionary<string, Type> m_generatedTypeByFullName = new();
-        private readonly Dictionary<string, List<Type>> m_generatedTypeByClassName = new();
         private BuildTypeResolver m_typeResolver;
 
         public override async Task Initialize(CompileContext context)
@@ -53,6 +51,7 @@ namespace Il2CppToolkit.ReverseCompiler
         public override Task Finalize()
         {
             m_context.Artifacts.Set(ArtifactSpecs.GeneratedTypes, m_generatedTypes);
+            m_context.Artifacts.Set(ArtifactSpecs.GeneratedModule, m_module);
             return base.Finalize();
         }
 
@@ -210,12 +209,6 @@ namespace Il2CppToolkit.ReverseCompiler
         private Type RegisterType(TypeDescriptor descriptor, Type type)
         {
             m_generatedTypes.Add(descriptor, type);
-            m_generatedTypeByFullName.Add(descriptor.FullName, type);
-            if (!m_generatedTypeByClassName.ContainsKey(descriptor.Name))
-            {
-                m_generatedTypeByClassName.Add(descriptor.Name, new List<Type>());
-            }
-            m_generatedTypeByClassName[descriptor.Name].Add(type);
             return type;
         }
 

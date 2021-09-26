@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using Il2CppToolkit.Common.Errors;
 using Il2CppToolkit.Model;
 using Il2CppToolkit.Runtime;
-using Il2CppToolkit.Runtime.Types;
 using Il2CppToolkit.Runtime.Types.Reflection;
 
 namespace Il2CppToolkit.ReverseCompiler
@@ -56,9 +55,24 @@ namespace Il2CppToolkit.ReverseCompiler
             return m_typeResolver.ResolveTypeReference(reference);
         }
 
-        private void ProcessType(TypeDescriptor td, TypeBuilder tb)
+        private ITypeReference GetBaseReferenceTypeFor(TypeDescriptor td)
         {
             if (td.Base != null)
+            {
+                return td.Base;
+            }
+            if (td.IsStatic)
+            {
+                return new GenericTypeReference(new DotNetTypeReference(typeof(StaticInstance<>)), new TypeDescriptorReference(td));
+            }
+
+            return new DotNetTypeReference(typeof(StructBase));
+        }
+
+        private void ProcessType(TypeDescriptor td, TypeBuilder tb)
+        {
+            ITypeReference baseTypeRef = GetBaseReferenceTypeFor(td);
+            if (baseTypeRef != null)
             {
                 tb.SetParent(ResolveTypeReference(td.Base));
             }

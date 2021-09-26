@@ -12,6 +12,8 @@ namespace Il2CppToolkit.Model
         [ErrorSeverity(ErrorSeverity.Warning)] IncompleteGenericType,
         [ErrorSeverity(ErrorSeverity.Warning)] InterfaceNotSupportedOrEmitted,
         [ErrorSeverity(ErrorSeverity.Warning)] UnknownType,
+        [ErrorSeverity(ErrorSeverity.Warning)] LoadTypeError,
+        [ErrorSeverity(ErrorSeverity.Warning)] ResolveTypeError,
 
     }
 }

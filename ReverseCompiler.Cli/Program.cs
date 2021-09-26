@@ -26,7 +26,8 @@ namespace Il2CppToolkit.ReverseCompiler.Cli
             AssemblyGenerator asmGen = new AssemblyGenerator(model);
             asmGen.TypeSelectors.Add(td => td.Name == args[2]);
             asmGen.AssemblyName = args[3];
-            asmGen.Execute().Wait();
+            asmGen.OutputPath = args[4];
+            asmGen.GenerateAssembly().Wait();
         }
 
         private static void HandleError(object sender, ErrorHandler.ErrorEventArgs e)
