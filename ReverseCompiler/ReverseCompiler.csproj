@@ -10,6 +10,8 @@
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
     <OutputType>Library</OutputType>
+    <AssemblyName>Il2CppToolkit.ReverseCompiler</AssemblyName>
+    <RootNamespace>Il2CppToolkit.ReverseCompiler</RootNamespace>
   </PropertyGroup>
 
 </Project>

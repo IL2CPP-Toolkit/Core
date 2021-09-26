@@ -3,6 +3,8 @@
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
     <OutputType>Library</OutputType>
+    <AssemblyName>Il2CppToolkit.Runtime</AssemblyName>
+    <RootNamespace>Il2CppToolkit.Runtime</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
