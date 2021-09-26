@@ -8,6 +8,10 @@
     <ProjectReference Include="..\ILPack\src\Lokad.ILPack.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="CommandLineParser" Version="2.8.0" />
+  </ItemGroup>
+
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
     <OutputType>Exe</OutputType>
