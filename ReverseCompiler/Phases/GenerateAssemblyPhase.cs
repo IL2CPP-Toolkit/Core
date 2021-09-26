@@ -1,15 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Threading;
 using System.Threading.Tasks;
-using Il2CppToolkit.Common.Errors;
 using Il2CppToolkit.Model;
-using Il2CppToolkit.Runtime;
-using Il2CppToolkit.Runtime.Types.Reflection;
 
 namespace Il2CppToolkit.ReverseCompiler
 {
