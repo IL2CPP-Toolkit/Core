@@ -68,7 +68,7 @@ namespace Il2CppToolkit.Model
                     Options.FireResolveFatPlatform(this, eventArgs);
                     if (eventArgs.ResolveToIndex == -1)
                     {
-                        MetadataError.ConfigurationError.Throw("ResolveFatPlatform was unhandled");
+                        MetadataError.ConfigurationError.Raise("ResolveFatPlatform was unhandled");
                     }
 
                     int index = eventArgs.ResolveToIndex;
@@ -93,7 +93,7 @@ namespace Il2CppToolkit.Model
             {
                 if (!Options.GlobalMetadataDumpAddress.HasValue)
                 {
-                    MetadataError.ConfigurationError.Throw("global-Metadata.data dump address must be provided");
+                    MetadataError.ConfigurationError.Raise("global-Metadata.data dump address must be provided");
                 }
                 Metadata.Address = Options.GlobalMetadataDumpAddress.Value;
             }
@@ -121,7 +121,7 @@ namespace Il2CppToolkit.Model
             }
             if (!flag)
             {
-                MetadataError.UnknownFormat.Throw("Can't use auto mode to process file, try manual mode.");
+                MetadataError.UnknownFormat.Raise("Can't use auto mode to process file, try manual mode.");
             }
         }
     }

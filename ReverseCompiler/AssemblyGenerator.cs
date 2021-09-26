@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using Il2CppToolkit.Common.Errors;
 using Il2CppToolkit.Model;
 
 namespace Il2CppToolkit.ReverseCompiler
@@ -17,8 +18,16 @@ namespace Il2CppToolkit.ReverseCompiler
         public AssemblyGenerator(TypeModel model)
         {
             m_context = new(model);
-            m_context.AddPhase(new SortDependenciesPhase());
-            m_context.AddPhase(new BuildTypesPhase());
+
+            IEnumerable<CompilePhase> compilePhases = GetType().Assembly
+                .GetTypes()
+                .Where(type => !type.IsAbstract && type.IsAssignableTo(typeof(CompilePhase)))
+                .Select(type => (CompilePhase)Activator.CreateInstance(type));
+
+            foreach (var phase in compilePhases)
+            {
+                m_context.AddPhase(phase);
+            }
         }
 
         public async Task Execute()

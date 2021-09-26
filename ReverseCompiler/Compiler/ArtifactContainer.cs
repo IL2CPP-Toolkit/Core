@@ -27,7 +27,7 @@ namespace Il2CppToolkit.ReverseCompiler
         {
             if (m_artifacts.TryGetValue(spec, out ArtifactState state))
             {
-                if (state.Value == ArtifactState.EmptyValue)
+                if (state.Value != ArtifactState.EmptyValue)
                 {
                     throw new InvalidOperationException("Value already set");
                 }

@@ -1,383 +1,247 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
-using System.Threading;
 using System.Threading.Tasks;
 using Il2CppToolkit.Common.Errors;
 using Il2CppToolkit.Model;
 using Il2CppToolkit.Runtime;
 using Il2CppToolkit.Runtime.Types;
+using Il2CppToolkit.Runtime.Types.Reflection;
 
 namespace Il2CppToolkit.ReverseCompiler
 {
     public class BuildTypesPhase : CompilePhase
     {
         public override string Name => "Build Types";
-        private IReadOnlyList<TypeDescriptor> m_typeDescriptors;
 
         private CompileContext m_context;
-
-        private string m_moduleName;
-        private AssemblyName m_asmName;
-        private AssemblyBuilder m_asm;
-        private ModuleBuilder m_module;
-        private readonly Dictionary<TypeDescriptor, Type> m_generatedTypes = new();
-        private readonly Dictionary<string, Type> m_generatedTypeByFullName = new();
-        private readonly Dictionary<string, List<Type>> m_generatedTypeByClassName = new();
+        private IReadOnlyDictionary<TypeDescriptor, Type> m_generatedTypes;
+        private BuildTypeResolver m_typeResolver;
 
         public override async Task Initialize(CompileContext context)
         {
             m_context = context;
-            m_moduleName = m_context.Model.ModuleName;
-            m_asmName = new AssemblyName(context.Artifacts.Get(ArtifactSpecs.AssemblyName));
-            m_typeDescriptors = await context.Artifacts.GetAsync(ArtifactSpecs.SortedTypeDescriptors);
+            m_generatedTypes = await m_context.Artifacts.GetAsync(ArtifactSpecs.GeneratedTypes);
+            m_typeResolver = new(context, m_generatedTypes);
         }
 
         public override Task Execute()
         {
-            m_asm = AssemblyBuilder.DefineDynamicAssembly(m_asmName, AssemblyBuilderAccess.RunAndCollect);
-            m_asm.SetCustomAttribute(new CustomAttributeBuilder(typeof(GeneratedAttribute).GetConstructor(Type.EmptyTypes), new object[] { }));
-            m_module = m_asm.DefineDynamicModule(m_asmName.Name);
-
-            foreach (TypeDescriptor descriptor in m_typeDescriptors)
-            {
-                EnsureType(descriptor);
-            }
-
-            return base.Execute();
+            return Task.CompletedTask;
         }
 
-        private Type EnsureType(TypeDescriptor descriptor)
+        public override Task Finalize()
         {
-            if (descriptor == null)
-            {
-                return null;
-            }
-            if (m_generatedTypes.TryGetValue(descriptor, out Type value))
-            {
-                return value;
-            }
-            return BuildType(descriptor);
+            return Task.CompletedTask;
         }
 
-        private Type BuildType(TypeDescriptor descriptor)
+        private void ProcessTypes()
         {
-            Type type = CreateAndRegisterType(descriptor);
-            ErrorHandler.VerifyElseThrow(m_generatedTypes.ContainsKey(descriptor), CompilerError.InternalError, "type was not added to m_generatedTypes");
-
-            if (type == null)
+            foreach ((TypeDescriptor td, Type type) in m_generatedTypes)
             {
-                return null;
-            }
-
-            if (type is TypeBuilder tb)
-            {
-                tb.SetCustomAttribute(new CustomAttributeBuilder(
-                    typeof(TokenAttribute).GetConstructor(new[] { typeof(uint) }), new object[] { descriptor.TypeDef.token }));
-                tb.SetCustomAttribute(new CustomAttributeBuilder(
-                    typeof(TagAttribute).GetConstructor(new[] { typeof(ulong) }), new object[] { descriptor.Tag }));
-
-                if (descriptor.IsStatic)
+                if (type is TypeBuilder tb)
                 {
-                    if (m_context.Model.TypeDefToAddress.TryGetValue(descriptor.TypeDef, out ulong address))
-                    {
-                        tb.SetCustomAttribute(new CustomAttributeBuilder(
-                            typeof(AddressAttribute).GetConstructor(new[] { typeof(ulong), typeof(string) }),
-                            new object[] { address, m_moduleName }));
-                    }
-                }
+                    if (td.TypeDef.IsEnum)
+                        continue;
 
-                // enum
-                if (descriptor.TypeDef.IsEnum)
-                {
-                    BuildEnum(descriptor, tb);
-                }
-
-                // generics
-                if (descriptor.GenericParameterNames.Length > 0)
-                {
-                    tb.DefineGenericParameters(descriptor.GenericParameterNames);
-                }
-
-                // constructor
-                if (!descriptor.TypeDef.IsEnum && !descriptor.Attributes.HasFlag(TypeAttributes.Interface))
-                {
-                    if (descriptor.TypeDef.IsValueType)
-                    {
-                        tb.DefineDefaultConstructor(MethodAttributes.Public);
-                    }
-                    else
-                    {
-                        if (descriptor.IsStatic)
-                        {
-                            ConstructorInfo ctorInfo = TypeBuilder.GetConstructor(typeof(StaticInstance<>).MakeGenericType(tb), StaticReflectionHandles.StaticInstance.Ctor.ConstructorInfo);
-                            CreateConstructor(tb, StaticReflectionHandles.StaticInstance.Ctor.Parameters, ctorInfo);
-                        }
-                        else
-                        {
-                            CreateConstructor(tb, StaticReflectionHandles.StructBase.Ctor.Parameters, StaticReflectionHandles.StructBase.Ctor.ConstructorInfo);
-                        }
-                    }
+                    ProcessType(td, tb);
                 }
             }
-
-            // visit members, don't create them.
-            if (!descriptor.TypeDef.IsEnum)
-            {
-                ResolveTypeReference(descriptor.Base);
-                descriptor.Fields.ForEach(field => ResolveTypeReference(field.Type));
-                EnsureType(descriptor.GenericParent);
-                descriptor.Implements.ForEach(iface => ResolveTypeReference(iface));
-            }
-
-            return type;
-        }
-
-        private void BuildEnum(TypeDescriptor descriptor, TypeBuilder typeBuilder)
-        {
-            foreach (FieldDescriptor field in descriptor.Fields)
-            {
-                FieldBuilder fb = typeBuilder.DefineField(field.Name, ResolveTypeReference(field.Type), field.Attributes);
-                if (field.DefaultValue != null)
-                {
-                    fb.SetConstant(field.DefaultValue);
-                }
-            }
-        }
-
-        private static void CreateConstructor(TypeBuilder tb, Type[] ctorArgs, ConstructorInfo ctorInfo)
-        {
-            ConstructorBuilder ctor = tb.DefineConstructor(MethodAttributes.Public,
-                CallingConventions.Standard | CallingConventions.HasThis, ctorArgs);
-            ILGenerator ilCtor = ctor.GetILGenerator();
-            ilCtor.Emit(OpCodes.Ldarg_0);
-            ilCtor.Emit(OpCodes.Ldarg_1);
-            ilCtor.Emit(OpCodes.Ldarg_2);
-            ilCtor.Emit(OpCodes.Call, ctorInfo);
-            ilCtor.Emit(OpCodes.Ret);
-        }
-
-        private Type GetBaseTypeFromDescriptorIfSimple(TypeDescriptor descriptor)
-        {
-            if (descriptor?.Base == null)
-                return null;
-
-            if (descriptor.Base is DotNetTypeReference dotnet)
-                return dotnet.Type;
-
-            if (Types.TryGetType(descriptor.Base.Name, out Type builtInType) && builtInType != null)
-                return builtInType;
-
-            return null;
-        }
-
-        private Type CreateAndRegisterType(TypeDescriptor descriptor)
-        {
-            if (Types.TryGetType(descriptor.Name, out Type type))
-                return RegisterType(descriptor, type);
-
-            Type baseType = GetBaseTypeFromDescriptorIfSimple(descriptor);
-            if (descriptor.DeclaringParent != null)
-            {
-                type = EnsureType(descriptor.DeclaringParent);
-                if (type == null)
-                    return RegisterType(descriptor, null);
-
-                // exclude types declared within a built-in type 
-                if (type is not TypeBuilder parentBuilder)
-                    return RegisterType(descriptor, null);
-
-                return RegisterType(
-                    descriptor,
-                    parentBuilder.DefineNestedType(descriptor.Name, descriptor.Attributes, baseType)
-                    );
-            }
-            return RegisterType(
-                descriptor,
-                m_module.DefineType(descriptor.Name, descriptor.Attributes, baseType)
-                );
-        }
-
-        private Type RegisterType(TypeDescriptor descriptor, Type type)
-        {
-            m_generatedTypes.Add(descriptor, type);
-            m_generatedTypeByFullName.Add(descriptor.FullName, type);
-            if (!m_generatedTypeByClassName.ContainsKey(descriptor.Name))
-            {
-                m_generatedTypeByClassName.Add(descriptor.Name, new List<Type>());
-            }
-            m_generatedTypeByClassName[descriptor.Name].Add(type);
-            return type;
         }
 
         private Type ResolveTypeReference(ITypeReference reference)
         {
-            if (reference == null)
+            return m_typeResolver.ResolveTypeReference(reference);
+        }
+
+        private void ProcessType(TypeDescriptor td, TypeBuilder tb)
+        {
+            if (td.Base != null)
             {
-                return null;
+                tb.SetParent(ResolveTypeReference(td.Base));
             }
 
-            switch (reference)
+            foreach (ITypeReference implements in td.Implements)
             {
-                case DotNetTypeReference dotnet: return dotnet.Type;
-                case TypeDescriptorReference typeRef: return m_generatedTypes[typeRef.Descriptor];
-                case GenericTypeReference genericTypeRef:
-                    {
-                        Type[] typeArgs = genericTypeRef.TypeArguments.Select(ResolveTypeReference).ToArray();
-                        Type specializedType = ResolveTypeReference(genericTypeRef.GenericType).MakeGenericType(typeArgs);
-                        return specializedType;
-                    }
-                case Il2CppTypeReference cppType: return ResolveTypeReference(cppType.CppType, cppType.TypeContext);
-                default:
-                    CompilerError.UnknownTypeReference.Throw("Unsupported type reference");
-                    return null;
+                Type interfaceType = ResolveTypeReference(implements);
+                if (interfaceType == null)
+                {
+                    CompilerError.InterfaceNotSupportedOrEmitted.Raise($"Dropping interface '{implements.Name}' from '{td.FullName}': interface is not supported or not emitted.");
+                    continue;
+                }
+                tb.AddInterfaceImplementation(interfaceType);
+            }
+
+            foreach (FieldDescriptor field in td.Fields)
+            {
+                ProcessField(td, tb, field);
+            }
+
+            // TODO: Figure out how to map properties<>fields with reasonable accuracy
+            //if (td.Attributes.HasFlag(TypeAttributes.Interface))
+            //{
+            //	foreach (PropertyDescriptor property in td.Properties)
+            //	{
+            //		ProcessProperty(tb, property);
+            //	}
+            //}
+
+            // methods on value types not yet supported
+            if (!td.TypeDef.IsValueType)
+            {
+                ProcessMethods(tb, td);
             }
         }
 
-        private Type ResolveTypeReference(Il2CppType il2CppType, TypeDescriptor typeContext)
+        private void ProcessMethods(TypeBuilder tb, TypeDescriptor td)
         {
-            string typeName = m_context.Model.GetTypeName(il2CppType, true, false);
-            switch (il2CppType.type)
+            IEnumerable<IGrouping<string, MethodDescriptor>> methodGroups = td.Methods.GroupBy(method => method.Name);
+            foreach (IGrouping<string, MethodDescriptor> methodGroup in methodGroups)
             {
-                case Il2CppTypeEnum.IL2CPP_TYPE_ARRAY:
+                string methodName = methodGroup.Key;
+                // only none or single-argument generic type methods are supported right one
+                MethodDescriptor[] methods = methodGroup.Where(method => method.DeclaringTypeArgs.Count <= 1).ToArray();
+                if (methods.Length == 0)
+                    continue;
+
+                Type[] genericTypeParams = ((TypeInfo)((Type)tb)).GenericTypeParameters;
+                if (methods.Length > 1 && genericTypeParams.Length == 0)
+                    continue; // not supported
+
+                MethodBuilder mb = tb.DefineMethod($"get_method_{methodGroup.Key}",
+                    MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.SpecialName | MethodAttributes.HideBySig,
+                    typeof(MethodDefinition), Type.EmptyTypes);
+                ILGenerator mbil = mb.GetILGenerator();
+                if (methods.Length > 1)
+                {
+                    Type typeT0 = genericTypeParams[0];
+
+                    Label? nextLabel = null;
+                    foreach (MethodDescriptor method in methods)
                     {
-                        Il2CppArrayType arrayType = m_context.Model.Il2Cpp.MapVATR<Il2CppArrayType>(il2CppType.data.array);
-                        Il2CppType elementCppType = m_context.Model.Il2Cpp.GetIl2CppType(arrayType.etype);
-                        Type elementType = ResolveTypeReference(elementCppType, typeContext);
-                        return elementType?.MakeArrayType(arrayType.rank);
-                    }
-                case Il2CppTypeEnum.IL2CPP_TYPE_SZARRAY:
-                    {
-                        Il2CppType elementCppType = m_context.Model.Il2Cpp.GetIl2CppType(il2CppType.data.type);
-                        Type elementType = ResolveTypeReference(elementCppType, typeContext);
-                        return elementType?.MakeArrayType();
-                    }
-                case Il2CppTypeEnum.IL2CPP_TYPE_PTR:
-                    {
-                        Il2CppType oriType = m_context.Model.Il2Cpp.GetIl2CppType(il2CppType.data.type);
-                        Type ptrToType = ResolveTypeReference(oriType, typeContext);
-                        return ptrToType?.MakePointerType();
-                    }
-                case Il2CppTypeEnum.IL2CPP_TYPE_VAR:
-                case Il2CppTypeEnum.IL2CPP_TYPE_MVAR:
-                    {
-                        // TODO: Is this even remotely correct? :S
-                        Il2CppGenericParameter param = m_context.Model.GetGenericParameterFromIl2CppType(il2CppType);
-                        Type type = m_generatedTypes[typeContext];
-                        return (type as TypeInfo)?.GenericTypeParameters[param.num];
-                    }
-                case Il2CppTypeEnum.IL2CPP_TYPE_CLASS:
-                case Il2CppTypeEnum.IL2CPP_TYPE_VALUETYPE:
-                    {
-                        Il2CppTypeDefinition typeDef = m_context.Model.GetTypeDefinitionFromIl2CppType(il2CppType);
-                        int typeDefIndex = Array.IndexOf(m_context.Model.Metadata.typeDefs, typeDef);
-                        return EnsureType(m_context.Model.TypeDefsByIndex[typeDefIndex]);
-                    }
-                case Il2CppTypeEnum.IL2CPP_TYPE_GENERICINST:
-                    {
-                        Il2CppGenericClass genericClass = m_context.Model.Il2Cpp.MapVATR<Il2CppGenericClass>(il2CppType.data.generic_class);
-                        Il2CppTypeDefinition genericTypeDef = m_context.Model.GetGenericClassTypeDefinition(genericClass);
-                        Il2CppGenericInst genericInst = m_context.Model.Il2Cpp.MapVATR<Il2CppGenericInst>(genericClass.context.class_inst);
-                        List<Type> genericParameterTypes = new();
-                        ulong[] pointers = m_context.Model.Il2Cpp.MapVATR<ulong>(genericInst.type_argv, genericInst.type_argc);
-                        for (int i = 0; i < genericInst.type_argc; i++)
+                        if (method.DeclaringTypeArgs.Count == 0)
+                            continue;
+                        Type declaringTypeArg0 = ResolveTypeReference(method.DeclaringTypeArgs[0]);
+                        // cannot generate types for generic arguments. feel free to implement if you're brave.
+                        if (declaringTypeArg0 == null || declaringTypeArg0.IsGenericType)
+                            continue;
+
+                        if (nextLabel.HasValue)
                         {
-                            Il2CppType paramCppType = m_context.Model.Il2Cpp.GetIl2CppType(pointers[i]);
-                            Type ptype = ResolveTypeReference(paramCppType, typeContext);
-                            if (ptype == null)
-                            {
-                                CompilerError.IncompleteGenericType.Throw($"Dropping '{typeName}'. Reason: incomplete generic type");
-                                return null;
-                            }
-                            genericParameterTypes.Add(ptype);
+                            mbil.MarkLabel(nextLabel.Value);
                         }
 
-                        int typeDefIndex = Array.IndexOf(m_context.Model.Metadata.typeDefs, genericTypeDef);
-                        return EnsureType(m_context.Model.TypeDefsByIndex[typeDefIndex])?.MakeGenericType(genericParameterTypes.ToArray());
+                        nextLabel = mbil.DefineLabel();
+                        // if (typeof(T) == typeof(U)) 
+                        mbil.Emit(OpCodes.Ldtoken, declaringTypeArg0);
+                        mbil.EmitCall(OpCodes.Call, StaticReflectionHandles.Type.GetTypeFromHandle, null);
+                        mbil.Emit(OpCodes.Ldtoken, typeT0);
+                        mbil.EmitCall(OpCodes.Call, StaticReflectionHandles.Type.GetTypeFromHandle, null);
+                        mbil.EmitCall(OpCodes.Call, StaticReflectionHandles.Type.op_Equality, null);
+                        mbil.Emit(OpCodes.Brfalse_S, nextLabel.Value);
+
+                        // true -> return new MethodDefinition(address, moduleName)
+                        mbil.Emit(OpCodes.Ldc_I8, (long)method.Address);
+                        mbil.Emit(OpCodes.Ldstr, m_context.Model.ModuleName);
+                        mbil.Emit(OpCodes.Newobj, StaticReflectionHandles.MethodDefinition.Ctor.ConstructorInfo);
+                        mbil.Emit(OpCodes.Ret);
                     }
-                default:
-                    return TypeMap[(int)il2CppType.type];
+                    ErrorHandler.VerifyElseThrow(nextLabel.HasValue, CompilerError.ILGenerationError, "Internal error: Missing label");
+                    mbil.MarkLabel(nextLabel.Value);
+                    mbil.Emit(OpCodes.Ldnull);
+                    mbil.Emit(OpCodes.Ret);
+                }
+                else
+                {
+                    mbil.Emit(OpCodes.Ldc_I8, (long)methods[0].Address);
+                    mbil.Emit(OpCodes.Ldstr, m_context.Model.ModuleName);
+                    mbil.Emit(OpCodes.Newobj, StaticReflectionHandles.MethodDefinition.Ctor.ConstructorInfo);
+                    mbil.Emit(OpCodes.Ret);
+                }
+
+                PropertyBuilder pb = tb.DefineProperty($"method_{methodName}", PropertyAttributes.None, typeof(MethodDefinition), null);
+                pb.SetGetMethod(mb);
             }
         }
 
-        private static readonly Dictionary<int, Type> TypeMap = new()
+        private void ProcessProperty(TypeBuilder tb, PropertyDescriptor property)
         {
-            { 1, typeof(void) },
-            { 2, typeof(bool) },
-            { 3, typeof(char) },
-            { 4, typeof(sbyte) },
-            { 5, typeof(byte) },
-            { 6, typeof(short) },
-            { 7, typeof(ushort) },
-            { 8, typeof(int) },
-            { 9, typeof(uint) },
-            { 10, typeof(long) },
-            { 11, typeof(ulong) },
-            { 12, typeof(float) },
-            { 13, typeof(double) },
-            { 14, typeof(string) },
-            { 22, typeof(IntPtr) },
-            { 24, typeof(IntPtr) },
-            { 25, typeof(UIntPtr) },
-            { 28, typeof(object) },
-        };
-
-    }
-
-    internal class StaticReflectionHandles
-    {
-        public static class MethodDefinition
-        {
-            public static class Ctor
+            if (property.GetMethodAttributes.HasFlag(MethodAttributes.Static))
             {
-                public static readonly System.Type[] Parameters = { typeof(ulong), typeof(string) };
-                public static readonly ConstructorInfo ConstructorInfo = typeof(Il2CppToolkit.Runtime.Types.Reflection.MethodDefinition).GetConstructor(
-                    BindingFlags.Public | BindingFlags.Instance,
-                    null,
-                    Parameters,
-                    null);
+                // TODO
+                return;
             }
-        }
 
-        public static class Type
-        {
-            public static readonly MethodInfo GetTypeFromHandle = typeof(System.Type).GetMethod("GetTypeFromHandle");
-            public static readonly MethodInfo op_Equality =
-                typeof(System.Type).GetMethod("op_Equality", BindingFlags.Static | BindingFlags.Public);
-        }
-
-        public static class StructBase
-        {
-            public static readonly MethodInfo Load =
-                typeof(Il2CppToolkit.Runtime.StructBase).GetMethod("Load", BindingFlags.NonPublic | BindingFlags.Instance);
-
-            public static class Ctor
+            Type fieldType = ResolveTypeReference(property.Type);
+            if (fieldType == null)
             {
-                public static readonly System.Type[] Parameters = { typeof(Il2CsRuntimeContext), typeof(ulong) };
-                public static readonly ConstructorInfo ConstructorInfo = typeof(Il2CppToolkit.Runtime.StructBase).GetConstructor(
-                    BindingFlags.NonPublic | BindingFlags.Instance,
-                    null,
-                    Parameters,
-                    null
-                    );
+                CompilerError.UnknownType.Raise($"Dropping property '{property.Name}' from '{tb.Name}'. Reason: unknown type");
+                return;
             }
+
+            MethodBuilder mb = tb.DefineMethod($"get_{property.Name}", property.GetMethodAttributes, fieldType, Type.EmptyTypes);
+            PropertyBuilder pb = tb.DefineProperty(property.Name, PropertyAttributes.None, fieldType, null);
+            pb.SetGetMethod(mb);
         }
 
-        public static class StaticInstance
+        private void ProcessField(TypeDescriptor td, TypeBuilder tb, FieldDescriptor field)
         {
-            public static class Ctor
+            if (field.Attributes.HasFlag(FieldAttributes.Static) != td.IsStatic)
             {
-                public static System.Type[] Parameters = StructBase.Ctor.Parameters;
-                public static readonly ConstructorInfo ConstructorInfo = typeof(Il2CppToolkit.Runtime.StaticInstance<>).GetConstructor(
-                    BindingFlags.NonPublic | BindingFlags.Instance,
-                    null,
-                    Parameters,
-                    null
-                    );
+                // TODO
+                return;
             }
+
+            Type fieldType = ResolveTypeReference(field.Type);
+            if (fieldType == null)
+            {
+                CompilerError.UnknownType.Raise($"Dropping field '{field.Name}' from '{tb.Name}'. Reason: unknown type");
+                return;
+            }
+
+            bool generateFieldsOnly = tb.IsValueType;
+            byte indirection = 1;
+            while (fieldType.IsPointer)
+            {
+                ++indirection;
+                fieldType = fieldType.GetElementType();
+            }
+
+            string fieldName = generateFieldsOnly ? field.Name : field.StorageName;
+            FieldAttributes fieldAttrs = field.Attributes & ~(FieldAttributes.InitOnly | FieldAttributes.Public | FieldAttributes.Private | FieldAttributes.PrivateScope | FieldAttributes.Static); // TODO: Allow static once we support both types on each class type
+            fieldAttrs |= generateFieldsOnly ? FieldAttributes.Public : FieldAttributes.Private;
+
+            FieldBuilder fb = tb.DefineField(fieldName, fieldType, fieldAttrs);
+
+            fb.SetCustomAttribute(new CustomAttributeBuilder(typeof(OffsetAttribute).GetConstructor(new[] { typeof(ulong) }), new object[] { field.Offset }));
+            if (indirection > 1)
+            {
+                fb.SetCustomAttribute(new CustomAttributeBuilder(typeof(IndirectionAttribute).GetConstructor(new[] { typeof(byte) }), new object[] { indirection }));
+            }
+
+            // structs only get fields and attributes, nothing more.
+            if (generateFieldsOnly)
+            {
+                return;
+            }
+
+            if (field.DefaultValue != null)
+            {
+                fb.SetConstant(field.DefaultValue);
+            }
+
+            MethodBuilder mb = tb.DefineMethod($"get_{field.Name}", MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.RTSpecialName | MethodAttributes.SpecialName, fieldType, Type.EmptyTypes);
+            ILGenerator mbil = mb.GetILGenerator();
+            mbil.Emit(OpCodes.Ldarg_0);
+            mbil.Emit(OpCodes.Call, StaticReflectionHandles.StructBase.Load);
+            mbil.Emit(OpCodes.Ldarg_0);
+            mbil.Emit(OpCodes.Ldfld, fb);
+            mbil.Emit(OpCodes.Ret);
+
+            PropertyBuilder pb = tb.DefineProperty(field.Name, PropertyAttributes.None, fieldType, null);
+            pb.SetGetMethod(mb);
         }
     }
 }

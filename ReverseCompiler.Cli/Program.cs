@@ -1,4 +1,7 @@
 
+using System;
+using System.Diagnostics;
+using Il2CppToolkit.Common.Errors;
 using Il2CppToolkit.Model;
 
 namespace Il2CppToolkit.ReverseCompiler.Cli
@@ -7,6 +10,8 @@ namespace Il2CppToolkit.ReverseCompiler.Cli
     {
         private static void Main(string[] args)
         {
+
+            ErrorHandler.OnError += HandleError;
             try
             {
                 if (args.Length == 0)
@@ -23,5 +28,11 @@ namespace Il2CppToolkit.ReverseCompiler.Cli
             asmGen.AssemblyName = args[3];
             asmGen.Execute().Wait();
         }
+
+        private static void HandleError(object sender, ErrorHandler.ErrorEventArgs e)
+        {
+            Console.WriteLine($"ReverseCompiler : {e.Exception.ToString()}");
+        }
+
     }
 }

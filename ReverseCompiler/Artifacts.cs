@@ -10,5 +10,6 @@ namespace Il2CppToolkit.ReverseCompiler
         public static SynchronousVariableSpecification<string> AssemblyName = new("AssemblyName");
 
         public static BuildArtifactSpecification<IReadOnlyList<TypeDescriptor>> SortedTypeDescriptors = new("SortedDescriptors");
+        public static BuildArtifactSpecification<IReadOnlyDictionary<TypeDescriptor, Type>> GeneratedTypes = new("GeneratedTypes");
     }
 }
