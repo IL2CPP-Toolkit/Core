@@ -1,6 +1,5 @@
 
 using System;
-using System.Diagnostics;
 using Il2CppToolkit.Common.Errors;
 using Il2CppToolkit.Model;
 
@@ -10,8 +9,8 @@ namespace Il2CppToolkit.ReverseCompiler.Cli
     {
         private static void Main(string[] args)
         {
-
             ErrorHandler.OnError += HandleError;
+#if DEBUG
             try
             {
                 if (args.Length == 0)
@@ -20,6 +19,7 @@ namespace Il2CppToolkit.ReverseCompiler.Cli
                 }
             }
             catch { }
+#endif
             Loader loader = new Loader();
             loader.Init(args[0], args[1]);
             TypeModel model = new TypeModel(loader);
@@ -31,7 +31,7 @@ namespace Il2CppToolkit.ReverseCompiler.Cli
 
         private static void HandleError(object sender, ErrorHandler.ErrorEventArgs e)
         {
-            Console.WriteLine($"ReverseCompiler : {e.Exception.ToString()}");
+            Console.WriteLine($"Il2Cpp.ReverseCompiler : {e.Exception.ToString()}");
         }
 
     }
