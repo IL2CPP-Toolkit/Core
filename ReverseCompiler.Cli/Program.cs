@@ -20,6 +20,7 @@ namespace Il2CppToolkit.ReverseCompiler.Cli
             TypeModel model = new TypeModel(loader);
             AssemblyGenerator asmGen = new AssemblyGenerator(model);
             asmGen.TypeSelectors.Add(td => td.Name == args[2]);
+            asmGen.AssemblyName = args[3];
             asmGen.Execute().Wait();
         }
     }

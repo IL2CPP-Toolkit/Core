@@ -6,5 +6,8 @@ namespace Il2CppToolkit.Model
     public enum CompilerError
     {
         [ErrorSeverity(ErrorSeverity.Fatal)] InternalError = 1,
+        [ErrorSeverity(ErrorSeverity.Warning)] UnknownTypeReference,
+        [ErrorSeverity(ErrorSeverity.Warning)] IncompleteGenericType,
+
     }
 }

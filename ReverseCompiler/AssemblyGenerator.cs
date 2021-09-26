@@ -12,26 +12,30 @@ namespace Il2CppToolkit.ReverseCompiler
         private CompileContext m_context;
 
         public List<Func<TypeDescriptor, bool>> TypeSelectors = new();
+        public string AssemblyName { get; set; }
 
         public AssemblyGenerator(TypeModel model)
         {
-            m_context = new(this, model);
-            m_context.AddPhase(new TypeGenerationPhase());
-            m_context.AddPhase(new ConfigurationPhase(TypeSelectors));
+            m_context = new(model);
+            m_context.AddPhase(new SortDependenciesPhase());
+            m_context.AddPhase(new BuildTypesPhase());
         }
 
         public async Task Execute()
         {
+            m_context.Artifacts.Set(ArtifactSpecs.TypeSelectors, TypeSelectors);
+            m_context.Artifacts.Set(ArtifactSpecs.AssemblyName, AssemblyName);
+
             await Task.WhenAll(m_context.GetPhases().Select(async phase =>
             {
-                Trace.WriteLine($"[{phase.Name}]:Prologue");
-                await phase.Prologue(m_context);
+                Trace.WriteLine($"[{phase.Name}]:Initialize");
+                await phase.Initialize(m_context);
 
                 Trace.WriteLine($"[{phase.Name}]:Execute");
-                await phase.Execute(m_context);
+                await phase.Execute();
 
-                Trace.WriteLine($"[{phase.Name}]:Epilogue");
-                await phase.Epilogue(m_context);
+                Trace.WriteLine($"[{phase.Name}]:Finalize");
+                await phase.Finalize();
 
                 Trace.WriteLine($"[{phase.Name}]:Completed");
             }).ToArray());
