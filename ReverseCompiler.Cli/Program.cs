@@ -16,10 +16,7 @@ namespace Il2CppToolkit.ReverseCompiler.Cli
             }
             catch { }
             Loader loader = new Loader();
-            loader.Init(
-                args[0],
-                args[1]
-                );
+            loader.Init(args[0], args[1]);
             TypeModel model = new TypeModel(loader);
             AssemblyGenerator asmGen = new AssemblyGenerator(model);
             asmGen.TypeSelectors.Add(td => td.Name == args[2]);
