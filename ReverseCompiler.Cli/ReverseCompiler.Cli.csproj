@@ -17,6 +17,7 @@
     <OutputType>Exe</OutputType>
     <AssemblyName>Il2CppToolkit.ReverseCompiler.Cli</AssemblyName>
     <RootNamespace>Il2CppToolkit.ReverseCompiler.Cli</RootNamespace>
+    <RepositoryUrl>https://github.com/IL2CPP-Toolkit/Core</RepositoryUrl>
   </PropertyGroup>
 
 </Project>

@@ -7,6 +7,7 @@
     <authors>dnchattan</authors>
     <owners>dnchattan</owners>
     <description>Generate C# Assembly from compiled Il2Cpp resources</description>
+    <repository type="git" url="https://github.com/IL2CPP-Toolkit/Core.git" />
     <dependencies>
       <group targetFramework="net5.0" />
     </dependencies>
