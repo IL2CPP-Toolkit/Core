@@ -23,7 +23,7 @@ namespace Il2CppToolkit.Runtime
 		public static T GetInstance(Il2CsRuntimeContext context)
 		{
 			AddressAttribute attr = typeof(T).GetCustomAttribute<AddressAttribute>();
-			ErrorHandler.VerifyElseThrow(attr == null, RuntimeError.StaticAddressMissing, "Class does not have a known address defined in metadata");
+			ErrorHandler.VerifyElseThrow(attr != null, RuntimeError.StaticAddressMissing, "Class does not have a known address defined in metadata");
 			ulong address = attr.Address + context.GetModuleAddress(attr.RelativeToModule);
 			return context.ReadValue<T>(address);
 		}
