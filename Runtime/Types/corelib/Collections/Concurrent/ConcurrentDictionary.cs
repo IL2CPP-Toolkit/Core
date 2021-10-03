@@ -36,6 +36,7 @@ namespace Il2CppToolkit.Runtime.Types.corelib.Collections.Concurrent
         private Table m_table;
 #pragma warning restore 649
 
+        [Ignore]
         private readonly Dictionary<TKey, TValue> m_dict = new();
 
         protected internal override void Load()
