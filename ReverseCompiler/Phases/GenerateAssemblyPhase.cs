@@ -47,13 +47,24 @@ namespace Il2CppToolkit.ReverseCompiler
             currentDomain.TypeResolve += resolveHandler;
 
 
-            Lokad.ILPack.AssemblyGenerator generator = new();
-            string outputFile = m_outputPath;
-            if (Path.GetExtension(outputFile) != ".dll")
+            try
             {
-                outputFile = Path.Join(m_outputPath, $"{m_module.Assembly.GetName().Name}.dll");
+                Lokad.ILPack.AssemblyGenerator generator = new();
+                string outputFile = m_outputPath;
+                if (Path.IsPathRooted(outputFile) && !Directory.Exists(Path.GetDirectoryName(outputFile)))
+                {
+                    Directory.CreateDirectory(Path.GetDirectoryName(outputFile));
+                }
+                if (Path.GetExtension(outputFile) != ".dll")
+                {
+                    outputFile = Path.Join(m_outputPath, $"{m_module.Assembly.GetName().Name}.dll");
+                }
+                generator.GenerateAssembly(m_module.Assembly, outputFile);
             }
-            generator.GenerateAssembly(m_module.Assembly, outputFile);
+            finally
+            {
+                currentDomain.TypeResolve -= resolveHandler;
+            }
         }
 
         private static readonly Stack<Type> s_resolutionStack = new();

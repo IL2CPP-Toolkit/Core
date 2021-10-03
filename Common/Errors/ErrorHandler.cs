@@ -17,7 +17,10 @@ namespace Il2CppToolkit.Common.Errors
 
         public static void HandleError<TError>(StructuredException<TError> ex) where TError : Enum
         {
-            OnError.Invoke(null, new(ex));
+            if (OnError != null)
+            {
+                OnError.Invoke(null, new(ex));
+            }
             if (ex.Severity >= ErrorHandler.ErrorThreshhold)
             {
                 throw ex;
