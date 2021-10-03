@@ -9,7 +9,14 @@ namespace Il2CppToolkit.Runtime.Types.Reflection
     {
         private string DebuggerDisplay
         {
-            get { return $"{Namespace}.{Name}"; }
+            get
+            {
+                if (string.IsNullOrEmpty(Namespace) && string.IsNullOrEmpty(Name))
+                {
+                    return "(none)";
+                }
+                return $"{Namespace}.{Name}";
+            }
         }
 
         [field: Offset(0)] public ImageDefinition Image { get; }

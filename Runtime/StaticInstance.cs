@@ -11,7 +11,7 @@ namespace Il2CppToolkit.Runtime
 		{
 			get
 			{
-				return Context.ReadValue<ClassDefinition>(Address);
+				return default;
 			}
 		}
 
@@ -25,7 +25,8 @@ namespace Il2CppToolkit.Runtime
 			AddressAttribute attr = typeof(T).GetCustomAttribute<AddressAttribute>();
 			ErrorHandler.VerifyElseThrow(attr != null, RuntimeError.StaticAddressMissing, "Class does not have a known address defined in metadata");
 			ulong address = attr.Address + context.GetModuleAddress(attr.RelativeToModule);
-			return context.ReadValue<T>(address);
+			ClassDefinition classDef = context.ReadValue<ClassDefinition>(address, 2);
+			return classDef.StaticFields.As<T>();
 		}
 	}
 }
