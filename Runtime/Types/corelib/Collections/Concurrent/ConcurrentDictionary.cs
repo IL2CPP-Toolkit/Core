@@ -15,8 +15,12 @@ namespace Il2CppToolkit.Runtime.Types.corelib.Collections.Concurrent
         }
 
         [Size(0x18)]
-        public class Node
+        public class Node : StructBase
         {
+            public Node(Il2CsRuntimeContext context, ulong address) : base(context, address)
+            {
+            }
+
             [Offset(0x10)]
             public TKey Key;
             [Offset(0x18)]
