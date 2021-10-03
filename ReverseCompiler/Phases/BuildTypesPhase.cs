@@ -62,6 +62,10 @@ namespace Il2CppToolkit.ReverseCompiler
             {
                 return td.Base;
             }
+            if (td.Attributes.HasFlag(TypeAttributes.Interface))
+			{
+                return null;
+			}
             if (td.IsStatic)
             {
                 return new GenericTypeReference(new DotNetTypeReference(typeof(StaticInstance<>)), new TypeDescriptorReference(td));
@@ -75,7 +79,7 @@ namespace Il2CppToolkit.ReverseCompiler
             ITypeReference baseTypeRef = GetBaseReferenceTypeFor(td);
             if (baseTypeRef != null)
             {
-                tb.SetParent(ResolveTypeReference(td.Base));
+                tb.SetParent(ResolveTypeReference(baseTypeRef));
             }
 
             foreach (ITypeReference implements in td.Implements)

@@ -57,10 +57,10 @@ namespace Il2CppToolkit.ReverseCompiler.Cli
                 {
                     ErrorHandler.ErrorThreshhold = ErrorSeverity.Warning;
                 }
-                Loader loader = new Loader();
+                Loader loader = new();
                 loader.Init(opts.GameAssemblyPath, opts.MetadataPath);
-                TypeModel model = new TypeModel(loader);
-                AssemblyGenerator asmGen = new AssemblyGenerator(model);
+                TypeModel model = new(loader);
+                AssemblyGenerator asmGen = new(model);
                 asmGen.TypeSelectors.Add(td => opts.IncludeTypes == null || opts.IncludeTypes.Contains(td.Name));
                 asmGen.AssemblyName = opts.AssemblyName;
                 asmGen.OutputPath = opts.OutputPath;
@@ -70,7 +70,7 @@ namespace Il2CppToolkit.ReverseCompiler.Cli
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Build failed.");
+                    Console.WriteLine($"Build failed: {ex}");
                     result = 1;
                 }
             });
@@ -79,7 +79,7 @@ namespace Il2CppToolkit.ReverseCompiler.Cli
 
         private static void HandleError(object sender, ErrorHandler.ErrorEventArgs e)
         {
-            Console.WriteLine($"Il2Cpp.ReverseCompiler : {e.Exception.ToString()}");
+            Console.WriteLine($"Il2Cpp.ReverseCompiler : {e.Exception}");
         }
 
     }
