@@ -35,6 +35,7 @@ namespace Il2CppToolkit.Model
                     if (fieldStartPtr == 0)
                         continue;
 
+                    m_loader.Il2Cpp.Position = fieldStartPtr;
                     for (var fieldIdx = 0; fieldIdx < def.field_count; ++fieldIdx)
                         m_fieldOffsets[def.fieldStart + fieldIdx] = m_loader.Il2Cpp.ReadUInt32();
                 }

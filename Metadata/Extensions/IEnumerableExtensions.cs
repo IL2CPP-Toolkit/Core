@@ -23,7 +23,7 @@ namespace Il2CppToolkit.Model
 			int index = 0;
 			foreach (var entry in target)
 			{
-				yield return (index, entry);
+				yield return (index++, entry);
 			}
 		}
 	}
