@@ -39,6 +39,14 @@ namespace Il2CppToolkit.Runtime
     }
 
     [AttributeUsage(AttributeTargets.Field)]
+    public class IgnoreAttribute : Attribute
+    {
+        public IgnoreAttribute()
+        {
+        }
+    }
+
+    [AttributeUsage(AttributeTargets.Field)]
     public class OffsetAttribute : Attribute
     {
         public ulong OffsetBytes { get; }

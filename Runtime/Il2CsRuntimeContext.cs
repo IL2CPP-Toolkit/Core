@@ -94,6 +94,10 @@ namespace Il2CppToolkit.Runtime
 
         public void ReadField(object target, ulong targetAddress, FieldInfo field)
         {
+            if (field.GetCustomAttribute<IgnoreAttribute>(inherit: true) != null)
+            {
+                return;
+            }
             ulong offset = targetAddress + GetMemberFieldOffset(field);
             byte indirection = 1;
             IndirectionAttribute indirectionAttr = field.GetCustomAttribute<IndirectionAttribute>(inherit: true);
