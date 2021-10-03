@@ -19,6 +19,7 @@ namespace Il2CppToolkit.Runtime.Types.corelib.Collections.Concurrent
         {
             public Node(Il2CsRuntimeContext context, ulong address) : base(context, address)
             {
+                Load();
             }
 
             [Offset(0x10)]
@@ -29,8 +30,13 @@ namespace Il2CppToolkit.Runtime.Types.corelib.Collections.Concurrent
             public Node Next;
         }
 
-        public class Table
+        public class Table : StructBase
         {
+            public Table(Il2CsRuntimeContext context, ulong address) : base(context, address)
+            {
+                Load();
+            }
+
             [Offset(0x10)]
             public Native__Array<Node> Buckets;
         }

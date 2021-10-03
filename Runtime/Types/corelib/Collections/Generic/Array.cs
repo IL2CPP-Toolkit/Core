@@ -50,10 +50,6 @@ namespace Il2CppToolkit.Runtime.Types.corelib.Collections.Generic
             for (ulong index = 0; index < readLength; ++index)
             {
                 T value = context.ReadValue<T>(address + 0x20 + index * typeSize);
-                if (value == null)
-                {
-                    return;
-                }
                 m_items.Add(value);
             }
         }
