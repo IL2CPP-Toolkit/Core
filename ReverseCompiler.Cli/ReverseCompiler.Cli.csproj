@@ -12,6 +12,12 @@
     <PackageReference Include="CommandLineParser" Version="2.8.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="test.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
     <OutputType>Exe</OutputType>

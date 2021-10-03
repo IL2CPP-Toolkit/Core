@@ -28,6 +28,7 @@ namespace Il2CppToolkit.ReverseCompiler
 
         public override Task Execute()
         {
+            ProcessTypes();
             return Task.CompletedTask;
         }
 
