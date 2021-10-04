@@ -13,6 +13,7 @@ namespace Il2CppToolkit.ReverseCompiler
         public List<Func<TypeDescriptor, bool>> TypeSelectors = new();
         public string AssemblyName { get; set; }
         public string OutputPath { get; set; }
+        public ArtifactContainer Artifacts => m_context.Artifacts;
 
         public AssemblyGenerator(TypeModel model)
         {
