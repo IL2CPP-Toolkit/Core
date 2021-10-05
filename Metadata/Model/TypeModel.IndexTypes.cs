@@ -221,6 +221,7 @@ namespace Il2CppToolkit.Model
         {
             string typeName = GetTypeDefName(typeDef);
             TypeDescriptor td = new(typeName, typeDef, typeIndex, imageDef);
+            td.SizeInBytes = (uint)m_loader.Il2Cpp.TypeDefinitionSizes[typeIndex].instance_size;
             m_typeCache.Add(typeIndex, td);
             return td;
         }

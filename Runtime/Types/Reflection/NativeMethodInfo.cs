@@ -9,7 +9,6 @@ namespace Il2CppToolkit.Runtime.Types.Reflection
         }
 
         [Offset(24)]
-        [Indirection(2)]
 #pragma warning disable 649
         private ClassDefinition m_klass;
 #pragma warning restore 649

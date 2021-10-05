@@ -238,17 +238,22 @@ namespace Il2CppToolkit.Runtime
 
         internal ulong ReadPointer(ulong address)
         {
-            ReadOnlyMemory<byte> memory = ReadMemory(address, 8);
-            return BitConverter.ToUInt64(memory.Span);
+            IntPtr ptr = IntPtr.Zero;
+            NativeWrapper.ReadProcessMemory(processHandle, (IntPtr)address, ref ptr);
+            return (ulong)ptr;
         }
 
+        private ulong CacheHits = 0;
+        private ulong CacheMisses = 0;
         internal ReadOnlyMemory<byte> ReadMemory(ulong address, ulong size)
         {
             ReadOnlyMemory<byte>? result = rpmCache.Find(address, size);
             if (result != null)
             {
+                ++CacheHits;
                 return result.Value;
             }
+            ++CacheMisses;
             byte[] buffer = new byte[size];
             if (!NativeWrapper.ReadProcessMemoryArray(processHandle, (IntPtr)address, buffer))
             {

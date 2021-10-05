@@ -3,9 +3,10 @@ using Il2CppToolkit.Runtime.Types.corelib;
 
 namespace Il2CppToolkit.Runtime.Types.Reflection
 {
-    [Size(4376)]
+    // [Size(4376)]
+    [Size(0x120)]
     [DebuggerDisplay("{DebuggerDisplay,nq}")]
-    public struct ClassDefinition
+    public class ClassDefinition
     {
         private string DebuggerDisplay
         {

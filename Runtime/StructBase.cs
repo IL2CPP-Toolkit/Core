@@ -19,7 +19,7 @@ namespace Il2CppToolkit.Runtime
         {
             get
             {
-                return Context.ReadValue<ClassDefinition>(Address, 2);
+                return Context.ReadValue<ClassDefinition>(Address);
             }
         }
 

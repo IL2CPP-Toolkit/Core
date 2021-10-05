@@ -84,6 +84,8 @@ namespace Il2CppToolkit.ReverseCompiler
                     typeof(TokenAttribute).GetConstructor(new[] { typeof(uint) }), new object[] { descriptor.TypeDef.token }));
                 tb.SetCustomAttribute(new CustomAttributeBuilder(
                     typeof(TagAttribute).GetConstructor(new[] { typeof(ulong) }), new object[] { descriptor.Tag }));
+                tb.SetCustomAttribute(new CustomAttributeBuilder(
+                    typeof(SizeAttribute).GetConstructor(new[] { typeof(uint) }), new object[] { descriptor.SizeInBytes }));
 
                 if (descriptor.IsStatic)
                 {
