@@ -37,19 +37,25 @@ namespace Il2CppToolkit.Runtime.Types.corelib.Collections.Generic
             }
         }
 
-        private void ReadFields(Il2CsRuntimeContext context, ulong address)
+        protected internal override void Load()
         {
-            ulong readLength = m_specifiedSize ?? context.ReadValue<ulong>(address + 0x18);
+            if (m_isLoaded)
+            {
+                return;
+            }
+            m_isLoaded = true;
+
+            ulong readLength = m_specifiedSize ?? MemorySource.ReadValue<ulong>(Address + 0x18);
             if (readLength == 0)
             {
                 return;
             }
 
             ulong typeSize = Il2CsRuntimeContext.GetTypeSize(typeof(T));
-            MemoryCacheEntry entry = context.CacheMemory(address + 0x20, typeSize * readLength);
+            m_cache = MemorySource.ParentContext.CacheMemory(Address + 0x20, typeSize * readLength);
             for (ulong index = 0; index < readLength; ++index)
             {
-                T value = context.ReadValue<T>(address + 0x20 + index * typeSize);
+                T value = m_cache.ReadValue<T>(Address + 0x20 + index * typeSize);
                 m_items.Add(value);
             }
         }

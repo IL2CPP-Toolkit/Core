@@ -1,25 +1,22 @@
-﻿using ProcessMemoryUtilities.Managed;
-using ProcessMemoryUtilities.Native;
-using System;
-using System.Reflection;
-using Il2CppToolkit.Common.Errors;
+﻿using System.Reflection;
 using Il2CppToolkit.Runtime.Types.Reflection;
 
 namespace Il2CppToolkit.Runtime
 {
     public abstract class StructBase
     {
-        private bool m_isLoaded = false;
-        private MemoryCacheEntry m_cache;
+        protected bool m_isLoaded = false;
+        protected CachedMemoryBlock m_cache;
 
-        public Il2CsRuntimeContext Context { get; set; }
+        public IMemorySource MemorySource { get; set; }
         public ulong Address { get; set; }
+        internal CachedMemoryBlock Cache => m_cache;
 
         public virtual ClassDefinition ClassDefinition
         {
             get
             {
-                return Context.ReadValue<ClassDefinition>(Address);
+                return MemorySource.ReadValue<ClassDefinition>(Address);
             }
         }
 
@@ -32,16 +29,16 @@ namespace Il2CppToolkit.Runtime
             }
         }
 
-        protected StructBase(Il2CsRuntimeContext context, ulong address)
+        protected StructBase(IMemorySource source, ulong address)
         {
-            Context = context;
+            MemorySource = source;
             Address = address;
         }
 
         public T As<T>()
         {
             // avoid double-indirection used to get to this type by passing indirection=0
-            T cast = (T)Context.ReadValue(typeof(T), Address, 0);
+            T cast = (T)MemorySource.ReadValue(typeof(T), Address, 0);
             return cast;
         }
 
@@ -53,7 +50,7 @@ namespace Il2CppToolkit.Runtime
             }
             m_isLoaded = true;
             EnsureCache();
-            Context.ReadFields(GetType(), this, Address);
+            MemorySource.ReadFields(GetType(), this, Address);
         }
 
         protected virtual void EnsureCache()
@@ -63,13 +60,7 @@ namespace Il2CppToolkit.Runtime
                 return;
             }
             uint? size = Native__ObjectSize;
-            IntPtr handle = NativeWrapper.OpenProcess(ProcessAccessFlags.Read, inheritHandle: true, Context.TargetProcess.Id);
-            byte[] buffer = new byte[size.Value];
-            if (!NativeWrapper.ReadProcessMemoryArray(handle, (IntPtr)Address, buffer))
-            {
-                RuntimeError.ReadProcessMemoryReadArrayFailed.Raise("Failed to read memory location");
-            }
-            m_cache = Context.CacheMemory(Address, size.Value);
+            m_cache = MemorySource.ParentContext.CacheMemory(Address, size.Value);
         }
     }
 }
