@@ -7,10 +7,10 @@ using Il2CppToolkit.Runtime.Types;
 
 namespace Il2CppToolkit.Runtime
 {
-	public class UnknownClass : StructBase
-	{
-		public UnknownClass(Il2CsRuntimeContext context, ulong address) : base(context, address)
-		{
-		}
-	}
+    public class UnknownClass : StructBase
+    {
+        public UnknownClass(IMemorySource source, ulong address) : base(source, address)
+        {
+        }
+    }
 }

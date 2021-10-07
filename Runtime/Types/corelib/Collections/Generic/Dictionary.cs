@@ -7,8 +7,8 @@ namespace Il2CppToolkit.Runtime.Types.corelib.Collections.Generic
     [TypeMapping(typeof(Dictionary<,>))]
     public class Native__Dictionary<TKey, TValue> : StructBase, IReadOnlyDictionary<TKey, TValue>
     {
-        public Native__Dictionary(Il2CsRuntimeContext context, ulong address)
-            : base(context, address)
+        public Native__Dictionary(IMemorySource source, ulong address)
+            : base(source, address)
         {
         }
 
@@ -27,10 +27,10 @@ namespace Il2CppToolkit.Runtime.Types.corelib.Collections.Generic
         }
         private readonly Dictionary<TKey, TValue> m_dict = new();
 
-        private void ReadFields(Il2CsRuntimeContext context, ulong address)
+        private void ReadFields(IMemorySource source, ulong address)
         {
-            uint count = context.ReadValue<uint>(address + 0x20);
-            Native__Array<Entry> entries = new(context, context.ReadPointer(address + 0x18), count);
+            uint count = source.ReadValue<uint>(address + 0x20);
+            Native__Array<Entry> entries = new(source, source.ReadPointer(address + 0x18), count);
             entries.Load();
             foreach (Entry entry in entries)
             {

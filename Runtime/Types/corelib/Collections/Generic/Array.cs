@@ -16,14 +16,14 @@ namespace Il2CppToolkit.Runtime.Types.corelib.Collections.Generic
         private readonly ulong? m_specifiedSize;
         private readonly List<T> m_items = new();
 
-        public Native__Array(Il2CsRuntimeContext context, ulong address)
-            : base(context, address)
+        public Native__Array(IMemorySource source, ulong address)
+            : base(source, address)
         {
             m_specifiedSize = null;
         }
 
-        public Native__Array(Il2CsRuntimeContext context, ulong address, ulong size)
-            : base(context, address)
+        public Native__Array(IMemorySource source, ulong address, ulong size)
+            : base(source, address)
         {
             m_specifiedSize = size;
         }

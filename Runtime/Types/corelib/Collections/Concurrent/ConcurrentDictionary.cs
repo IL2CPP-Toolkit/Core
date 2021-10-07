@@ -9,15 +9,15 @@ namespace Il2CppToolkit.Runtime.Types.corelib.Collections.Concurrent
     [TypeMapping(typeof(ConcurrentDictionary<,>))]
     public class Native__ConcurrentDictionary<TKey, TValue> : StructBase, IReadOnlyDictionary<TKey, TValue>
     {
-        public Native__ConcurrentDictionary(Il2CsRuntimeContext context, ulong address)
-            : base(context, address)
+        public Native__ConcurrentDictionary(IMemorySource source, ulong address)
+            : base(source, address)
         {
         }
 
         [Size(0x18)]
         public class Node : StructBase
         {
-            public Node(Il2CsRuntimeContext context, ulong address) : base(context, address)
+            public Node(IMemorySource source, ulong address) : base(source, address)
             {
                 Load();
             }
@@ -32,7 +32,7 @@ namespace Il2CppToolkit.Runtime.Types.corelib.Collections.Concurrent
 
         public class Table : StructBase
         {
-            public Table(Il2CsRuntimeContext context, ulong address) : base(context, address)
+            public Table(IMemorySource source, ulong address) : base(source, address)
             {
                 Load();
             }

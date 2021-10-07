@@ -7,10 +7,10 @@ using Il2CppToolkit.Runtime.Types.corelib;
 
 namespace Il2CppToolkit.Runtime
 {
-    public static class BitReader
+    public static class MemorySourceExtensions
     {
         private static readonly Dictionary<Type, Func<IMemorySource, ulong, object>> s_impl = new();
-        static BitReader()
+        static MemorySourceExtensions()
         {
             // ReSharper disable BuiltInTypeReferenceStyle
             s_impl.Add(typeof(Char), (context, address) => BitConverter.ToChar(context.ReadMemory(address, sizeof(Char)).Span));
@@ -118,7 +118,7 @@ namespace Il2CppToolkit.Runtime
             }
             if (type.IsAssignableTo(typeof(StructBase)))
             {
-                object classObject = Activator.CreateInstance(type, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance, null, new object[] { source, address }, null);
+                object classObject = Activator.CreateInstance(type, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance, null, new object[] { (IMemorySource)source, address }, null);
                 return classObject;
             }
             // value type
@@ -136,21 +136,21 @@ namespace Il2CppToolkit.Runtime
                 CallingConventions.HasThis,
                 new[]
                 {
-                    typeof(Il2CsRuntimeContext),
+                    typeof(IMemorySource),
                     typeof(ulong),
                 },
                 null);
 
             if (readFieldsOverride != null)
             {
-                readFieldsOverride.Invoke(target, new object[] { source, targetAddress });
+                readFieldsOverride.Invoke(target, new object[] { (IMemorySource)source, targetAddress });
                 return;
             }
 
             do
             {
                 FieldInfo[] fields =
-                    type.GetFields(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
+                    type.GetFields(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
                 foreach (FieldInfo field in fields)
                 {
                     ReadField(source, target, targetAddress, field);

@@ -272,7 +272,7 @@ namespace Il2CppToolkit.ReverseCompiler
 
             public static class Ctor
             {
-                public static readonly System.Type[] Parameters = { typeof(Il2CsRuntimeContext), typeof(ulong) };
+                public static readonly System.Type[] Parameters = { typeof(IMemorySource), typeof(ulong) };
                 public static readonly ConstructorInfo ConstructorInfo = typeof(Il2CppToolkit.Runtime.StructBase).GetConstructor(
                     BindingFlags.NonPublic | BindingFlags.Instance,
                     null,
