@@ -98,6 +98,12 @@ namespace Il2CppToolkit.Runtime
             {
                 return (uint)size;
             }
+
+            if (type.IsEnum)
+            {
+                return GetTypeSize(type.GetEnumUnderlyingType());
+            }
+
             // pointer
             if (!type.IsValueType)
             {

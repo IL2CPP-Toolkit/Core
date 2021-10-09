@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Reflection;
 using Il2CppToolkit.Runtime.Types;
 using Il2CppToolkit.Runtime.Types.corelib;
+using Il2CppToolkit.Runtime.Types.corelib.Collections.Generic;
 
 namespace Il2CppToolkit.Runtime
 {
@@ -100,6 +101,12 @@ namespace Il2CppToolkit.Runtime
             {
                 return null;
             }
+            if (type.IsArray)
+            {
+                dynamic array = Activator.CreateInstance(typeof(Native__Array<>).MakeGenericType(type.GetElementType()), new object[] { (IMemorySource)source, address });
+                return array.Array;
+            }
+
             if (type.IsInterface || type.IsAbstract)
             {
                 UnknownClass unk = (UnknownClass)ReadStruct(source, typeof(UnknownClass), address);

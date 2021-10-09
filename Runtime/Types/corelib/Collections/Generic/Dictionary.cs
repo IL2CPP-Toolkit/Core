@@ -21,8 +21,19 @@ namespace Il2CppToolkit.Runtime.Types.corelib.Collections.Generic
             public UInt32 Next;
             [Offset(0x08)]
             public TKey Key;
-            // TODO: Offset should shift based on sizeof(TKey) [ requires size information from IL2CppDumper, which is not currently public :( ]
             [Offset(0x10)]
+            public TValue Value;
+        }
+        [Size(0x10)]
+        public struct EntryNarrow
+        {
+            [Offset(0x00)]
+            public UInt32 HashCode;
+            [Offset(0x04)]
+            public UInt32 Next;
+            [Offset(0x08)]
+            public TKey Key;
+            [Offset(0x0C)]
             public TValue Value;
         }
         private readonly Dictionary<TKey, TValue> m_dict = new();
@@ -30,15 +41,27 @@ namespace Il2CppToolkit.Runtime.Types.corelib.Collections.Generic
         private void ReadFields(IMemorySource source, ulong address)
         {
             uint count = source.ReadValue<uint>(address + 0x20);
-            Native__Array<Entry> entries = new(source, source.ReadPointer(address + 0x18), count);
-            entries.Load();
-            foreach (Entry entry in entries)
+            if (Il2CsRuntimeContext.GetTypeSize(typeof(TValue)) <= 4 && Il2CsRuntimeContext.GetTypeSize(typeof(TKey)) <= 4)
             {
-                m_dict.Add(entry.Key, entry.Value);
+                Native__Array<EntryNarrow> entries = new(source, source.ReadPointer(address + 0x18), count);
+                entries.Load();
+                foreach (EntryNarrow entry in entries)
+                {
+                    m_dict.Add(entry.Key, entry.Value);
+                }
+            }
+            else
+            {
+                Native__Array<Entry> entries = new(source, source.ReadPointer(address + 0x18), count);
+                entries.Load();
+                foreach (Entry entry in entries)
+                {
+                    m_dict.Add(entry.Key, entry.Value);
+                }
             }
         }
 
-        private Dictionary<TKey, TValue> Dict
+        public Dictionary<TKey, TValue> UnderlyingDictionary
         {
             get
             {
@@ -49,42 +72,42 @@ namespace Il2CppToolkit.Runtime.Types.corelib.Collections.Generic
 
         public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
         {
-            return Dict.GetEnumerator();
+            return UnderlyingDictionary.GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return Dict.GetEnumerator();
+            return UnderlyingDictionary.GetEnumerator();
         }
 
         public int Count
         {
-            get { return Dict.Count; }
+            get { return UnderlyingDictionary.Count; }
         }
 
         public bool ContainsKey(TKey key)
         {
-            return Dict.ContainsKey(key);
+            return UnderlyingDictionary.ContainsKey(key);
         }
 
         public bool TryGetValue(TKey key, out TValue value)
         {
-            return Dict.TryGetValue(key, out value);
+            return UnderlyingDictionary.TryGetValue(key, out value);
         }
 
         public TValue this[TKey key]
         {
-            get { return Dict[key]; }
+            get { return UnderlyingDictionary[key]; }
         }
 
         public IEnumerable<TKey> Keys
         {
-            get { return Dict.Keys; }
+            get { return UnderlyingDictionary.Keys; }
         }
 
         public IEnumerable<TValue> Values
         {
-            get { return Dict.Values; }
+            get { return UnderlyingDictionary.Values; }
         }
     }
 }

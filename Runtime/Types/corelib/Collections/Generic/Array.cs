@@ -13,19 +13,27 @@ namespace Il2CppToolkit.Runtime.Types.corelib.Collections.Generic
 	 */
     public class Native__Array<T> : StructBase, IReadOnlyList<T>
     {
-        private readonly ulong? m_specifiedSize;
+        private readonly ulong? m_specifiedLength;
+        private readonly ulong? m_specifiedElementSize;
         private readonly List<T> m_items = new();
 
         public Native__Array(IMemorySource source, ulong address)
             : base(source, address)
         {
-            m_specifiedSize = null;
+            m_specifiedLength = null;
         }
 
-        public Native__Array(IMemorySource source, ulong address, ulong size)
+        public Native__Array(IMemorySource source, ulong address, ulong length)
             : base(source, address)
         {
-            m_specifiedSize = size;
+            m_specifiedLength = length;
+        }
+
+        public Native__Array(IMemorySource source, ulong address, ulong length, ulong elementSize)
+            : base(source, address)
+        {
+            m_specifiedLength = length;
+            m_specifiedElementSize = elementSize;
         }
 
         private List<T> Items
@@ -37,6 +45,15 @@ namespace Il2CppToolkit.Runtime.Types.corelib.Collections.Generic
             }
         }
 
+        public T[] Array
+        {
+            get
+            {
+                Load();
+                return m_items.ToArray();
+            }
+        }
+
         protected internal override void Load()
         {
             if (m_isLoaded)
@@ -45,13 +62,13 @@ namespace Il2CppToolkit.Runtime.Types.corelib.Collections.Generic
             }
             m_isLoaded = true;
 
-            ulong readLength = m_specifiedSize ?? MemorySource.ReadValue<ulong>(Address + 0x18);
+            ulong readLength = m_specifiedLength ?? MemorySource.ReadValue<ulong>(Address + 0x18);
             if (readLength == 0)
             {
                 return;
             }
 
-            ulong typeSize = Il2CsRuntimeContext.GetTypeSize(typeof(T));
+            ulong typeSize = m_specifiedElementSize ?? Il2CsRuntimeContext.GetTypeSize(typeof(T));
             m_cache = MemorySource.ParentContext.CacheMemory(Address + 0x20, typeSize * readLength);
             for (ulong index = 0; index < readLength; ++index)
             {
