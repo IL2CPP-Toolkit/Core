@@ -104,6 +104,11 @@ namespace Il2CppToolkit.Runtime
                 return GetTypeSize(type.GetEnumUnderlyingType());
             }
 
+            if (type.IsArray)
+            {
+                return 8;
+            }
+
             // pointer
             if (!type.IsValueType)
             {
