@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\Common\Common.csproj" />
+    <ProjectReference Include="..\Metadata\Metadata.csproj" />
+    <ProjectReference Include="..\Runtime\Runtime.csproj" />
+    <ProjectReference Include="..\ReverseCompiler\ReverseCompiler.csproj" />
+    <ProjectReference Include="..\ILPack\src\Lokad.ILPack.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+    <OutputType>Library</OutputType>
+    <AssemblyName>Il2CppToolkit.Target.NetCore</AssemblyName>
+    <RootNamespace>Il2CppToolkit.Target.NetCore</RootNamespace>
+  </PropertyGroup>
+
+</Project>

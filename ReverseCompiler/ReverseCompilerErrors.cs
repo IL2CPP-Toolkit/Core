@@ -7,6 +7,7 @@ namespace Il2CppToolkit.Model
     {
         [ErrorSeverity(ErrorSeverity.Fatal)] InternalError = 1,
         [ErrorSeverity(ErrorSeverity.Error)] ILGenerationError,
+        [ErrorSeverity(ErrorSeverity.Error)] MissingParameter,
 
         [ErrorSeverity(ErrorSeverity.Warning)] UnknownTypeReference = 500,
         [ErrorSeverity(ErrorSeverity.Warning)] IncompleteGenericType,

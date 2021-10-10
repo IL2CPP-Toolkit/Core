@@ -7,7 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Il2CppToolkit.Model;
 
-namespace Il2CppToolkit.ReverseCompiler
+namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 {
     public class GenerateAssemblyPhase : CompilePhase
     {
@@ -24,8 +24,8 @@ namespace Il2CppToolkit.ReverseCompiler
         {
             m_context = context;
             m_outputPath = m_context.Artifacts.Get(ArtifactSpecs.OutputPath);
-            m_generatedTypes = await m_context.Artifacts.GetAsync(ArtifactSpecs.GeneratedTypes);
-            m_module = await m_context.Artifacts.GetAsync(ArtifactSpecs.GeneratedModule);
+            m_generatedTypes = await m_context.Artifacts.GetAsync(NetCoreArtifactSpecs.GeneratedTypes);
+            m_module = await m_context.Artifacts.GetAsync(NetCoreArtifactSpecs.GeneratedModule);
 
             foreach ((TypeDescriptor descriptor, Type type) in m_generatedTypes)
             {

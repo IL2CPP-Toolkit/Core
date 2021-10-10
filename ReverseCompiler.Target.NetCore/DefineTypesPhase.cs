@@ -9,7 +9,7 @@ using Il2CppToolkit.Model;
 using Il2CppToolkit.Runtime;
 using Il2CppToolkit.Runtime.Types;
 
-namespace Il2CppToolkit.ReverseCompiler
+namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 {
     public class DefineTypesPhase : CompilePhase, IResolveTypeFromTypeDefinition
     {
@@ -30,7 +30,7 @@ namespace Il2CppToolkit.ReverseCompiler
             m_context = context;
             m_moduleName = m_context.Model.ModuleName;
             m_asmName = new AssemblyName(context.Artifacts.Get(ArtifactSpecs.AssemblyName));
-            m_typeDescriptors = await context.Artifacts.GetAsync(ArtifactSpecs.SortedTypeDescriptors);
+            m_typeDescriptors = await context.Artifacts.GetAsync(NetCoreArtifactSpecs.SortedTypeDescriptors);
             m_typeResolver = new(context, m_generatedTypes);
         }
 
@@ -50,8 +50,8 @@ namespace Il2CppToolkit.ReverseCompiler
 
         public override Task Finalize()
         {
-            m_context.Artifacts.Set(ArtifactSpecs.GeneratedTypes, m_generatedTypes);
-            m_context.Artifacts.Set(ArtifactSpecs.GeneratedModule, m_module);
+            m_context.Artifacts.Set(NetCoreArtifactSpecs.GeneratedTypes, m_generatedTypes);
+            m_context.Artifacts.Set(NetCoreArtifactSpecs.GeneratedModule, m_module);
             return base.Finalize();
         }
 

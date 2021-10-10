@@ -4,7 +4,7 @@ using System.Linq;
 using System.Reflection;
 using Il2CppToolkit.Model;
 
-namespace Il2CppToolkit.ReverseCompiler
+namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 {
     public interface IResolveTypeFromTypeDefinition
     {

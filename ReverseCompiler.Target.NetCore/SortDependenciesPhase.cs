@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using Il2CppToolkit.Common.Errors;
 using Il2CppToolkit.Model;
 
-namespace Il2CppToolkit.ReverseCompiler
+namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 {
     public class SortDependenciesPhase : CompilePhase
     {
@@ -30,7 +30,7 @@ namespace Il2CppToolkit.ReverseCompiler
 
         public override Task Finalize()
         {
-            m_context.Artifacts.Set(ArtifactSpecs.SortedTypeDescriptors, m_sortedDescriptors);
+            m_context.Artifacts.Set(NetCoreArtifactSpecs.SortedTypeDescriptors, m_sortedDescriptors);
             return Task.CompletedTask;
         }
 

@@ -5,6 +5,9 @@ using Il2CppToolkit.Common.Errors;
 using Il2CppToolkit.Model;
 using CommandLine;
 using System.Collections.Generic;
+using System.Reflection;
+using System.IO;
+using Il2CppToolkit.ReverseCompiler.Target;
 
 namespace Il2CppToolkit.ReverseCompiler.Cli
 {
@@ -32,6 +35,9 @@ namespace Il2CppToolkit.ReverseCompiler.Cli
 
             [Option('w', "warnings-as-errors", Required = false, HelpText = "Treat warnings as errors")]
             public bool WarningsAsErrors { get; set; }
+
+            [Option('t', "target", Required = false, HelpText = "List of compile targets")]
+            public IEnumerable<string> Targets { get; set; }
         }
 
         private static int Main(string[] args)
@@ -60,13 +66,23 @@ namespace Il2CppToolkit.ReverseCompiler.Cli
                 Loader loader = new();
                 loader.Init(opts.GameAssemblyPath, opts.MetadataPath);
                 TypeModel model = new(loader);
-                AssemblyGenerator asmGen = new(model);
-                asmGen.TypeSelectors.Add(td => opts.IncludeTypes == null || opts.IncludeTypes.Contains(td.Name));
-                asmGen.AssemblyName = opts.AssemblyName;
-                asmGen.OutputPath = opts.OutputPath;
+                Compiler compiler = new(model);
+                foreach (string target in opts.Targets)
+                {
+                    Assembly targetAsm = Assembly.LoadFrom(Path.Join(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), $"Il2CppToolkit.Target.{target}.dll"));
+                    Type targetType = targetAsm.GetTypes().Single(type => type.IsAssignableTo(typeof(ICompilerTarget)));
+                    compiler.AddTarget((ICompilerTarget)Activator.CreateInstance(targetType));
+                }
+                compiler.AddConfiguration(
+                    ArtifactSpecs.TypeSelectors.MakeValue(new List<Func<TypeDescriptor, bool>>{
+                        {td => opts.IncludeTypes == null || opts.IncludeTypes.Contains(td.Name)}
+                    }),
+                    ArtifactSpecs.AssemblyName.MakeValue(opts.AssemblyName),
+                    ArtifactSpecs.OutputPath.MakeValue(opts.OutputPath)
+                );
                 try
                 {
-                    asmGen.GenerateAssembly().Wait();
+                    compiler.Compile().Wait();
                 }
                 catch (Exception ex)
                 {

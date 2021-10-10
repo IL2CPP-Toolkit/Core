@@ -4,6 +4,7 @@
     <ProjectReference Include="..\Common\Common.csproj" />
     <ProjectReference Include="..\Metadata\Metadata.csproj" />
     <ProjectReference Include="..\ReverseCompiler\ReverseCompiler.csproj" />
+    <ProjectReference Include="..\ReverseCompiler.Target.NetCore\ReverseCompiler.Target.NetCore.csproj" />
     <ProjectReference Include="..\Runtime\Runtime.csproj" />
     <ProjectReference Include="..\ILPack\src\Lokad.ILPack.csproj" />
   </ItemGroup>

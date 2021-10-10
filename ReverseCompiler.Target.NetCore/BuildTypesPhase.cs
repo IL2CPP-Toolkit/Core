@@ -9,7 +9,7 @@ using Il2CppToolkit.Model;
 using Il2CppToolkit.Runtime;
 using Il2CppToolkit.Runtime.Types.Reflection;
 
-namespace Il2CppToolkit.ReverseCompiler
+namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 {
     public class BuildTypesPhase : CompilePhase
     {
@@ -22,7 +22,7 @@ namespace Il2CppToolkit.ReverseCompiler
         public override async Task Initialize(CompileContext context)
         {
             m_context = context;
-            m_generatedTypes = await m_context.Artifacts.GetAsync(ArtifactSpecs.GeneratedTypes);
+            m_generatedTypes = await m_context.Artifacts.GetAsync(NetCoreArtifactSpecs.GeneratedTypes);
             m_typeResolver = new(context, m_generatedTypes);
         }
 
@@ -63,9 +63,9 @@ namespace Il2CppToolkit.ReverseCompiler
                 return td.Base;
             }
             if (td.Attributes.HasFlag(TypeAttributes.Interface))
-			{
+            {
                 return null;
-			}
+            }
             if (td.IsStatic)
             {
                 return new GenericTypeReference(new DotNetTypeReference(typeof(StaticInstance<>)), new TypeDescriptorReference(td));

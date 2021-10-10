@@ -40,6 +40,23 @@ namespace Il2CppToolkit.ReverseCompiler
             }
         }
 
+        public void Set(IStateSpecification spec, object value)
+        {
+            if (m_artifacts.TryGetValue(spec, out ArtifactState state))
+            {
+                if (state.Value != ArtifactState.EmptyValue)
+                {
+                    throw new InvalidOperationException("Value already set");
+                }
+                state.Value = value;
+                state.CompletionSource.TrySetResult(value);
+            }
+            else
+            {
+                m_artifacts.Add(spec, new ArtifactState(value));
+            }
+        }
+
         public async Task<T> GetAsync<T>(ITypedSpecification<T> spec)
         {
             if (!m_artifacts.TryGetValue(spec, out ArtifactState state))
