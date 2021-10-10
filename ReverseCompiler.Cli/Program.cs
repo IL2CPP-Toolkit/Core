@@ -36,7 +36,7 @@ namespace Il2CppToolkit.ReverseCompiler.Cli
             [Option('w', "warnings-as-errors", Required = false, HelpText = "Treat warnings as errors")]
             public bool WarningsAsErrors { get; set; }
 
-            [Option('t', "target", Required = false, HelpText = "List of compile targets")]
+            [Option('t', "target", Required = false, Separator = ',', HelpText = "List of compile targets")]
             public IEnumerable<string> Targets { get; set; }
         }
 
