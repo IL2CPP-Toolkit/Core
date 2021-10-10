@@ -12,7 +12,7 @@ using static Il2CppToolkit.Runtime.Types.Types;
 
 namespace Il2CppToolkit.Runtime
 {
-    public class Il2CsRuntimeContext : IMemorySource
+    public class Il2CsRuntimeContext : IMemorySource, IDisposable
     {
         public class ObjectEventArgs : EventArgs
         {
@@ -37,6 +37,11 @@ namespace Il2CppToolkit.Runtime
         {
             TargetProcess = target;
             processHandle = NativeWrapper.OpenProcess(ProcessAccessFlags.Read, inheritHandle: true, TargetProcess.Id);
+        }
+
+        public void Dispose()
+        {
+            NativeWrapper.CloseHandle(processHandle);
         }
 
         public ulong GetMemberFieldOffset(FieldInfo field)
