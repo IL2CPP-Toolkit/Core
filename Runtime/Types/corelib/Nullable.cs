@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
-using System.Reflection;
-// ReSharper disable InconsistentNaming
 
 namespace Il2CppToolkit.Runtime.Types.corelib
 {
@@ -22,5 +19,16 @@ namespace Il2CppToolkit.Runtime.Types.corelib
 
             Value = source.ReadValue<T>(address);
         }
+
+#nullable enable
+        public T? ToNullable()
+        {
+            if (HasValue)
+            {
+                return Value;
+            }
+            return default(T?);
+        }
+#nullable restore
     }
 }
