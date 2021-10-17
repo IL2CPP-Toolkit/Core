@@ -56,7 +56,8 @@ namespace Il2CppToolkit.Runtime.Types.corelib.Collections.Generic
                 entries.Load();
                 foreach (Entry entry in entries)
                 {
-                    m_dict.Add(entry.Key, entry.Value);
+                    //TODO: Log something?
+                    m_dict.TryAdd(entry.Key, entry.Value);
                 }
             }
         }
