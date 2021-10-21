@@ -23,30 +23,7 @@ namespace Il2CppToolkit.Model
                 return;
             }
 
-            foreach ((uint metadataUsageIndex, uint methodSpecIndex) in m_loader.Metadata.metadataUsageDic[
-                Il2CppMetadataUsage.kIl2CppMetadataUsageMethodRef])
-            {
-                Il2CppMethodSpec methodSpec = m_loader.Il2Cpp.MethodSpecs[methodSpecIndex];
-                ulong address = m_loader.Il2Cpp.GetRVA(m_loader.Il2Cpp.MetadataUsages[metadataUsageIndex]);
-                methodSpecAddresses.Add(methodSpec, address);
-            }
-
-            foreach ((uint metadataUsageIndex, uint methodDefIndex) in m_loader.Metadata.metadataUsageDic[Il2CppMetadataUsage.kIl2CppMetadataUsageMethodDef])
-            {
-                Il2CppMethodDefinition methodDef = m_loader.Metadata.methodDefs[methodDefIndex];
-                ulong address = m_loader.Il2Cpp.GetRVA(m_loader.Il2Cpp.MetadataUsages[metadataUsageIndex]);
-                methodAddresses.Add(methodDef, address);
-            }
-
-            foreach ((uint metadataUsageIndex, uint typeIndex) in m_loader.Metadata.metadataUsageDic[Il2CppMetadataUsage.kIl2CppMetadataUsageTypeInfo])
-            {
-                Il2CppType il2CppType = m_loader.Il2Cpp.Types[typeIndex];
-                Il2CppTypeDefinition typeDef = GetTypeDefinitionFromIl2CppType(il2CppType, false);
-                if (typeDef == null) continue;
-
-                ulong address = m_loader.Il2Cpp.GetRVA(m_loader.Il2Cpp.MetadataUsages[metadataUsageIndex]);
-                m_typeDefToAddress.Add(typeDef, address);
-            }
+            ProcessTypeMetadata();
 
             // Declare all types before associating dependencies
             for (int imageIndex = 0; imageIndex < m_loader.Metadata.imageDefs.Length; ++imageIndex)
@@ -208,6 +185,87 @@ namespace Il2CppToolkit.Model
                     //}
                 }
             }
+        }
+
+        private void ProcessTypeMetadata()
+        {
+            Dictionary<Il2CppMetadataUsage, Action<uint, ulong>> usageHandlers = new()
+            {
+                { Il2CppMetadataUsage.kIl2CppMetadataUsageMethodRef, HandleMethodRefUsage },
+                { Il2CppMetadataUsage.kIl2CppMetadataUsageMethodDef, HandleMethodDefUsage },
+                { Il2CppMetadataUsage.kIl2CppMetadataUsageTypeInfo, HandleTypeInfoUsage }
+            };
+
+            if (m_loader.Il2Cpp.Version >= 27)
+            {
+                var sectionHelper = GetSectionHelper();
+                foreach (var sec in sectionHelper.data)
+                {
+                    m_loader.Il2Cpp.Position = sec.offset;
+                    while (m_loader.Il2Cpp.Position < sec.offsetEnd - m_loader.Il2Cpp.PointerSize)
+                    {
+                        var addr = m_loader.Il2Cpp.Position;
+                        var metadataValue = m_loader.Il2Cpp.ReadUIntPtr();
+                        var position = m_loader.Il2Cpp.Position;
+                        if (metadataValue < uint.MaxValue)
+                        {
+                            var encodedToken = (uint)metadataValue;
+                            var usage = m_loader.Metadata.GetEncodedIndexType(encodedToken);
+                            if (usage > 0 && usage <= 6)
+                            {
+                                var decodedIndex = m_loader.Metadata.GetDecodedMethodIndex(encodedToken);
+                                if (metadataValue == ((usage << 29) | (decodedIndex << 1)) + 1)
+                                {
+                                    if (!usageHandlers.TryGetValue((Il2CppMetadataUsage)usage, out var handler))
+                                        continue;
+                                    var va = m_loader.Il2Cpp.MapRTVA(addr);
+                                    if (va > 0)
+                                    {
+                                        handler(decodedIndex, va);
+                                    }
+                                    if (m_loader.Il2Cpp.Position != position)
+                                    {
+                                        m_loader.Il2Cpp.Position = position;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            else
+            {
+                foreach ((var usageType, var handler) in usageHandlers)
+                    foreach (var i in m_loader.Metadata.metadataUsageDic[usageType])
+                        handler(i.Value, m_loader.Il2Cpp.MetadataUsages[i.Key]);
+            }
+        }
+
+        public void HandleMethodRefUsage(uint methodSpecIndex, ulong address)
+        {
+            if (methodSpecIndex >= m_loader.Il2Cpp.MethodSpecs.Length) return;
+            Il2CppMethodSpec methodSpec = m_loader.Il2Cpp.MethodSpecs[methodSpecIndex];
+            address = m_loader.Il2Cpp.GetRVA(address);
+            methodSpecAddresses.Add(methodSpec, address);
+        }
+
+        public void HandleMethodDefUsage(uint methodDefIndex, ulong address)
+        {
+            if (methodDefIndex >= m_loader.Metadata.methodDefs.Length) return;
+            Il2CppMethodDefinition methodDef = m_loader.Metadata.methodDefs[methodDefIndex];
+            address = m_loader.Il2Cpp.GetRVA(address);
+            methodAddresses[methodDef] = address;
+        }
+
+        public void HandleTypeInfoUsage(uint typeIndex, ulong address)
+        {
+            if (typeIndex >= m_loader.Il2Cpp.Types.Length) return;
+            Il2CppType il2CppType = m_loader.Il2Cpp.Types[typeIndex];
+            Il2CppTypeDefinition typeDef = GetTypeDefinitionFromIl2CppType(il2CppType, false);
+            if (typeDef == null) return;
+
+            address = m_loader.Il2Cpp.GetRVA(address);
+            m_typeDefToAddress.Add(typeDef, address);
         }
 
         private ITypeReference MakeTypeReferenceFromCppTypeIndex(int typeIndex, TypeDescriptor descriptor)

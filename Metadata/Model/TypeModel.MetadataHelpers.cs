@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 
 namespace Il2CppToolkit.Model
@@ -235,6 +236,14 @@ namespace Il2CppToolkit.Model
                 genericParameterNames.Add(m_loader.Metadata.GetStringFromIndex(genericParameter.nameIndex));
             }
             return $"<{string.Join(", ", genericParameterNames)}>";
+        }
+
+        public SectionHelper GetSectionHelper()
+        {
+            return m_loader.Il2Cpp.GetSectionHelper(
+                m_loader.Metadata.methodDefs.Count(x => x.methodIndex >= 0),
+                m_loader.Metadata.typeDefs.Length,
+                m_loader.Metadata.imageDefs.Length);
         }
     }
 }
