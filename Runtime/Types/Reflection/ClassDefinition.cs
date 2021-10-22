@@ -16,7 +16,22 @@ namespace Il2CppToolkit.Runtime.Types.Reflection
                 {
                     return "(none)";
                 }
-                return $"{Namespace}.{Name}";
+                return FullName;
+            }
+        }
+
+        public string FullName
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(Namespace))
+                {
+                    return Name;
+                }
+                else
+                {
+                    return $"{Namespace}.{Name}";
+                }
             }
         }
 
@@ -38,6 +53,6 @@ namespace Il2CppToolkit.Runtime.Types.Reflection
 #pragma warning restore 649
         [field: Offset(184)] public UnknownClass StaticFields { get; }
 
-        [field: Offset(0x10c)] public uint Token { get; }
+        [field: Offset(0x118)] public uint Token { get; }
     }
 }

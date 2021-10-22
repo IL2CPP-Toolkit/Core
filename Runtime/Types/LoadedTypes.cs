@@ -9,31 +9,34 @@ using Il2CppToolkit.Runtime.Types.Reflection;
 
 namespace Il2CppToolkit.Runtime.Types
 {
-	public static class LoadedTypes
-	{
-		private static readonly Dictionary<ulong, Type> s_tokenToType = new();
+    public static class LoadedTypes
+    {
+        private static readonly Dictionary<string, Type> s_nameToType = new();
 
-		public static Type GetType(ClassDefinition classDef)
-		{
-			ulong token = Utilities.GetTypeTag(classDef.Image.TypeStart, classDef.Token);
-			return s_tokenToType.TryGetValue(token, out Type retVal) ? retVal : null;
-		}
+        public static Type GetType(ClassDefinition classDef)
+        {
+            // ulong token = Utilities.GetTypeTag(classDef.Image.TypeStart, classDef.Token);
+            // return s_tokenToType.TryGetValue(token, out Type retVal) ? retVal : null;
+            string className = classDef.FullName;
+            return s_nameToType.TryGetValue(classDef.FullName, out Type retVal) ? retVal : null;
+        }
 
-		static LoadedTypes()
-		{
-			foreach (Assembly asm in AppDomain.CurrentDomain.GetAssemblies())
-			{
-				if (asm.GetCustomAttribute<GeneratedAttribute>() == null) continue;
+        static LoadedTypes()
+        {
+            foreach (Assembly asm in AppDomain.CurrentDomain.GetAssemblies())
+            {
+                if (asm.GetCustomAttribute<GeneratedAttribute>() == null) continue;
 
-				foreach (Type type in asm.GetTypes())
-				{
-					TagAttribute attr = type.GetCustomAttribute<TagAttribute>();
-					if (attr == null) continue;
+                foreach (Type type in asm.GetTypes())
+                {
+                    TagAttribute attr = type.GetCustomAttribute<TagAttribute>();
+                    if (attr == null) continue;
 
-					ErrorHandler.Assert(!s_tokenToType.ContainsKey(attr.Tag), "Duplicate type by token");
-					s_tokenToType.Add(attr.Tag, type);
-				}
-			}
-		}
-	}
+                    s_nameToType.Add(type.FullName, type);
+                    // ErrorHandler.Assert(!s_tokenToType.ContainsKey(attr.Tag), "Duplicate type by token");
+                    // s_tokenToType.Add(attr.Tag, type);
+                }
+            }
+        }
+    }
 }
