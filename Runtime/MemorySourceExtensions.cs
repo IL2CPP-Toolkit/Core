@@ -45,6 +45,14 @@ namespace Il2CppToolkit.Runtime
             throw new ArgumentException($"Type '{typeof(T).FullName}' is not a valid primitive type");
         }
 
+        private static object GetDefaultValue(Type type)
+        {
+            if (type.IsAssignableTo(typeof(IEnumerable<>)))
+            { }
+
+            return null;
+        }
+
 
         public static T ReadValue<T>(this IMemorySource source, ulong address, byte indirection = 1)
         {
@@ -61,11 +69,9 @@ namespace Il2CppToolkit.Runtime
             {
                 address = ReadPointer(source, address);
                 if (address == 0)
-                {
-                    return default;
-                }
+                    break;
             }
-            if (address == 0)
+            if (address == 0 && !type.IsAssignableTo(typeof(INullConstructable)))
             {
                 return default;
             }
@@ -97,7 +103,7 @@ namespace Il2CppToolkit.Runtime
 
         public static object ReadStruct(this IMemorySource source, Type type, ulong address)
         {
-            if (address == 0)
+            if (address == 0 && !type.IsAssignableTo(typeof(INullConstructable)))
             {
                 return null;
             }

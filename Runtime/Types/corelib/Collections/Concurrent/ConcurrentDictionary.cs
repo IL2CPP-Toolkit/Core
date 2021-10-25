@@ -7,7 +7,7 @@ using Il2CppToolkit.Runtime.Types.corelib.Collections.Generic;
 namespace Il2CppToolkit.Runtime.Types.corelib.Collections.Concurrent
 {
     [TypeMapping(typeof(ConcurrentDictionary<,>))]
-    public class Native__ConcurrentDictionary<TKey, TValue> : StructBase, IReadOnlyDictionary<TKey, TValue>
+    public class Native__ConcurrentDictionary<TKey, TValue> : StructBase, IReadOnlyDictionary<TKey, TValue>, INullConstructable
     {
         public Native__ConcurrentDictionary(IMemorySource source, ulong address)
             : base(source, address)
@@ -51,6 +51,9 @@ namespace Il2CppToolkit.Runtime.Types.corelib.Collections.Concurrent
 
         protected internal override void Load()
         {
+            if (Address == 0)
+                return;
+
             base.Load();
             foreach (Node head in m_table.Buckets)
             {

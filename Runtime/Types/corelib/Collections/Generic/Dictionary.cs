@@ -5,7 +5,7 @@ using System.Collections.Generic;
 namespace Il2CppToolkit.Runtime.Types.corelib.Collections.Generic
 {
     [TypeMapping(typeof(Dictionary<,>))]
-    public class Native__Dictionary<TKey, TValue> : StructBase, IReadOnlyDictionary<TKey, TValue>
+    public class Native__Dictionary<TKey, TValue> : StructBase, IReadOnlyDictionary<TKey, TValue>, INullConstructable
     {
         public Native__Dictionary(IMemorySource source, ulong address)
             : base(source, address)
@@ -40,6 +40,9 @@ namespace Il2CppToolkit.Runtime.Types.corelib.Collections.Generic
 
         private void ReadFields(IMemorySource source, ulong address)
         {
+            if (Address == 0)
+                return;
+
             uint count = source.ReadValue<uint>(address + 0x20);
             if (Il2CsRuntimeContext.GetTypeSize(typeof(TValue)) <= 4 && Il2CsRuntimeContext.GetTypeSize(typeof(TKey)) <= 4)
             {

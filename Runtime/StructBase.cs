@@ -45,9 +45,8 @@ namespace Il2CppToolkit.Runtime
         protected internal virtual void Load()
         {
             if (m_isLoaded)
-            {
                 return;
-            }
+
             m_isLoaded = true;
             EnsureCache();
             MemorySource.ReadFields(GetType(), this, Address);
@@ -56,9 +55,8 @@ namespace Il2CppToolkit.Runtime
         protected virtual void EnsureCache()
         {
             if (m_cache != null || !Native__ObjectSize.HasValue || Address == 0)
-            {
                 return;
-            }
+
             uint? size = Native__ObjectSize;
             m_cache = MemorySource.ParentContext.CacheMemory(Address, size.Value);
         }

@@ -11,7 +11,7 @@ namespace Il2CppToolkit.Runtime.Types.corelib.Collections.Generic
 	 * 0x18 - size_t max_length
 	 * 0x20 - T items[]
 	 */
-    public class Native__Array<T> : StructBase, IReadOnlyList<T>
+    public class Native__Array<T> : StructBase, IReadOnlyList<T>, INullConstructable
     {
         private readonly ulong? m_specifiedLength;
         private readonly ulong? m_specifiedElementSize;
@@ -56,17 +56,17 @@ namespace Il2CppToolkit.Runtime.Types.corelib.Collections.Generic
 
         protected internal override void Load()
         {
-            if (m_isLoaded)
-            {
+            if (Address == 0)
                 return;
-            }
+
+            if (m_isLoaded)
+                return;
+
             m_isLoaded = true;
 
             ulong readLength = m_specifiedLength ?? MemorySource.ReadValue<ulong>(Address + 0x18);
             if (readLength == 0)
-            {
                 return;
-            }
 
             ulong typeSize = m_specifiedElementSize ?? Il2CsRuntimeContext.GetTypeSize(typeof(T));
             m_cache = MemorySource.ParentContext.CacheMemory(Address + 0x20, typeSize * readLength);

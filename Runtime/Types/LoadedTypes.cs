@@ -1,10 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
-using Il2CppToolkit.Common.Errors;
 using Il2CppToolkit.Runtime.Types.Reflection;
 
 namespace Il2CppToolkit.Runtime.Types
@@ -15,8 +11,6 @@ namespace Il2CppToolkit.Runtime.Types
 
         public static Type GetType(ClassDefinition classDef)
         {
-            // ulong token = Utilities.GetTypeTag(classDef.Image.TypeStart, classDef.Token);
-            // return s_tokenToType.TryGetValue(token, out Type retVal) ? retVal : null;
             string className = classDef.FullName;
             return s_nameToType.TryGetValue(classDef.FullName, out Type retVal) ? retVal : null;
         }
@@ -33,8 +27,6 @@ namespace Il2CppToolkit.Runtime.Types
                     if (attr == null) continue;
 
                     s_nameToType.Add(type.FullName, type);
-                    // ErrorHandler.Assert(!s_tokenToType.ContainsKey(attr.Tag), "Duplicate type by token");
-                    // s_tokenToType.Add(attr.Tag, type);
                 }
             }
         }

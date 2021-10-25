@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace Il2CppToolkit.Runtime.Types.corelib.Collections.Generic
 {
     [TypeMapping(typeof(List<>))]
-    public class Native__List<T> : StructBase, IReadOnlyList<T>
+    public class Native__List<T> : StructBase, IReadOnlyList<T>, INullConstructable
     {
         private IReadOnlyList<T> m_list;
 
@@ -14,6 +14,11 @@ namespace Il2CppToolkit.Runtime.Types.corelib.Collections.Generic
 
         private void ReadFields(IMemorySource source, ulong address)
         {
+            if (Address == 0)
+            {
+                m_list = new List<T>();
+                return;
+            }
             uint count = (uint)source.ReadValue<int>(address + 0x18);
             Native__Array<T> entries = new(source, source.ReadPointer(address + 0x10), count);
             entries.Load();
