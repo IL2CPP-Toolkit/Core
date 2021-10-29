@@ -30,5 +30,13 @@ namespace Il2CppToolkit.Runtime.Types.corelib
             return default(T?);
         }
 #nullable restore
+        public override string ToString()
+        {
+            if (HasValue)
+            {
+                return Value.ToString();
+            }
+            return null;
+        }
     }
 }
