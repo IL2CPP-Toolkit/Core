@@ -6,8 +6,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using Il2CppToolkit.Common.Errors;
-using Il2CppToolkit.Runtime.Types;
-using Il2CppToolkit.Runtime.Types.corelib;
 using static Il2CppToolkit.Runtime.Types.Types;
 
 namespace Il2CppToolkit.Runtime

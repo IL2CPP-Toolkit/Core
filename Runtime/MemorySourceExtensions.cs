@@ -8,12 +8,26 @@ using Il2CppToolkit.Runtime.Types.corelib.Collections.Generic;
 
 namespace Il2CppToolkit.Runtime
 {
+    public class MemoryAccessEventArgs : EventArgs
+    {
+        public ulong Address { get; }
+        public Type Type { get; }
+        public MemoryAccessEventArgs(Type type, ulong address) : base() => (Address, Type) = (address, type);
+    }
+    public class MemoryAccessErrorEventArgs : MemoryAccessEventArgs
+    {
+        public Exception Exception { get; }
+        public MemoryAccessErrorEventArgs(Type type, ulong address, Exception ex) : base(type, address) => Exception = ex;
+
+    }
     public static class MemorySourceExtensions
     {
+        public static event EventHandler<MemoryAccessEventArgs> ObjectReadFromMemory;
+        public static event EventHandler<MemoryAccessErrorEventArgs> ObjectReadError;
+
         private static readonly Dictionary<Type, Func<IMemorySource, ulong, object>> s_impl = new();
         static MemorySourceExtensions()
         {
-            // ReSharper disable BuiltInTypeReferenceStyle
             s_impl.Add(typeof(Char), (context, address) => BitConverter.ToChar(context.ReadMemory(address, sizeof(Char)).Span));
             s_impl.Add(typeof(Boolean), (context, address) => BitConverter.ToBoolean(context.ReadMemory(address, sizeof(Boolean)).Span));
             s_impl.Add(typeof(Double), (context, address) => BitConverter.ToDouble(context.ReadMemory(address, sizeof(Double)).Span));
@@ -24,33 +38,6 @@ namespace Il2CppToolkit.Runtime
             s_impl.Add(typeof(UInt16), (context, address) => BitConverter.ToUInt16(context.ReadMemory(address, sizeof(UInt16)).Span));
             s_impl.Add(typeof(UInt32), (context, address) => BitConverter.ToUInt32(context.ReadMemory(address, sizeof(UInt32)).Span));
             s_impl.Add(typeof(UInt64), (context, address) => BitConverter.ToUInt64(context.ReadMemory(address, sizeof(UInt64)).Span));
-            // ReSharper restore BuiltInTypeReferenceStyle
-        }
-
-        public static object ReadPrimitive(this IMemorySource context, Type type, ulong address)
-        {
-            if (s_impl.TryGetValue(type, out Func<IMemorySource, ulong, object> fn))
-            {
-                return fn(context, address);
-            }
-            throw new ArgumentException($"Type '{type.FullName}' is not a valid primitive type");
-        }
-
-        public static T ReadPrimitive<T>(this IMemorySource context, ulong address)
-        {
-            if (s_impl.TryGetValue(typeof(T), out Func<IMemorySource, ulong, object> fn))
-            {
-                return (T)fn(context, address);
-            }
-            throw new ArgumentException($"Type '{typeof(T).FullName}' is not a valid primitive type");
-        }
-
-        private static object GetDefaultValue(Type type)
-        {
-            if (type.IsAssignableTo(typeof(IEnumerable<>)))
-            { }
-
-            return null;
         }
 
 
@@ -61,33 +48,42 @@ namespace Il2CppToolkit.Runtime
 
         public static object ReadValue(this IMemorySource source, Type type, ulong address, byte indirection = 1)
         {
-            if (!type.IsValueType)
+            try
             {
-                ++indirection;
+                ObjectReadFromMemory?.Invoke(source, new(type, address));
+                if (!type.IsValueType)
+                {
+                    ++indirection;
+                }
+                for (; indirection > 1; --indirection)
+                {
+                    address = ReadPointer(source, address);
+                    if (address == 0)
+                        break;
+                }
+                if (address == 0 && !type.IsAssignableTo(typeof(INullConstructable)))
+                {
+                    return default;
+                }
+                if (type == typeof(string))
+                {
+                    return ReadString(source, address);
+                }
+                if (type.IsEnum)
+                {
+                    return ReadPrimitive(source, type.GetEnumUnderlyingType(), address);
+                }
+                if (type.IsPrimitive)
+                {
+                    return ReadPrimitive(source, type, address);
+                }
+                return ReadStruct(source, type, address);
             }
-            for (; indirection > 1; --indirection)
+            catch (Exception ex)
             {
-                address = ReadPointer(source, address);
-                if (address == 0)
-                    break;
+                ObjectReadError?.Invoke(source, new(type, address, ex));
+                throw ex;
             }
-            if (address == 0 && !type.IsAssignableTo(typeof(INullConstructable)))
-            {
-                return default;
-            }
-            if (type == typeof(string))
-            {
-                return ReadString(source, address);
-            }
-            if (type.IsEnum)
-            {
-                return ReadPrimitive(source, type.GetEnumUnderlyingType(), address);
-            }
-            if (type.IsPrimitive)
-            {
-                return ReadPrimitive(source, type, address);
-            }
-            return ReadStruct(source, type, address);
         }
 
         public static ulong ReadPointer(this IMemorySource source, ulong address)
@@ -95,13 +91,7 @@ namespace Il2CppToolkit.Runtime
             return ReadPrimitive<ulong>(source, address);
         }
 
-        private static object ReadString(IMemorySource source, ulong address)
-        {
-            Native__String? str = source.ReadValue<Native__String>(address);
-            return str?.Value;
-        }
-
-        public static object ReadStruct(this IMemorySource source, Type type, ulong address)
+        private static object ReadStruct(this IMemorySource source, Type type, ulong address)
         {
             if (address == 0 && !type.IsAssignableTo(typeof(INullConstructable)))
             {
@@ -173,7 +163,7 @@ namespace Il2CppToolkit.Runtime
             } while (type != null && type != typeof(StructBase) && type != typeof(object) && type != typeof(ValueType));
         }
 
-        public static void ReadField(this IMemorySource source, object target, ulong targetAddress, FieldInfo field)
+        private static void ReadField(this IMemorySource source, object target, ulong targetAddress, FieldInfo field)
         {
             if (field.GetCustomAttribute<IgnoreAttribute>(inherit: true) != null)
             {
@@ -190,5 +180,38 @@ namespace Il2CppToolkit.Runtime
             object result = ReadValue(source, field.FieldType, offset, indirection);
             field.SetValue(target, result);
         }
+
+        private static object ReadPrimitive(this IMemorySource context, Type type, ulong address)
+        {
+            if (s_impl.TryGetValue(type, out Func<IMemorySource, ulong, object> fn))
+            {
+                return fn(context, address);
+            }
+            throw new ArgumentException($"Type '{type.FullName}' is not a valid primitive type");
+        }
+
+        private static T ReadPrimitive<T>(this IMemorySource context, ulong address)
+        {
+            if (s_impl.TryGetValue(typeof(T), out Func<IMemorySource, ulong, object> fn))
+            {
+                return (T)fn(context, address);
+            }
+            throw new ArgumentException($"Type '{typeof(T).FullName}' is not a valid primitive type");
+        }
+
+        private static object GetDefaultValue(Type type)
+        {
+            if (type.IsAssignableTo(typeof(IEnumerable<>)))
+            { }
+
+            return null;
+        }
+
+        private static object ReadString(IMemorySource source, ulong address)
+        {
+            Native__String? str = source.ReadValue<Native__String>(address);
+            return str?.Value;
+        }
+
     }
 }
