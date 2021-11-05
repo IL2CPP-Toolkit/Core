@@ -82,7 +82,7 @@ namespace Il2CppToolkit.Runtime
             catch (Exception ex)
             {
                 ObjectReadError?.Invoke(source, new(type, address, ex));
-                throw ex;
+                throw;
             }
         }
 
