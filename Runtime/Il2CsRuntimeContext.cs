@@ -80,7 +80,7 @@ namespace Il2CppToolkit.Runtime
             byte[] buffer = new byte[size];
             if (!NativeWrapper.ReadProcessMemoryArray(processHandle, (IntPtr)address, buffer))
             {
-                RuntimeError.ReadProcessMemoryReadFailed.Raise("Failed to read memory location");
+                RuntimeError.ReadProcessMemoryReadFailed.Raise($"Failed to read memory location. GetLastError() = {NativeWrapper.LastError}");
             }
             return buffer;
         }
@@ -90,7 +90,7 @@ namespace Il2CppToolkit.Runtime
             byte[] buffer = new byte[size];
             if (!NativeWrapper.ReadProcessMemoryArray(processHandle, (IntPtr)address, buffer))
             {
-                RuntimeError.ReadProcessMemoryReadFailed.Raise("Failed to read memory location");
+                RuntimeError.ReadProcessMemoryReadFailed.Raise($"Failed to read memory location. GetLastError() = {NativeWrapper.LastError}");
             }
             return new CachedMemoryBlock(this, address, buffer);
         }
