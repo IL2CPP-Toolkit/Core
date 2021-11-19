@@ -4,7 +4,10 @@
     <ProjectReference Include="..\Common\Common.csproj" />
     <ProjectReference Include="..\Metadata\Metadata.csproj" />
     <ProjectReference Include="..\Runtime\Runtime.csproj" />
-    <ProjectReference Include="..\ILPack\src\Lokad.ILPack.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Lokad.ILPack" Version="0.1.7" />
   </ItemGroup>
 
   <PropertyGroup>
