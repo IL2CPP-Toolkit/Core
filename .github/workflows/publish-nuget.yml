@@ -41,7 +41,7 @@ jobs:
 
       # Build + Pack
       - name: Publish Service
-        run: dotnet pack $env:Solution_Name --output publish /p:Configuration=Release /p:Platform=x64 /p:DeployOnBuild=true
+        run: dotnet pack $env:Solution_Name --output publish /p:Configuration=Release /p:DeployOnBuild=true
 
       # NuGet Push
       - name: Push client package to nuget registry
