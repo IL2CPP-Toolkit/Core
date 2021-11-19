@@ -45,6 +45,6 @@ jobs:
 
       # NuGet Push
       - name: Push client package to nuget registry
-        run: dotnet nuget push publish/nuget/*.nupkg -k $env:PUBLISH_TOKEN -s https://api.nuget.org/v3/index.json --skip-duplicate
+        run: dotnet nuget push publish/*.nupkg -k $env:PUBLISH_TOKEN -s https://api.nuget.org/v3/index.json --skip-duplicate
         env:
           PUBLISH_TOKEN: ${{ secrets.PUBLISH_TOKEN }}
