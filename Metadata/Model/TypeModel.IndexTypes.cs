@@ -176,13 +176,14 @@ namespace Il2CppToolkit.Model
                             td.Methods.Add(md);
                         }
                     }
-                    // TODO: Get address
-                    //else
-                    //{
-                    //	MethodDescriptor md = new(methodName, 0);
-                    //	ulong address = methodAddresses[methodDef];
-                    //	td.Methods.Add(md, address);
-                    //}
+                    else
+                    {
+                        string imageName = m_loader.Metadata.GetStringFromIndex(td.ImageDef.nameIndex);
+                        ulong methodPointer = m_loader.Il2Cpp.GetMethodPointer(imageName, methodDef);
+                        ulong address = m_loader.Il2Cpp.GetRVA(methodPointer);
+                        MethodDescriptor md = new(methodName, address);
+                        td.Methods.Add(md);
+                    }
                 }
             }
         }
