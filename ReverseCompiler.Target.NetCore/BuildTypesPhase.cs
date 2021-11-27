@@ -214,9 +214,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
             {
                 tb = type.EnsureStaticType();
                 if (tb == null)
-                {
                     return;
-                }
             }
 
             Type fieldType = ResolveTypeReference(field.Type);
