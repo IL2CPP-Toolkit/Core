@@ -88,14 +88,11 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
                 tb.SetCustomAttribute(new CustomAttributeBuilder(
                     typeof(SizeAttribute).GetConstructor(new[] { typeof(uint) }), new object[] { descriptor.SizeInBytes }));
 
-                if (descriptor.IsStatic)
+                if (m_context.Model.TypeDefToAddress.TryGetValue(descriptor.TypeDef, out ulong address))
                 {
-                    if (m_context.Model.TypeDefToAddress.TryGetValue(descriptor.TypeDef, out ulong address))
-                    {
-                        tb.SetCustomAttribute(new CustomAttributeBuilder(
-                            typeof(AddressAttribute).GetConstructor(new[] { typeof(ulong), typeof(string) }),
-                            new object[] { address, m_moduleName }));
-                    }
+                    tb.SetCustomAttribute(new CustomAttributeBuilder(
+                        typeof(AddressAttribute).GetConstructor(new[] { typeof(ulong), typeof(string) }),
+                        new object[] { address, m_moduleName }));
                 }
 
                 // enum
