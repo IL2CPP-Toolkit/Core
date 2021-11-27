@@ -64,6 +64,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 
                 MethodBuilder mb = tb.DefineMethod("GetStaticFields", MethodAttributes.Public | MethodAttributes.NewSlot | MethodAttributes.Static, StaticType, new Type[] { typeof(Il2CsRuntimeContext) });
                 ILGenerator mbil = mb.GetILGenerator();
+                mbil.DeclareLocal(typeof(ulong));
                 mbil.Emit(OpCodes.Ldc_I8, (long)Descriptor.TypeInfo.Address);
                 mbil.Emit(OpCodes.Ldarg_0); // context
                 mbil.Emit(OpCodes.Ldstr, Descriptor.TypeInfo.ModuleName);
