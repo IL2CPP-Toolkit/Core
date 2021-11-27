@@ -17,6 +17,7 @@
     <OutputType>Library</OutputType>
     <AssemblyName>Il2CppToolkit.Target.NetCore</AssemblyName>
     <RootNamespace>Il2CppToolkit.Target.NetCore</RootNamespace>
+    <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
   </PropertyGroup>
 
 </Project>

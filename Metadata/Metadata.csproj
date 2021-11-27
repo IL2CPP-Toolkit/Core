@@ -9,6 +9,7 @@
     <OutputType>Library</OutputType>
     <AssemblyName>Il2CppToolkit.Metadata</AssemblyName>
     <RootNamespace>Il2CppToolkit.Metadata</RootNamespace>
+    <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
   </PropertyGroup>
 
 </Project>

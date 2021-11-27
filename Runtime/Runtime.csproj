@@ -5,6 +5,7 @@
     <OutputType>Library</OutputType>
     <AssemblyName>Il2CppToolkit.Runtime</AssemblyName>
     <RootNamespace>Il2CppToolkit.Runtime</RootNamespace>
+    <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
   </PropertyGroup>
 
   <ItemGroup>
