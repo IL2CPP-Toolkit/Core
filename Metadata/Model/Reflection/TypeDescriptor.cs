@@ -74,6 +74,13 @@ namespace Il2CppToolkit.Model
         public readonly List<PropertyDescriptor> Properties = new();
         public readonly List<MethodDescriptor> Methods = new();
 
+        public TypeInfoAddress TypeInfo;
+
         private string DebuggerDisplay => string.Join(" : ", Name, Base?.Name).TrimEnd(new char[] { ' ', ':' });
+    }
+    public class TypeInfoAddress
+    {
+        public ulong Address;
+        public string ModuleName;
     }
 }

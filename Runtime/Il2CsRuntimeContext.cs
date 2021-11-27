@@ -61,7 +61,7 @@ namespace Il2CppToolkit.Runtime
             return offsetAttr.OffsetBytes;
         }
 
-        internal ulong GetModuleAddress(string moduleName)
+        public ulong GetModuleAddress(string moduleName)
         {
             if (moduleAddresses.ContainsKey(moduleName))
                 return moduleAddresses[moduleName];

@@ -16,7 +16,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
         public override string Name => "Build Types";
 
         private CompileContext m_context;
-        private IReadOnlyDictionary<TypeDescriptor, Type> m_generatedTypes;
+        private IReadOnlyDictionary<TypeDescriptor, GeneratedType> m_generatedTypes;
         private BuildTypeResolver m_typeResolver;
 
         public override async Task Initialize(CompileContext context)
@@ -39,14 +39,14 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 
         private void ProcessTypes()
         {
-            foreach ((TypeDescriptor td, Type type) in m_generatedTypes)
+            foreach ((TypeDescriptor td, GeneratedType type) in m_generatedTypes)
             {
-                if (type is TypeBuilder tb)
+                if (type.Type is TypeBuilder tb)
                 {
                     if (td.TypeDef.IsEnum)
                         continue;
 
-                    ProcessType(td, tb);
+                    ProcessType(td, tb, type);
                 }
             }
         }
@@ -74,7 +74,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
             return new DotNetTypeReference(typeof(StructBase));
         }
 
-        private void ProcessType(TypeDescriptor td, TypeBuilder tb)
+        private void ProcessType(TypeDescriptor td, TypeBuilder tb, GeneratedType type)
         {
             ITypeReference baseTypeRef = GetBaseReferenceTypeFor(td);
             if (baseTypeRef != null)
@@ -95,7 +95,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 
             foreach (FieldDescriptor field in td.Fields)
             {
-                ProcessField(td, tb, field);
+                ProcessField(td, tb, field, type);
             }
 
             // TODO: Figure out how to map properties<>fields with reasonable accuracy
@@ -205,12 +205,15 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
             pb.SetGetMethod(mb);
         }
 
-        private void ProcessField(TypeDescriptor td, TypeBuilder tb, FieldDescriptor field)
+        private void ProcessField(TypeDescriptor td, TypeBuilder tb, FieldDescriptor field, GeneratedType type)
         {
             if (field.Attributes.HasFlag(FieldAttributes.Static) != td.IsStatic)
             {
-                // TODO
-                return;
+                tb = type.EnsureStaticType();
+                if (tb == null)
+                {
+                    return;
+                }
             }
 
             Type fieldType = ResolveTypeReference(field.Type);
@@ -229,7 +232,8 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
             }
 
             string fieldName = generateFieldsOnly ? field.Name : field.StorageName;
-            FieldAttributes fieldAttrs = field.Attributes & ~(FieldAttributes.InitOnly | FieldAttributes.Public | FieldAttributes.Private | FieldAttributes.PrivateScope | FieldAttributes.Static); // TODO: Allow static once we support both types on each class type
+            // Static fields are added to a subtype, handled at the top of this method
+            FieldAttributes fieldAttrs = field.Attributes & ~(FieldAttributes.InitOnly | FieldAttributes.Public | FieldAttributes.Private | FieldAttributes.PrivateScope | FieldAttributes.Static);
             fieldAttrs |= generateFieldsOnly ? FieldAttributes.Public : FieldAttributes.Private;
 
             FieldBuilder fb = tb.DefineField(fieldName, fieldType, fieldAttrs);

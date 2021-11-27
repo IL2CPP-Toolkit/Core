@@ -14,9 +14,9 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
     public class BuildTypeResolver
     {
         private readonly CompileContext m_context;
-        private readonly IReadOnlyDictionary<TypeDescriptor, Type> m_generatedTypeMap;
+        private readonly IReadOnlyDictionary<TypeDescriptor, GeneratedType> m_generatedTypeMap;
 
-        public BuildTypeResolver(CompileContext context, IReadOnlyDictionary<TypeDescriptor, Type> generatedTypeMap)
+        public BuildTypeResolver(CompileContext context, IReadOnlyDictionary<TypeDescriptor, GeneratedType> generatedTypeMap)
         {
             m_context = context;
             m_generatedTypeMap = generatedTypeMap;
@@ -24,9 +24,9 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 
         public Type TryEnsureType(TypeDescriptor descriptor, IResolveTypeFromTypeDefinition resolver)
         {
-            if (m_generatedTypeMap.TryGetValue(descriptor, out Type type))
+            if (m_generatedTypeMap.TryGetValue(descriptor, out GeneratedType type))
             {
-                return type;
+                return type.Type;
             }
             return resolver?.EnsureType(descriptor);
         }
@@ -41,7 +41,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
             switch (reference)
             {
                 case DotNetTypeReference dotnet: return dotnet.Type;
-                case TypeDescriptorReference typeRef: return m_generatedTypeMap[typeRef.Descriptor];
+                case TypeDescriptorReference typeRef: return m_generatedTypeMap[typeRef.Descriptor].Type;
                 case GenericTypeReference genericTypeRef:
                     {
                         Type[] typeArgs = genericTypeRef.TypeArguments.Select(arg => ResolveTypeReference(arg, resolver)).ToArray();
@@ -84,7 +84,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
                     {
                         // TODO: Is this even remotely correct? :S
                         Il2CppGenericParameter param = m_context.Model.GetGenericParameterFromIl2CppType(il2CppType);
-                        Type type = m_generatedTypeMap[typeContext];
+                        Type type = m_generatedTypeMap[typeContext].Type;
                         return (type as TypeInfo)?.GenericTypeParameters[param.num];
                     }
                 case Il2CppTypeEnum.IL2CPP_TYPE_CLASS:

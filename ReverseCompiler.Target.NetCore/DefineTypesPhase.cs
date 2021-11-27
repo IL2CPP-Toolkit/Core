@@ -22,7 +22,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
         private AssemblyName m_asmName;
         private AssemblyBuilder m_asm;
         private ModuleBuilder m_module;
-        private readonly Dictionary<TypeDescriptor, Type> m_generatedTypes = new();
+        private readonly Dictionary<TypeDescriptor, GeneratedType> m_generatedTypes = new();
         private BuildTypeResolver m_typeResolver;
 
         public override async Task Initialize(CompileContext context)
@@ -62,9 +62,9 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
             {
                 return null;
             }
-            if (m_generatedTypes.TryGetValue(descriptor, out Type value))
+            if (m_generatedTypes.TryGetValue(descriptor, out GeneratedType value))
             {
-                return value;
+                return value.Type;
             }
             return BuildType(descriptor);
         }
@@ -88,11 +88,11 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
                 tb.SetCustomAttribute(new CustomAttributeBuilder(
                     typeof(SizeAttribute).GetConstructor(new[] { typeof(uint) }), new object[] { descriptor.SizeInBytes }));
 
-                if (m_context.Model.TypeDefToAddress.TryGetValue(descriptor.TypeDef, out ulong address))
+                if (descriptor.TypeInfo != null)
                 {
                     tb.SetCustomAttribute(new CustomAttributeBuilder(
                         typeof(AddressAttribute).GetConstructor(new[] { typeof(ulong), typeof(string) }),
-                        new object[] { address, m_moduleName }));
+                        new object[] { descriptor.TypeInfo.Address, descriptor.TypeInfo.ModuleName }));
                 }
 
                 // enum
@@ -153,7 +153,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
             }
         }
 
-        private static void CreateConstructor(TypeBuilder tb, Type[] ctorArgs, ConstructorInfo ctorInfo)
+        internal static void CreateConstructor(TypeBuilder tb, Type[] ctorArgs, ConstructorInfo ctorInfo)
         {
             ConstructorBuilder ctor = tb.DefineConstructor(MethodAttributes.Public,
                 CallingConventions.Standard | CallingConventions.HasThis, ctorArgs);
@@ -208,7 +208,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 
         private Type RegisterType(TypeDescriptor descriptor, Type type)
         {
-            m_generatedTypes.Add(descriptor, type);
+            m_generatedTypes.Add(descriptor, new(type, descriptor));
             return type;
         }
 
