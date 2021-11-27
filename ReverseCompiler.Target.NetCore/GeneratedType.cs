@@ -67,7 +67,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
                 mbil.Emit(OpCodes.Ldc_I8, (long)Descriptor.TypeInfo.Address);
                 mbil.Emit(OpCodes.Ldarg_0); // context
                 mbil.Emit(OpCodes.Ldstr, Descriptor.TypeInfo.ModuleName);
-                mbil.EmitCall(OpCodes.Call, Il2CppRuntimeContext_Types.GetModuleAddress, null);
+                mbil.EmitCall(OpCodes.Callvirt, Il2CppRuntimeContext_Types.GetModuleAddress, null);
                 mbil.Emit(OpCodes.Add);
                 mbil.Emit(OpCodes.Stloc_0); // address
 
