@@ -74,7 +74,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 
                 mbil.Emit(OpCodes.Ldarg_0); // context
                 mbil.Emit(OpCodes.Ldloc_0); // address
-                mbil.Emit(OpCodes.Ldc_I4_2);
+                mbil.Emit(OpCodes.Ldc_I4_1);
                 mbil.EmitCall(OpCodes.Call, MemorySourceExtensions_Types.ReadValue.MakeGenericMethod(typeof(ClassDefinition)), null);
                 mbil.EmitCall(OpCodes.Callvirt, ClassDefinition_Types.get_StaticFields, null);
                 mbil.EmitCall(OpCodes.Callvirt, StructBase_Types.As.MakeGenericMethod(StaticType), null);
