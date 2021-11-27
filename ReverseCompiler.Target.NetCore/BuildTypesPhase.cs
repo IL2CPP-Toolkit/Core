@@ -185,12 +185,15 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
             }
         }
 
-        private void ProcessProperty(TypeBuilder tb, PropertyDescriptor property)
+        private void ProcessProperty(TypeBuilder tb, PropertyDescriptor property, GeneratedType type)
         {
-            if (property.GetMethodAttributes.HasFlag(MethodAttributes.Static))
+            if (property.GetMethodAttributes.HasFlag(MethodAttributes.Static) && !type.Descriptor.IsStatic)
             {
-                // TODO
-                return;
+                tb = type.EnsureStaticType();
+                if (tb == null)
+                {
+                    return;
+                }
             }
 
             Type fieldType = ResolveTypeReference(property.Type);
@@ -207,7 +210,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 
         private void ProcessField(TypeDescriptor td, TypeBuilder tb, FieldDescriptor field, GeneratedType type)
         {
-            if (field.Attributes.HasFlag(FieldAttributes.Static) != td.IsStatic)
+            if (field.Attributes.HasFlag(FieldAttributes.Static) && !td.IsStatic)
             {
                 tb = type.EnsureStaticType();
                 if (tb == null)
@@ -223,7 +226,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
                 return;
             }
 
-            bool generateFieldsOnly = tb.IsValueType;
+            bool generateFieldsOnly = tb.IsValueType || field.Attributes.HasFlag(FieldAttributes.Literal);
             byte indirection = 1;
             while (fieldType.IsPointer)
             {
@@ -244,15 +247,15 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
                 fb.SetCustomAttribute(new CustomAttributeBuilder(typeof(IndirectionAttribute).GetConstructor(new[] { typeof(byte) }), new object[] { indirection }));
             }
 
+            if (field.DefaultValue != null)
+            {
+                fb.SetConstant(field.DefaultValue);
+            }
+
             // structs only get fields and attributes, nothing more.
             if (generateFieldsOnly)
             {
                 return;
-            }
-
-            if (field.DefaultValue != null)
-            {
-                fb.SetConstant(field.DefaultValue);
             }
 
             MethodBuilder mb = tb.DefineMethod($"get_{field.Name}", MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.RTSpecialName | MethodAttributes.SpecialName, fieldType, Type.EmptyTypes);
