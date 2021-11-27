@@ -156,7 +156,14 @@ namespace Il2CppToolkit.Runtime
                     type.GetFields(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
                 foreach (FieldInfo field in fields)
                 {
-                    ReadField(source, target, targetAddress, field);
+                    try
+                    {
+                        if (field.Attributes.HasFlag(FieldAttributes.Literal) || field.Attributes.HasFlag(FieldAttributes.InitOnly))
+                            continue;
+                        ReadField(source, target, targetAddress, field);
+                    }
+                    catch (Exception)
+                    { }
                 }
 
                 type = type.BaseType;
