@@ -6,6 +6,7 @@ using System.Reflection.Emit;
 using System.Threading;
 using System.Threading.Tasks;
 using Il2CppToolkit.Model;
+using Vestris.ResourceLib;
 
 namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 {
@@ -60,6 +61,13 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
                     outputFile = Path.Join(m_outputPath, $"{m_module.Assembly.GetName().Name}.dll");
                 }
                 generator.GenerateAssembly(m_module.Assembly, outputFile);
+
+                // set file version
+                VersionResource vi = new VersionResource();
+                {
+                    vi.FileVersion = m_module.Assembly.GetName().Version.ToString();
+                    vi.SaveTo(outputFile);
+                }
             }
             finally
             {

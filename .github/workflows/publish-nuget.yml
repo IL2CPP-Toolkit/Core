@@ -35,16 +35,12 @@ jobs:
       - name: Restore the application
         run: msbuild $env:Solution_Name /t:Restore /p:Configuration=Release
 
-      # Versions
-      - uses: dotnet/nbgv@master
-        id: build_version
-
       # Build + Pack
-      - name: Publish Service
+      - name: Build
         run: dotnet pack $env:Solution_Name --output publish /p:Configuration=Release /p:DeployOnBuild=true
 
       # NuGet Push
-      - name: Push client package to nuget registry
+      - name: Push package to nuget.org
         run: dotnet nuget push publish\*.nupkg -k $env:PUBLISH_TOKEN -s https://api.nuget.org/v3/index.json --skip-duplicate
         env:
           PUBLISH_TOKEN: ${{ secrets.PUBLISH_TOKEN }}

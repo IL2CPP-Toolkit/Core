@@ -21,6 +21,9 @@ namespace Il2CppToolkit.ReverseCompiler.Cli
             [Option('n', "name", Required = true, HelpText = "Output assembly name")]
             public string AssemblyName { get; set; }
 
+            [Option('a', "assembly-version", Required = false, HelpText = "Output assembly version")]
+            public string AssemblyVersion { get; set; } = "1.0";
+
             [Option('g', "game-assembly", Required = true, HelpText = "Path to GameAssembly.dll")]
             public string GameAssemblyPath { get; set; }
 
@@ -78,6 +81,7 @@ namespace Il2CppToolkit.ReverseCompiler.Cli
                         {td => opts.IncludeTypes == null || opts.IncludeTypes.Contains(td.Name)}
                     }),
                     ArtifactSpecs.AssemblyName.MakeValue(opts.AssemblyName),
+                    ArtifactSpecs.AssemblyVersion.MakeValue(Version.Parse(opts.AssemblyVersion)),
                     ArtifactSpecs.OutputPath.MakeValue(opts.OutputPath)
                 );
                 try

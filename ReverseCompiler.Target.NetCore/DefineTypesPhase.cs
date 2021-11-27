@@ -30,6 +30,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
             m_context = context;
             m_moduleName = m_context.Model.ModuleName;
             m_asmName = new AssemblyName(context.Artifacts.Get(ArtifactSpecs.AssemblyName));
+            m_asmName.Version = context.Artifacts.Get(ArtifactSpecs.AssemblyVersion);
             m_typeDescriptors = await context.Artifacts.GetAsync(NetCoreArtifactSpecs.SortedTypeDescriptors);
             m_typeResolver = new(context, m_generatedTypes);
         }

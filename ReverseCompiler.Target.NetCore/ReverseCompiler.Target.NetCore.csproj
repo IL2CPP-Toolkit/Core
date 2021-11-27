@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <PackageReference Include="Lokad.ILPack" Version="0.1.7" />
+    <PackageReference Include="Vestris.ResourceLib" Version="2.1.0" />
   </ItemGroup>
 
   <PropertyGroup>
