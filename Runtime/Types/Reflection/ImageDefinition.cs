@@ -4,6 +4,7 @@ using Il2CppToolkit.Runtime.Types.corelib;
 namespace Il2CppToolkit.Runtime.Types.Reflection
 {
     // https://github.com/Orkanelf/MRRemoteGuiding/blob/fdb2d48b9e14e25505a00fa3dfa611be36f4bae5/AR-Application-Scherf_neu/Builds/Il2CppOutputProject/IL2CPP/libil2cpp/il2cpp-class-internals.h
+    [Size(0x28)]
     public class ImageDefinition
     {
         [Offset(0x0)]

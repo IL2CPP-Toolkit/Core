@@ -7,20 +7,21 @@ using System.Threading.Tasks;
 
 namespace Il2CppToolkit.Runtime.Types.Reflection
 {
-	public class MethodDefinition
-	{
-		private readonly ulong m_address;
-		private readonly string m_moduleName;
-		public MethodDefinition(ulong address, string moduleName)
-		{
-			m_address = address;
-			m_moduleName = moduleName;
-		}
+    [Size(0x08)]
+    public class MethodDefinition
+    {
+        private readonly ulong m_address;
+        private readonly string m_moduleName;
+        public MethodDefinition(ulong address, string moduleName)
+        {
+            m_address = address;
+            m_moduleName = moduleName;
+        }
 
-		public NativeMethodInfo GetMethodInfo(Il2CsRuntimeContext context)
-		{
-			ulong address = m_address + context.GetModuleAddress(m_moduleName);
-			return context.ReadValue<NativeMethodInfo>(address, 1);
-		}
-	}
+        public NativeMethodInfo GetMethodInfo(Il2CsRuntimeContext context)
+        {
+            ulong address = m_address + context.GetModuleAddress(m_moduleName);
+            return context.ReadValue<NativeMethodInfo>(address, 1);
+        }
+    }
 }
