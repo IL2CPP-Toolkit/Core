@@ -124,11 +124,6 @@ namespace Il2CppToolkit.Runtime
             // pointer
             if (!type.IsValueType)
             {
-                if (!type.IsAssignableTo(typeof(StructBase)))
-                {
-                    // TODO: Catch if there are other cases we didn't anticipate
-                    throw new NotSupportedException("Unexpected type === unknown size");
-                }
                 return 8;
             }
 
