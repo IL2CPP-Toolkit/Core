@@ -239,9 +239,9 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 
             FieldBuilder fb = tb.DefineField(fieldName, fieldType, fieldAttrs);
 
-            if (td.GenericParent != null)
+            if (td.GenericParameterNames != null && td.GenericParameterNames.Length > 0)
             {
-                fb.SetCustomAttribute(new CustomAttributeBuilder(typeof(DynamicOffsetAttribute).GetConstructor(Array.Empty<Type>()), null));
+                fb.SetCustomAttribute(new CustomAttributeBuilder(typeof(DynamicOffsetAttribute).GetConstructor(Array.Empty<Type>()), Array.Empty<object>()));
             }
             else
             {
