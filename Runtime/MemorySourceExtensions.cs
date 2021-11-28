@@ -154,13 +154,19 @@ namespace Il2CppToolkit.Runtime
             {
                 FieldInfo[] fields =
                     type.GetFields(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+                ulong dynamicOffset = 0;
+                if (!type.IsValueType)
+                {
+                    dynamicOffset += 0x10;
+                }
                 foreach (FieldInfo field in fields)
                 {
                     try
                     {
                         if (field.Attributes.HasFlag(FieldAttributes.Literal))
                             continue;
-                        ReadField(source, target, targetAddress, field);
+                        ReadField(source, target, targetAddress, field, dynamicOffset);
+                        dynamicOffset += Il2CsRuntimeContext.GetTypeSize(type);
                     }
                     catch (Exception)
                     { }
@@ -170,13 +176,13 @@ namespace Il2CppToolkit.Runtime
             } while (type != null && type != typeof(StructBase) && type != typeof(object) && type != typeof(ValueType));
         }
 
-        private static void ReadField(this IMemorySource source, object target, ulong targetAddress, FieldInfo field)
+        private static void ReadField(this IMemorySource source, object target, ulong targetAddress, FieldInfo field, ulong dynamicOffset)
         {
             if (field.GetCustomAttribute<IgnoreAttribute>(inherit: true) != null)
             {
                 return;
             }
-            ulong offset = targetAddress + source.ParentContext.GetMemberFieldOffset(field);
+            ulong offset = targetAddress + (source.ParentContext.GetMemberFieldOffset(field) ?? dynamicOffset);
             byte indirection = 1;
             IndirectionAttribute indirectionAttr = field.GetCustomAttribute<IndirectionAttribute>(inherit: true);
             if (indirectionAttr != null)

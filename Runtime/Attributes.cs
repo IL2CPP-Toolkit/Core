@@ -57,6 +57,12 @@ namespace Il2CppToolkit.Runtime
     }
 
     [AttributeUsage(AttributeTargets.Field)]
+    public class DynamicOffsetAttribute : Attribute
+    {
+        public DynamicOffsetAttribute() { }
+    }
+
+    [AttributeUsage(AttributeTargets.Field)]
     public class IndirectionAttribute : Attribute
     {
         public byte Indirection { get; }

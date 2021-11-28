@@ -239,7 +239,14 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 
             FieldBuilder fb = tb.DefineField(fieldName, fieldType, fieldAttrs);
 
-            fb.SetCustomAttribute(new CustomAttributeBuilder(typeof(OffsetAttribute).GetConstructor(new[] { typeof(ulong) }), new object[] { field.Offset }));
+            if (td.GenericParent != null)
+            {
+                fb.SetCustomAttribute(new CustomAttributeBuilder(typeof(DynamicOffsetAttribute).GetConstructor(Array.Empty<Type>()), null));
+            }
+            else
+            {
+                fb.SetCustomAttribute(new CustomAttributeBuilder(typeof(OffsetAttribute).GetConstructor(new[] { typeof(ulong) }), new object[] { field.Offset }));
+            }
             if (indirection > 1)
             {
                 fb.SetCustomAttribute(new CustomAttributeBuilder(typeof(IndirectionAttribute).GetConstructor(new[] { typeof(byte) }), new object[] { indirection }));
