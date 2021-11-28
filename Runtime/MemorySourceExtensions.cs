@@ -163,10 +163,10 @@ namespace Il2CppToolkit.Runtime
                 {
                     try
                     {
+                        dynamicOffset += Il2CsRuntimeContext.GetTypeSize(type);
                         if (field.Attributes.HasFlag(FieldAttributes.Literal))
                             continue;
                         ReadField(source, target, targetAddress, field, dynamicOffset);
-                        dynamicOffset += Il2CsRuntimeContext.GetTypeSize(type);
                     }
                     catch (Exception)
                     { }
