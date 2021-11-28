@@ -59,7 +59,8 @@ namespace Il2CppToolkit.Runtime
     [AttributeUsage(AttributeTargets.Field)]
     public class DynamicOffsetAttribute : Attribute
     {
-        public DynamicOffsetAttribute() { }
+        public string FieldName { get; }
+        public DynamicOffsetAttribute(string fieldName) => FieldName = fieldName;
     }
 
     [AttributeUsage(AttributeTargets.Field)]

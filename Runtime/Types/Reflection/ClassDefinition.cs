@@ -1,13 +1,20 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using Il2CppToolkit.Runtime.Types.corelib;
+using Il2CppToolkit.Runtime.Types.corelib.Collections.Generic;
 
+#pragma warning disable 649
 namespace Il2CppToolkit.Runtime.Types.Reflection
 {
     // [Size(4376)]
     [Size(0x120)]
     [DebuggerDisplay("{DebuggerDisplay,nq}")]
-    public class ClassDefinition
+    public class ClassDefinition : StructBase
     {
+        public ClassDefinition(IMemorySource source, ulong address) : base(source, address)
+        {
+        }
+
         private string DebuggerDisplay
         {
             get
@@ -35,24 +42,101 @@ namespace Il2CppToolkit.Runtime.Types.Reflection
             }
         }
 
-        [field: Offset(0)] public ImageDefinition Image { get; }
+        [Offset(0)]
+        private ImageDefinition _image;
+        public ImageDefinition Image
+        {
+            get
+            {
+                Load();
+                return _image;
+            }
+        }
 
-        [Offset(16)]
-#pragma warning disable 649
+        [Offset(0x10)]
         private Native__LPSTR m_name;
-#pragma warning restore 649
-        public string Name { get { return m_name.Value; } }
+        public string Name
+        {
+            get
+            {
+                Load();
+                return m_name.Value;
+            }
+        }
 
 
-        [Offset(24)]
-#pragma warning disable 649
+        [Offset(0x18)]
         private Native__LPSTR m_namespace;
-#pragma warning restore 649
-        public string Namespace { get { return m_namespace.Value; } }
+        public string Namespace
+        {
+            get
+            {
+                Load();
+                return m_namespace.Value;
+            }
+        }
 
-#pragma warning restore 649
-        [field: Offset(184)] public UnknownClass StaticFields { get; }
+        [Offset(0x58)]
+        private ClassDefinition m_parent;
+        public ClassDefinition Parent
+        {
+            get
+            {
+                Load();
+                return m_parent;
+            }
+        }
 
-        [field: Offset(0x118)] public uint Token { get; }
+        [Ignore]
+        private FieldDefinition[] _fields;
+        public FieldDefinition[] GetFields()
+        {
+            if (_fields == null)
+            {
+                ulong firstElementPtr = this.MemorySource.ReadPointer(this.Address + 0x80);
+                if (firstElementPtr == 0)
+                {
+                    return _fields = Array.Empty<FieldDefinition>();
+                }
+
+                Load();
+                _fields = new Native__RawArray<FieldDefinition>(this.MemorySource, firstElementPtr, FieldCount).Array;
+            }
+            return _fields;
+        }
+
+        [Offset(0xB8)]
+        private UnknownClass _staticFields;
+        public UnknownClass StaticFields
+        {
+            get
+            {
+                Load();
+                return _staticFields;
+            }
+        }
+
+        [Offset(0x118)]
+        private uint _token;
+        public uint Token
+        {
+            get
+            {
+                Load();
+                return _token;
+            }
+        }
+
+        [Offset(0x11c)]
+        private UInt16 _fieldCount;
+        public UInt16 FieldCount
+        {
+            get
+            {
+                Load();
+                return _fieldCount;
+            }
+        }
     }
 }
+#pragma warning restore 649

@@ -7,6 +7,7 @@ using System.Linq;
 using System.Reflection;
 using Il2CppToolkit.Common.Errors;
 using static Il2CppToolkit.Runtime.Types.Types;
+using Il2CppToolkit.Runtime.Types.Reflection;
 
 namespace Il2CppToolkit.Runtime
 {
@@ -42,7 +43,7 @@ namespace Il2CppToolkit.Runtime
             NativeWrapper.CloseHandle(processHandle);
         }
 
-        public ulong? GetMemberFieldOffset(FieldInfo field)
+        public ulong GetMemberFieldOffset(FieldInfo field, ulong objectAddress)
         {
             AddressAttribute addressAttr = field.GetCustomAttribute<AddressAttribute>(inherit: true);
             if (addressAttr != null)
@@ -64,10 +65,19 @@ namespace Il2CppToolkit.Runtime
             DynamicOffsetAttribute dynamicOffsetAttr = field.GetCustomAttribute<DynamicOffsetAttribute>(inherit: true);
             if (dynamicOffsetAttr != null)
             {
-                return null;
+                ClassDefinition classDef = this.ReadValue<ClassDefinition>(objectAddress);
+                while (classDef != null)
+                {
+                    FieldDefinition fieldDef = classDef.GetFields().FirstOrDefault(fld => fld.Name == dynamicOffsetAttr.FieldName);
+                    if (fieldDef.Name != null)
+                    {
+                        return (ulong)fieldDef.Offset;
+                    }
+                    classDef = classDef.Parent;
+                }
             }
             RuntimeError.OffsetRequired.Raise($"Field {field.Name} requires offset information");
-            return null;
+            return 0;
         }
 
         public ulong GetModuleAddress(string moduleName)
