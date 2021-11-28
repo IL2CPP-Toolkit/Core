@@ -158,7 +158,7 @@ namespace Il2CppToolkit.Runtime
                 {
                     try
                     {
-                        if (field.Attributes.HasFlag(FieldAttributes.Literal) || field.Attributes.HasFlag(FieldAttributes.InitOnly))
+                        if (field.Attributes.HasFlag(FieldAttributes.Literal))
                             continue;
                         ReadField(source, target, targetAddress, field);
                     }
