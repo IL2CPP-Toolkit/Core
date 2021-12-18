@@ -38,6 +38,8 @@ namespace Il2CppToolkit.Runtime
             s_impl.Add(typeof(UInt16), (context, address) => BitConverter.ToUInt16(context.ReadMemory(address, sizeof(UInt16)).Span));
             s_impl.Add(typeof(UInt32), (context, address) => BitConverter.ToUInt32(context.ReadMemory(address, sizeof(UInt32)).Span));
             s_impl.Add(typeof(UInt64), (context, address) => BitConverter.ToUInt64(context.ReadMemory(address, sizeof(UInt64)).Span));
+            s_impl.Add(typeof(IntPtr), (context, address) => (IntPtr)BitConverter.ToInt64(context.ReadMemory(address, sizeof(Int64)).Span));
+            s_impl.Add(typeof(UIntPtr), (context, address) => (UIntPtr)BitConverter.ToInt64(context.ReadMemory(address, sizeof(UInt64)).Span));
         }
 
 
