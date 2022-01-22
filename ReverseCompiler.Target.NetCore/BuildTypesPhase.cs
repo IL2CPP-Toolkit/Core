@@ -238,6 +238,10 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
             fieldAttrs |= generateFieldsOnly ? FieldAttributes.Public : FieldAttributes.Private;
 
             FieldBuilder fb = tb.DefineField(fieldName, fieldType, fieldAttrs);
+            if (td.Attributes.HasFlag(TypeAttributes.ExplicitLayout))
+            {
+                fb.SetOffset((int)field.Offset);
+            }
 
             if (td.GenericParameterNames != null && td.GenericParameterNames.Length > 0)
             {

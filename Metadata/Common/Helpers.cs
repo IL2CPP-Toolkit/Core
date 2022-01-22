@@ -83,8 +83,8 @@ namespace Il2CppToolkit.Common
 				attrs |= TypeAttributes.Sealed;
 			if ((typeDef.flags & TYPE_ATTRIBUTE_INTERFACE) != 0)
 				attrs |= TypeAttributes.Interface | TypeAttributes.Abstract;
-			if (((TypeAttributes)typeDef.flags).HasFlag(TypeAttributes.ExplicitLayout))
-				attrs |= TypeAttributes.ExplicitLayout;
+			//if (((TypeAttributes)typeDef.flags).HasFlag(TypeAttributes.ExplicitLayout))
+			//	attrs |= TypeAttributes.ExplicitLayout;
 			if (((TypeAttributes)typeDef.flags).HasFlag(TypeAttributes.Serializable))
 				attrs |= TypeAttributes.Serializable;
 			if (((TypeAttributes)typeDef.flags).HasFlag(TypeAttributes.AnsiClass))
