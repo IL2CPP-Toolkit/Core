@@ -31,14 +31,26 @@ namespace Il2CppToolkit.Runtime.Types.Reflection
         {
             get
             {
-                if (string.IsNullOrEmpty(Namespace))
+                if (Parent == null)
                 {
-                    return Name;
+                    return GetLocalTypeName(Namespace, Name);
                 }
                 else
                 {
-                    return $"{Namespace}.{Name}";
+                    return $"{Parent.FullName}+{Name}";
                 }
+            }
+        }
+
+        private static string GetLocalTypeName(string ns, string name)
+		{
+            if (string.IsNullOrEmpty(ns))
+            {
+                return name;
+            }
+            else
+            {
+                return $"{ns}.{name}";
             }
         }
 
@@ -76,7 +88,7 @@ namespace Il2CppToolkit.Runtime.Types.Reflection
             }
         }
 
-        [Offset(0x58)]
+        [Offset(0x50)]
         private ClassDefinition m_parent;
         public ClassDefinition Parent
         {
@@ -84,6 +96,17 @@ namespace Il2CppToolkit.Runtime.Types.Reflection
             {
                 Load();
                 return m_parent;
+            }
+        }
+
+        [Offset(0x58)]
+        private ClassDefinition m_base;
+        public ClassDefinition Base
+        {
+            get
+            {
+                Load();
+                return m_base;
             }
         }
 
