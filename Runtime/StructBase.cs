@@ -42,6 +42,12 @@ namespace Il2CppToolkit.Runtime
             return cast;
         }
 
+        public void Reload()
+		{
+            m_isLoaded = false;
+            Load();
+		}
+
         protected internal virtual void Load()
         {
             if (m_isLoaded)
