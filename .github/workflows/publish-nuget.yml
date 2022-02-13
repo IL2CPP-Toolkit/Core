@@ -35,13 +35,9 @@ jobs:
       - name: Restore the application
         run: msbuild $env:Solution_Name /t:Restore /p:Configuration=Release
 
-      # Versions
-      - uses: dotnet/nbgv@master
-        id: version
-
       # Build + Pack
       - name: Build
-        run: dotnet pack $env:Solution_Name --output publish /p:NuspecProperties="version=${{ steps.version.outputs.NuGetPackageVersion }};RepositoryType=git;RepositoryCommit=${{ steps.version.outputs.GitCommitId }};" /p:Configuration=Release /p:DeployOnBuild=true
+        run: dotnet pack $env:Solution_Name --output publish /p:Configuration=Release /p:DeployOnBuild=true
 
       # NuGet Push
       - name: Push package to nuget.org
