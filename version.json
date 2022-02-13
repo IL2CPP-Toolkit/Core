@@ -6,8 +6,12 @@
     "^refs/heads/v\\d+(?:\\.\\d+)?$"
   ],
   "cloudBuild": {
+    "setAllVariables": true,
     "buildNumber": {
-      "enabled": false
+      "enabled": true,
+      "includeCommitId": {
+        "when": "never"
+      }
     }
   }
 }
