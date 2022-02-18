@@ -7,7 +7,7 @@ using Il2CppToolkit.Runtime.Types.corelib.Collections.Generic;
 namespace Il2CppToolkit.Runtime.Types.Reflection
 {
     // [Size(4376)]
-    [Size(0x120)]
+    [Size(0x128)]
     [DebuggerDisplay("{DebuggerDisplay,nq}")]
     public class ClassDefinition : StructBase
     {
@@ -43,7 +43,7 @@ namespace Il2CppToolkit.Runtime.Types.Reflection
         }
 
         private static string GetLocalTypeName(string ns, string name)
-		{
+        {
             if (string.IsNullOrEmpty(ns))
             {
                 return name;
@@ -139,7 +139,7 @@ namespace Il2CppToolkit.Runtime.Types.Reflection
             }
         }
 
-        [Offset(0x118)]
+        [Offset(0x114)]
         private uint _token;
         public uint Token
         {
@@ -150,7 +150,7 @@ namespace Il2CppToolkit.Runtime.Types.Reflection
             }
         }
 
-        [Offset(0x11c)]
+        [Offset(0x120)]
         private UInt16 _fieldCount;
         public UInt16 FieldCount
         {
