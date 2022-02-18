@@ -66,7 +66,7 @@ namespace Il2CppToolkit.Runtime
             if (dynamicOffsetAttr != null)
             {
                 ClassDefinition classDef = this.ReadValue<ClassDefinition>(objectAddress);
-                while (classDef != null)
+                while (classDef != null && classDef.FullName != "System.Object")
                 {
                     FieldDefinition fieldDef = classDef.GetFields().FirstOrDefault(fld => fld.Name == dynamicOffsetAttr.FieldName);
                     if (fieldDef.Name != null)
