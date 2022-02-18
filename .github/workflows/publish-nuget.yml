@@ -37,7 +37,7 @@ jobs:
 
       # Build + Pack
       - name: Build
-        run: dotnet pack $env:Solution_Name --output publish /p:Configuration=Release -p:DeployOnBuild=true /p:IncludeSymbols=true /p:SymbolPackageFormat=snupkg
+        run: dotnet pack $env:Solution_Name --output publish /p:Configuration=Release -p:DeployOnBuild=true /p:IncludeSymbols=true /p:SymbolPackageFormat=snupkg /p:PublicRelease=true
 
       # NuGet Push
       - name: Push package to nuget.org
