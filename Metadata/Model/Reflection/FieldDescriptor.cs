@@ -11,7 +11,7 @@ namespace Il2CppToolkit.Model
         {
             Name = BackingFieldRegex.Replace(name, match => match.Groups[1].Value);
             // this is kinda evil, but it will make them consistent in name at least =)
-            StorageName = $"_{Name}_BackingField";
+            StorageName = $"<{Name}>k__BackingField";
             Type = typeReference;
             Attributes = attrs;
             Offset = offset;
