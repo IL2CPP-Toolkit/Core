@@ -37,10 +37,12 @@ jobs:
 
       # Build + Pack
       - name: Build
-        run: dotnet pack $env:Solution_Name --output publish /p:Configuration=Release /p:DeployOnBuild=true
+        run: dotnet pack $env:Solution_Name --output publish /p:Configuration=Release -p:DeployOnBuild=true /p:IncludeSymbols=true /p:SymbolPackageFormat=snupkg
 
       # NuGet Push
       - name: Push package to nuget.org
-        run: dotnet nuget push publish\*.nupkg -k $env:PUBLISH_TOKEN -s https://api.nuget.org/v3/index.json --skip-duplicate
+        run: |
+          dotnet nuget push publish\*.nupkg -k $env:PUBLISH_TOKEN -s https://api.nuget.org/v3/index.json --skip-duplicate
+          dotnet nuget push publish\*.snupkg -k $env:PUBLISH_TOKEN -s https://www.nuget.org/api/v2/symbolpackage --skip-duplicate
         env:
           PUBLISH_TOKEN: ${{ secrets.PUBLISH_TOKEN }}
