@@ -245,7 +245,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 
             if (td.GenericParameterNames != null && td.GenericParameterNames.Length > 0)
             {
-                fb.SetCustomAttribute(new CustomAttributeBuilder(typeof(DynamicOffsetAttribute).GetConstructor(new[] { typeof(string) }), new object[] { field.StorageName }));
+                fb.SetCustomAttribute(new CustomAttributeBuilder(typeof(DynamicOffsetAttribute).GetConstructor(new[] { typeof(string) }), new object[] { field.OriginalName }));
             }
             else
             {

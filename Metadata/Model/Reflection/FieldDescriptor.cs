@@ -9,6 +9,7 @@ namespace Il2CppToolkit.Model
 
         public FieldDescriptor(string name, ITypeReference typeReference, FieldAttributes attrs, ulong offset)
         {
+            OriginalName = name;
             Name = BackingFieldRegex.Replace(name, match => match.Groups[1].Value);
             // this is kinda evil, but it will make them consistent in name at least =)
             StorageName = $"<{Name}>k__BackingField";
@@ -17,6 +18,7 @@ namespace Il2CppToolkit.Model
             Offset = offset;
         }
 
+        public readonly string OriginalName;
         public readonly string StorageName;
         public readonly string Name;
         public readonly ITypeReference Type;
