@@ -116,9 +116,10 @@ namespace Il2CppToolkit.Runtime
 
                 if (type == null)
                     return null;
+
                 if (type.IsGenericType)
                 {
-                    Debugger.Break();
+                    return (dynamic)unk;
                 }
             }
             if (type.IsAssignableTo(typeof(StructBase)))

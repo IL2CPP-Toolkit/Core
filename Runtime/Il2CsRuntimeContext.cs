@@ -73,7 +73,7 @@ namespace Il2CppToolkit.Runtime
                     {
                         return (ulong)fieldDef.Offset;
                     }
-                    classDef = classDef.Parent;
+                    classDef = classDef.Base;
                 }
             }
             RuntimeError.OffsetRequired.Raise($"Field {field.Name} requires offset information");
