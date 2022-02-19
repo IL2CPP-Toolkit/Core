@@ -119,7 +119,8 @@ namespace Il2CppToolkit.Runtime
 
                 if (type.IsGenericType)
                 {
-                    return (dynamic)unk;
+                    // TODO: Get generic type arguments at runtime
+                    return null;
                 }
             }
             if (type.IsAssignableTo(typeof(StructBase)))
