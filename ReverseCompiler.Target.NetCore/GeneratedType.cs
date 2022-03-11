@@ -90,17 +90,17 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 
         public static class MemorySourceExtensions_Types
         {
-            public static readonly MethodInfo ReadValue = typeof(MemorySourceExtensions).GetMethod("ReadValue", 1, new Type[] { typeof(IMemorySource), typeof(ulong), typeof(byte) });
+            public static readonly MethodInfo ReadValue = typeof(MemorySourceExtensions).GetMethod("ReadValue", new Type[] { typeof(IMemorySource), typeof(ulong), typeof(byte) });
         }
 
         public static class ClassDefinition_Types
         {
-            public static readonly MethodInfo get_StaticFields = typeof(ClassDefinition).GetMethod("get_StaticFields", 0, BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetProperty, null, CallingConventions.HasThis, Array.Empty<Type>(), null);
+            public static readonly MethodInfo get_StaticFields = typeof(ClassDefinition).GetMethod("get_StaticFields", BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetProperty, null, CallingConventions.HasThis, Array.Empty<Type>(), null);
         }
 
         public static class StructBase_Types
         {
-            public static readonly MethodInfo As = typeof(StructBase).GetMethod("As", 1, Array.Empty<Type>());
+            public static readonly MethodInfo As = typeof(StructBase).GetMethod("As", Array.Empty<Type>());
         }
 
     }

@@ -39,7 +39,7 @@ namespace Il2CppToolkit.Target.TSDef
             }
             if (Path.GetExtension(outputFile) != ".ts.d")
             {
-                outputFile = Path.Join(m_outputPath, $"{m_assemblyName}.ts.d");
+                outputFile = Path.Combine(m_outputPath, $"{m_assemblyName}.ts.d");
             }
             File.WriteAllText(outputFile, tsd);
             return base.Execute();

@@ -39,8 +39,10 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 
         private void ProcessTypes()
         {
-            foreach ((TypeDescriptor td, GeneratedType type) in m_generatedTypes)
+            foreach (var kvp in m_generatedTypes)
             {
+                TypeDescriptor td = kvp.Key;
+                GeneratedType type = kvp.Value;
                 if (type.Type is TypeBuilder tb)
                 {
                     if (td.TypeDef.IsEnum)
@@ -95,7 +97,11 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 
             foreach (FieldDescriptor field in td.Fields)
             {
-                ProcessField(td, tb, field, type);
+                try
+                {
+                    ProcessField(td, tb, field, type);
+                }catch(Exception ex)
+                { }
             }
 
             // TODO: Figure out how to map properties<>fields with reasonable accuracy

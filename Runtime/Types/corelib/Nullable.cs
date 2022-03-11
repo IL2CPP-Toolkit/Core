@@ -11,7 +11,7 @@ namespace Il2CppToolkit.Runtime.Types.corelib
         private void ReadFields(IMemorySource source, ulong address)
         {
             ReadOnlyMemory<byte> hasValue = source.ReadMemory(address + Il2CsRuntimeContext.GetTypeSize(typeof(T)), 1);
-            HasValue = BitConverter.ToBoolean(hasValue.Span);
+            HasValue = hasValue.ToBoolean();
             if (!HasValue)
             {
                 return;

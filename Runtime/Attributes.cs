@@ -31,8 +31,8 @@ namespace Il2CppToolkit.Runtime
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
     public class TagAttribute : Attribute
     {
-        public ulong Tag { get; }
-        public TagAttribute(ulong token)
+        public string Tag { get; }
+        public TagAttribute(string token)
         {
             Tag = token;
         }

@@ -13,7 +13,7 @@ namespace Il2CppToolkit.Runtime.Types.corelib
         {
             address = source.ReadPointer(address);
             ReadOnlyMemory<byte> stringData = source.ReadMemory(address, 512);
-            Value = Encoding.UTF8.GetString(stringData.Span).Split('\0', 2)[0];
+            Value = Encoding.UTF8.GetString(stringData.Span).Split(new char[] { '\0' }, 2)[0];
         }
     }
 }

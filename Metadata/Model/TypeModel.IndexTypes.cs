@@ -236,9 +236,11 @@ namespace Il2CppToolkit.Model
             }
             else
             {
-                foreach ((var usageType, var handler) in usageHandlers)
-                    foreach (var i in m_loader.Metadata.metadataUsageDic[usageType])
-                        handler(i.Value, m_loader.Il2Cpp.MetadataUsages[i.Key]);
+                foreach (var kvp in usageHandlers)
+                {
+                    foreach (var i in m_loader.Metadata.metadataUsageDic[kvp.Key])
+                        kvp.Value(i.Value, m_loader.Il2Cpp.MetadataUsages[i.Key]);
+                }
             }
         }
 
@@ -300,7 +302,7 @@ namespace Il2CppToolkit.Model
             int index = typeName.IndexOf("`", StringComparison.Ordinal);
             if (index != -1)
             {
-                typeName = typeName[..index];
+                typeName = typeName.Substring(0, index);
             }
             string ns = m_loader.Metadata.GetStringFromIndex(typeDef.namespaceIndex);
             if (ns != "")

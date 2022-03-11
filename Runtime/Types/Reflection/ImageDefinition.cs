@@ -21,6 +21,7 @@ namespace Il2CppToolkit.Runtime.Types.Reflection
 
         // 0x10 = AssemblyDefinition
 
-        [field: Offset(0x20)] public int TypeStart { get; }
+        [field: Offset(0x18)] public UInt32 TypeStart { get; }
+        [field: Offset(0x40)] public UInt32 Token { get; }
     }
 }

@@ -1,18 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
+using Il2CppToolkit.Common;
+using Il2CppToolkit.Common.Errors;
 using Il2CppToolkit.Runtime.Types.Reflection;
 
 namespace Il2CppToolkit.Runtime.Types
 {
     public static class LoadedTypes
     {
-        private static readonly Dictionary<string, Type> s_nameToType = new();
+        private static readonly Dictionary<string, Type> s_tokenToType = new();
 
         public static Type GetType(ClassDefinition classDef)
         {
-            string className = classDef.FullName;
-            return s_nameToType.TryGetValue(classDef.FullName, out Type retVal) ? retVal : null;
+            var classType = classDef.byval_arg.TypeHandle;
+            string token = Utilities.GetTypeTag(classType._nameIndex, classType._namespaceIndex, classDef.Token);
+            return s_tokenToType.TryGetValue(token, out Type retVal) ? retVal : null;
         }
 
         static LoadedTypes()
@@ -26,7 +29,7 @@ namespace Il2CppToolkit.Runtime.Types
                     TagAttribute attr = type.GetCustomAttribute<TagAttribute>();
                     if (attr == null) continue;
 
-                    s_nameToType.Add(type.FullName, type);
+                    ErrorHandler.Assert(s_tokenToType.TryAdd(attr.Tag, type), "Duplicate type by token");
                 }
             }
         }

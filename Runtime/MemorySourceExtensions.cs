@@ -28,18 +28,18 @@ namespace Il2CppToolkit.Runtime
         private static readonly Dictionary<Type, Func<IMemorySource, ulong, object>> s_impl = new();
         static MemorySourceExtensions()
         {
-            s_impl.Add(typeof(Char), (context, address) => BitConverter.ToChar(context.ReadMemory(address, sizeof(Char)).Span));
-            s_impl.Add(typeof(Boolean), (context, address) => BitConverter.ToBoolean(context.ReadMemory(address, sizeof(Boolean)).Span));
-            s_impl.Add(typeof(Double), (context, address) => BitConverter.ToDouble(context.ReadMemory(address, sizeof(Double)).Span));
-            s_impl.Add(typeof(Single), (context, address) => BitConverter.ToSingle(context.ReadMemory(address, sizeof(Single)).Span));
-            s_impl.Add(typeof(Int16), (context, address) => BitConverter.ToInt16(context.ReadMemory(address, sizeof(Int16)).Span));
-            s_impl.Add(typeof(Int32), (context, address) => BitConverter.ToInt32(context.ReadMemory(address, sizeof(Int32)).Span));
-            s_impl.Add(typeof(Int64), (context, address) => BitConverter.ToInt64(context.ReadMemory(address, sizeof(Int64)).Span));
-            s_impl.Add(typeof(UInt16), (context, address) => BitConverter.ToUInt16(context.ReadMemory(address, sizeof(UInt16)).Span));
-            s_impl.Add(typeof(UInt32), (context, address) => BitConverter.ToUInt32(context.ReadMemory(address, sizeof(UInt32)).Span));
-            s_impl.Add(typeof(UInt64), (context, address) => BitConverter.ToUInt64(context.ReadMemory(address, sizeof(UInt64)).Span));
-            s_impl.Add(typeof(IntPtr), (context, address) => (IntPtr)BitConverter.ToInt64(context.ReadMemory(address, sizeof(Int64)).Span));
-            s_impl.Add(typeof(UIntPtr), (context, address) => (UIntPtr)BitConverter.ToInt64(context.ReadMemory(address, sizeof(UInt64)).Span));
+            s_impl.Add(typeof(Char), (context, address) => context.ReadMemory(address, sizeof(Char)).ToChar());
+            s_impl.Add(typeof(Boolean), (context, address) => context.ReadMemory(address, sizeof(Boolean)).ToBoolean());
+            s_impl.Add(typeof(Double), (context, address) => context.ReadMemory(address, sizeof(Double)).ToDouble());
+            s_impl.Add(typeof(Single), (context, address) => context.ReadMemory(address, sizeof(Single)).ToSingle());
+            s_impl.Add(typeof(Int16), (context, address) => context.ReadMemory(address, sizeof(Int16)).ToInt16());
+            s_impl.Add(typeof(Int32), (context, address) => context.ReadMemory(address, sizeof(Int32)).ToInt32());
+            s_impl.Add(typeof(Int64), (context, address) => context.ReadMemory(address, sizeof(Int64)).ToInt64());
+            s_impl.Add(typeof(UInt16), (context, address) => context.ReadMemory(address, sizeof(UInt16)).ToUInt16());
+            s_impl.Add(typeof(UInt32), (context, address) => context.ReadMemory(address, sizeof(UInt32)).ToUInt32());
+            s_impl.Add(typeof(UInt64), (context, address) => context.ReadMemory(address, sizeof(UInt64)).ToUInt64());
+            s_impl.Add(typeof(IntPtr), (context, address) => context.ReadMemory(address, sizeof(Int64)).ToIntPtr());
+            s_impl.Add(typeof(UIntPtr), (context, address) => context.ReadMemory(address, sizeof(UInt64)).ToUIntPtr());
         }
 
 
@@ -102,7 +102,8 @@ namespace Il2CppToolkit.Runtime
             if (type.IsArray)
             {
                 dynamic array = Activator.CreateInstance(typeof(Native__Array<>).MakeGenericType(type.GetElementType()), new object[] { (IMemorySource)source, address });
-                return array.Array;
+                object result = array.Array;
+                return result;
             }
 
             if (type.IsInterface || type.IsAbstract || type == typeof(Object))
@@ -128,6 +129,10 @@ namespace Il2CppToolkit.Runtime
                 object classObject = Activator.CreateInstance(type, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance, null, new object[] { (IMemorySource)source, address }, null);
                 return classObject;
             }
+            if (type.GetConstructor(Array.Empty<Type>()) == null)
+			{
+                return null;
+			}
             // value type
             object valueObject = Activator.CreateInstance(type);
             ReadFields(source, type, valueObject, address);

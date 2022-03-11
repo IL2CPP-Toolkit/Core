@@ -101,7 +101,7 @@ namespace Il2CppToolkit.Runtime
             {
                 RuntimeError.ReadProcessMemoryReadFailed.Raise($"Failed to read memory location. GetLastError() = {NativeWrapper.LastError}");
             }
-            return buffer;
+            return new (buffer);
         }
 
         internal CachedMemoryBlock CacheMemory(ulong address, ulong size)

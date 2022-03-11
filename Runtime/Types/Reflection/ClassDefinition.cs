@@ -88,6 +88,17 @@ namespace Il2CppToolkit.Runtime.Types.Reflection
             }
         }
 
+        [Offset(0x20), Indirection(0)]
+        private Il2CppType m_byval_arg;
+        public Il2CppType byval_arg
+        {
+            get
+            {
+                Load();
+                return m_byval_arg;
+            }
+        }
+
         [Offset(0x50)]
         private ClassDefinition m_parent;
         public ClassDefinition Parent
@@ -107,6 +118,17 @@ namespace Il2CppToolkit.Runtime.Types.Reflection
             {
                 Load();
                 return m_base;
+            }
+        }
+
+        [Offset(0x60)]
+        private GenericClass m_genericClass;
+        public GenericClass GenericClass
+        {
+            get
+            {
+                Load();
+                return m_genericClass;
             }
         }
 

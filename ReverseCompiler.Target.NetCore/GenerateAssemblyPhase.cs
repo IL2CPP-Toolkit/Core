@@ -28,9 +28,12 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
             m_generatedTypes = await m_context.Artifacts.GetAsync(NetCoreArtifactSpecs.GeneratedTypes);
             m_module = await m_context.Artifacts.GetAsync(NetCoreArtifactSpecs.GeneratedModule);
 
-            foreach ((TypeDescriptor descriptor, GeneratedType type) in m_generatedTypes)
+            foreach (var kvp in m_generatedTypes)
             {
-                m_generatedTypeByFullName.Add(descriptor.FullName, type);
+                TypeDescriptor descriptor = kvp.Key;
+                GeneratedType type = kvp.Value;
+                if (!m_generatedTypeByFullName.TryAdd(descriptor.FullName, type))
+                    continue;
                 if (!m_generatedTypeByClassName.ContainsKey(descriptor.Name))
                 {
                     m_generatedTypeByClassName.Add(descriptor.Name, new List<GeneratedType>());
@@ -50,7 +53,6 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 
             try
             {
-                Lokad.ILPack.AssemblyGenerator generator = new();
                 string outputFile = m_outputPath;
                 if (Path.IsPathRooted(outputFile) && !Directory.Exists(Path.GetDirectoryName(outputFile)))
                 {
@@ -58,15 +60,30 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
                 }
                 if (Path.GetExtension(outputFile) != ".dll")
                 {
-                    outputFile = Path.Join(m_outputPath, $"{m_module.Assembly.GetName().Name}.dll");
+                    outputFile = Path.Combine(m_outputPath, $"{m_module.Assembly.GetName().Name}.dll");
                 }
+#if NET472
+                if (m_module.Assembly is AssemblyBuilder ab)
+                {
+                    ab.Save(Path.GetFileName(outputFile));
+                    File.Move(Path.GetFileName(outputFile), outputFile);
+                }
+#else
+                Lokad.ILPack.AssemblyGenerator generator = new();
                 generator.GenerateAssembly(m_module.Assembly, outputFile);
+#endif
 
                 // set file version
-                VersionResource vi = new VersionResource();
+                VersionResource vi = new();
                 {
                     vi.FileVersion = m_module.Assembly.GetName().Version.ToString();
                     vi.SaveTo(outputFile);
+                }
+                using (ResourceInfo ri = new())
+                {
+                    GenericResource stringTableRes = new(new ResourceId("METADATA"), new ResourceId("STRINGTABLE"), ResourceUtil.USENGLISHLANGID);
+                    stringTableRes.Data = Guid.NewGuid().ToByteArray();
+                    stringTableRes.SaveTo(outputFile);
                 }
             }
             finally

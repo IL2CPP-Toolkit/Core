@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
@@ -23,6 +24,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
         private AssemblyBuilder m_asm;
         private ModuleBuilder m_module;
         private readonly Dictionary<TypeDescriptor, GeneratedType> m_generatedTypes = new();
+        private readonly Dictionary<string, TypeDescriptor> m_typeDescriptorResolution = new();
         private HashSet<TypeDescriptor> m_pendingDescriptors = new();
         private BuildTypeResolver m_typeResolver;
 
@@ -38,8 +40,13 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 
         public override Task Execute()
         {
-            m_asm = AssemblyBuilder.DefineDynamicAssembly(m_asmName, AssemblyBuilderAccess.RunAndCollect);
-            m_asm.SetCustomAttribute(new CustomAttributeBuilder(typeof(GeneratedAttribute).GetConstructor(Type.EmptyTypes), new object[] { }));
+#if NET472
+            AssemblyBuilderAccess access = AssemblyBuilderAccess.RunAndSave;
+#else
+            AssemblyBuilderAccess access = AssemblyBuilderAccess.RunAndCollect;
+#endif
+            m_asm = AssemblyBuilder.DefineDynamicAssembly(m_asmName, access);
+            m_asm.SetCustomAttribute(new CustomAttributeBuilder(typeof(GeneratedAttribute).GetConstructor(Type.EmptyTypes), Array.Empty<object>()));
             m_module = m_asm.DefineDynamicModule(m_asmName.Name);
 
             foreach (TypeDescriptor descriptor in m_typeDescriptors)
@@ -47,8 +54,8 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
                 EnsureType(descriptor);
             }
 
-            while (m_pendingDescriptors.Count >0)
-			{
+            while (m_pendingDescriptors.Count > 0)
+            {
                 var descriptors = m_pendingDescriptors;
                 m_pendingDescriptors = new();
 
@@ -74,95 +81,102 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
             {
                 return null;
             }
-            if (m_generatedTypes.TryGetValue(descriptor, out GeneratedType value))
+            if (!m_typeDescriptorResolution.TryGetValue(descriptor.Name, out TypeDescriptor resolvedDescriptor))
+			{
+                resolvedDescriptor = descriptor;
+                m_typeDescriptorResolution.Add(descriptor.Name, resolvedDescriptor);
+            }
+            if (m_generatedTypes.TryGetValue(resolvedDescriptor, out GeneratedType value))
             {
                 return value.Type;
             }
-            return BuildType(descriptor);
+            Debug.Assert(resolvedDescriptor == descriptor);
+            return BuildType(resolvedDescriptor);
         }
 
         private Type BuildType(TypeDescriptor descriptor)
-		{
-			Type type = CreateAndRegisterType(descriptor);
-			ErrorHandler.VerifyElseThrow(m_generatedTypes.ContainsKey(descriptor), CompilerError.InternalError, "type was not added to m_generatedTypes");
-
-			if (type == null)
-			{
-				return null;
-			}
-
-			if (type is TypeBuilder tb)
-			{
-				tb.SetCustomAttribute(new CustomAttributeBuilder(
-					typeof(TokenAttribute).GetConstructor(new[] { typeof(uint) }), new object[] { descriptor.TypeDef.token }));
-				tb.SetCustomAttribute(new CustomAttributeBuilder(
-					typeof(TagAttribute).GetConstructor(new[] { typeof(ulong) }), new object[] { descriptor.Tag }));
-				tb.SetCustomAttribute(new CustomAttributeBuilder(
-					typeof(SizeAttribute).GetConstructor(new[] { typeof(uint) }), new object[] { descriptor.SizeInBytes }));
-
-				if (descriptor.TypeInfo != null)
-				{
-					tb.SetCustomAttribute(new CustomAttributeBuilder(
-						typeof(AddressAttribute).GetConstructor(new[] { typeof(ulong), typeof(string) }),
-						new object[] { descriptor.TypeInfo.Address, descriptor.TypeInfo.ModuleName }));
-				}
-
-				// enum
-				if (descriptor.TypeDef.IsEnum)
-				{
-					BuildEnum(descriptor, tb);
-				}
-
-				// generics
-				if (descriptor.GenericParameterNames.Length > 0)
-				{
-					tb.DefineGenericParameters(descriptor.GenericParameterNames);
-				}
-
-				// constructor
-				if (!descriptor.TypeDef.IsEnum && !descriptor.Attributes.HasFlag(TypeAttributes.Interface))
-				{
-					if (descriptor.TypeDef.IsValueType)
-					{
-						tb.DefineDefaultConstructor(MethodAttributes.Public);
-					}
-					else
-					{
-						if (descriptor.IsStatic)
-						{
-							ConstructorInfo ctorInfo = TypeBuilder.GetConstructor(typeof(StaticInstance<>).MakeGenericType(tb), StaticReflectionHandles.StaticInstance.Ctor.ConstructorInfo);
-							CreateConstructor(tb, StaticReflectionHandles.StaticInstance.Ctor.Parameters, ctorInfo);
-						}
-						else
-						{
-							CreateConstructor(tb, StaticReflectionHandles.StructBase.Ctor.Parameters, StaticReflectionHandles.StructBase.Ctor.ConstructorInfo);
-						}
-					}
-				}
-			}
-
-			// visit members, don't create them.
-			// VisitMembers(descriptor);
-
-			return type;
-		}
-
-		private void VisitMembers(TypeDescriptor descriptor)
-		{
-			if (!descriptor.TypeDef.IsEnum)
-			{
-				ResolveTypeReference(descriptor.Base);
-				descriptor.Fields.ForEach(field => ResolveTypeReference(field.Type));
-				EnsureType(descriptor.GenericParent);
-				descriptor.Implements.ForEach(iface => ResolveTypeReference(iface));
-			}
-		}
-
-		private void BuildEnum(TypeDescriptor descriptor, TypeBuilder typeBuilder)
         {
+            Type type = CreateAndRegisterType(descriptor);
+            ErrorHandler.VerifyElseThrow(m_generatedTypes.ContainsKey(descriptor), CompilerError.InternalError, "type was not added to m_generatedTypes");
+
+            if (type == null)
+            {
+                return null;
+            }
+
+            if (type is TypeBuilder tb)
+            {
+                tb.SetCustomAttribute(new CustomAttributeBuilder(
+                    typeof(TokenAttribute).GetConstructor(new[] { typeof(uint) }), new object[] { descriptor.TypeDef.token }));
+                tb.SetCustomAttribute(new CustomAttributeBuilder(
+                    typeof(TagAttribute).GetConstructor(new[] { typeof(string) }), new object[] { descriptor.Tag }));
+                tb.SetCustomAttribute(new CustomAttributeBuilder(
+                    typeof(SizeAttribute).GetConstructor(new[] { typeof(uint) }), new object[] { descriptor.SizeInBytes }));
+
+                if (descriptor.TypeInfo != null)
+                {
+                    tb.SetCustomAttribute(new CustomAttributeBuilder(
+                        typeof(AddressAttribute).GetConstructor(new[] { typeof(ulong), typeof(string) }),
+                        new object[] { descriptor.TypeInfo.Address, descriptor.TypeInfo.ModuleName }));
+                }
+
+                // enum
+                if (descriptor.TypeDef.IsEnum)
+                {
+                    BuildEnum(descriptor, tb);
+                }
+
+                // generics
+                if (descriptor.GenericParameterNames.Length > 0)
+                {
+                    tb.DefineGenericParameters(descriptor.GenericParameterNames);
+                }
+
+                // constructor
+                if (!descriptor.TypeDef.IsEnum && !descriptor.Attributes.HasFlag(TypeAttributes.Interface))
+                {
+                    if (descriptor.TypeDef.IsValueType)
+                    {
+                        tb.DefineDefaultConstructor(MethodAttributes.Public);
+                    }
+                    else
+                    {
+                        if (descriptor.IsStatic)
+                        {
+                            ConstructorInfo ctorInfo = TypeBuilder.GetConstructor(typeof(StaticInstance<>).MakeGenericType(tb), StaticReflectionHandles.StaticInstance.Ctor.ConstructorInfo);
+                            CreateConstructor(tb, StaticReflectionHandles.StaticInstance.Ctor.Parameters, ctorInfo);
+                        }
+                        else
+                        {
+                            CreateConstructor(tb, StaticReflectionHandles.StructBase.Ctor.Parameters, StaticReflectionHandles.StructBase.Ctor.ConstructorInfo);
+                        }
+                    }
+                }
+            }
+
+            // visit members, don't create them.
+            // VisitMembers(descriptor);
+
+            return type;
+        }
+
+        private void VisitMembers(TypeDescriptor descriptor)
+        {
+            if (!descriptor.TypeDef.IsEnum)
+            {
+                ResolveTypeReference(descriptor.Base);
+                descriptor.Fields.ForEach(field => ResolveTypeReference(field.Type));
+                EnsureType(descriptor.GenericParent);
+                descriptor.Implements.ForEach(iface => ResolveTypeReference(iface));
+            }
+        }
+
+        private void BuildEnum(TypeDescriptor descriptor, TypeBuilder typeBuilder)
+        {
+            Type fieldType = descriptor.Fields.Where(field => field.DefaultValue != null).FirstOrDefault()?.DefaultValue.GetType();
             foreach (FieldDescriptor field in descriptor.Fields)
             {
-                FieldBuilder fb = typeBuilder.DefineField(field.Name, ResolveTypeReference(field.Type), field.Attributes);
+                FieldBuilder fb = typeBuilder.DefineField(field.Name, fieldType ?? ResolveTypeReference(field.Type), field.Attributes);
                 if (field.DefaultValue != null)
                 {
                     fb.SetConstant(field.DefaultValue);
@@ -226,7 +240,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
         private Type RegisterType(TypeDescriptor descriptor, Type type)
         {
             if (m_generatedTypes.TryAdd(descriptor, new(type, descriptor)))
-			{
+            {
                 m_pendingDescriptors.Add(descriptor);
             }
             return type;

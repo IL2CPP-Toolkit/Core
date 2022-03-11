@@ -18,11 +18,11 @@ namespace Il2CppToolkit.Model
             ImageDef = imageDef;
         }
 
-        public ulong Tag
+        public string Tag
         {
             get
             {
-                return Utilities.GetTypeTag(ImageDef.typeStart, TypeDef.token);
+                return Utilities.GetTypeTag(TypeDef.nameIndex, TypeDef.namespaceIndex, TypeDef.token);
             }
         }
 
@@ -34,7 +34,7 @@ namespace Il2CppToolkit.Model
                 {
                     return m_name;
                 }
-                return $"{m_name}`{GenericParameterNames.Length }";
+                return $"{m_name}`{GenericParameterNames.Length}";
             }
         }
         public string FullName

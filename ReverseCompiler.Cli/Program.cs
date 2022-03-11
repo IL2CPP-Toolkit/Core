@@ -72,13 +72,17 @@ namespace Il2CppToolkit.ReverseCompiler.Cli
                 Compiler compiler = new(model);
                 foreach (string target in opts.Targets)
                 {
-                    Assembly targetAsm = Assembly.LoadFrom(Path.Join(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), $"Il2CppToolkit.Target.{target}.dll"));
+                    Assembly targetAsm = Assembly.LoadFrom(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), $"Il2CppToolkit.Target.{target}.dll"));
                     Type targetType = targetAsm.GetTypes().Single(type => type.IsAssignableTo(typeof(ICompilerTarget)));
                     compiler.AddTarget((ICompilerTarget)Activator.CreateInstance(targetType));
                 }
+                bool allTypes = opts.IncludeTypes.Count() == 0;
                 compiler.AddConfiguration(
                     ArtifactSpecs.TypeSelectors.MakeValue(new List<Func<TypeDescriptor, bool>>{
-                        {td => opts.IncludeTypes == null || opts.IncludeTypes.Contains(td.Name)}
+                        {td => !td.FullName.StartsWith("<") 
+                            && !td.FullName.StartsWith("System.") 
+                            && !(td.TypeDef.IsEnum && td.GenericParameterNames?.Length > 0)
+                            && (allTypes || opts.IncludeTypes.Contains(td.Name))}
                     }),
                     ArtifactSpecs.AssemblyName.MakeValue(opts.AssemblyName),
                     ArtifactSpecs.AssemblyVersion.MakeValue(Version.Parse(opts.AssemblyVersion)),

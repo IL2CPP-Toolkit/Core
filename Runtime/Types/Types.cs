@@ -7,6 +7,11 @@ namespace Il2CppToolkit.Runtime.Types
 {
     public static class Types
     {
+        public static bool TryGetType(uint token, out Type mappedType)
+        {
+            return TokenMapping.TryGetValue(token, out mappedType);
+        }
+
         public static bool TryGetType(string typeName, out Type mappedType)
         {
             if (NativeMapping.TryGetValue(typeName, out mappedType))
@@ -21,12 +26,17 @@ namespace Il2CppToolkit.Runtime.Types
             return false;
         }
         private static readonly Dictionary<string, Type> NativeMapping = new();
+        private static readonly Dictionary<uint, Type> TokenMapping = new();
         static Types()
         {
             NativeMapping.Add(typeof(ValueType).FullName, typeof(ValueType));
             foreach (var (mapFrom, mapTo) in GetTypesWithMappingAttribute(typeof(Types).Assembly))
             {
                 NativeMapping.Add(mapFrom.FullName, mapTo);
+            }
+            foreach (var (mapFrom, mapTo) in GetTypesWithTokenAttribute(typeof(Types).Assembly))
+            {
+                TokenMapping.Add(mapFrom, mapTo);
             }
         }
         static IEnumerable<(Type, Type)> GetTypesWithMappingAttribute(Assembly assembly)
@@ -37,6 +47,17 @@ namespace Il2CppToolkit.Runtime.Types
                 if (tma != null)
                 {
                     yield return (tma.Type, type);
+                }
+            }
+        }
+        static IEnumerable<(uint, Type)> GetTypesWithTokenAttribute(Assembly assembly)
+        {
+            foreach (Type type in assembly.GetTypes())
+            {
+                TokenAttribute ta = type.GetCustomAttribute<TokenAttribute>(true);
+                if (ta != null)
+                {
+                    yield return (ta.Token, type);
                 }
             }
         }
