@@ -51,7 +51,6 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
             ResolveEventHandler resolveHandler = ResolveEvent;
             currentDomain.TypeResolve += resolveHandler;
 
-
             try
             {
                 string outputFile = m_outputPath;
@@ -66,19 +65,19 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 #if NET472
                 if (m_module.Assembly is AssemblyBuilder ab)
                 {
-                    foreach(var gt in m_generatedTypeByFullName.Values)
-					{
+                    foreach (var gt in m_generatedTypeByFullName.Values)
+                    {
                         ResolveType(gt);
                     }
-                    
+
                     if (File.Exists(Path.GetFileName(outputFile)))
                         File.Delete(Path.GetFileName(outputFile));
 
                     ab.Save(Path.GetFileName(outputFile));
-                    
+
                     if (File.Exists(outputFile))
                         File.Delete(outputFile);
-                    
+
                     File.Move(Path.GetFileName(outputFile), outputFile);
                 }
 #else
