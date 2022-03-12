@@ -38,8 +38,10 @@ namespace Il2CppToolkit.Runtime
         public T As<T>()
         {
             // avoid double-indirection used to get to this type by passing indirection=0
-            T cast = (T)MemorySource.ReadValue(typeof(T), Address, 0);
-            return cast;
+            object value = MemorySource.ReadValue(typeof(T), Address, 0);
+            if (value == null)
+                return default;
+            return (T)value;
         }
 
         public void Reload()
