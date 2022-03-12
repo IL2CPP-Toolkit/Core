@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Threading;
@@ -65,7 +66,19 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 #if NET472
                 if (m_module.Assembly is AssemblyBuilder ab)
                 {
+                    foreach(var gt in m_generatedTypeByFullName.Values)
+					{
+                        ResolveType(gt);
+                    }
+                    
+                    if (File.Exists(Path.GetFileName(outputFile)))
+                        File.Delete(Path.GetFileName(outputFile));
+
                     ab.Save(Path.GetFileName(outputFile));
+                    
+                    if (File.Exists(outputFile))
+                        File.Delete(outputFile);
+                    
                     File.Move(Path.GetFileName(outputFile), outputFile);
                 }
 #else

@@ -47,7 +47,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 #endif
             m_asm = AssemblyBuilder.DefineDynamicAssembly(m_asmName, access);
             m_asm.SetCustomAttribute(new CustomAttributeBuilder(typeof(GeneratedAttribute).GetConstructor(Type.EmptyTypes), Array.Empty<object>()));
-            m_module = m_asm.DefineDynamicModule(m_asmName.Name);
+            m_module = m_asm.DefineDynamicModule($"{m_asmName.Name}.dll");
 
             foreach (TypeDescriptor descriptor in m_typeDescriptors)
             {
