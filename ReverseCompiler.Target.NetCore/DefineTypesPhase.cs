@@ -82,7 +82,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
                 return null;
             }
             if (!m_typeDescriptorResolution.TryGetValue(descriptor.Name, out TypeDescriptor resolvedDescriptor))
-			{
+            {
                 resolvedDescriptor = descriptor;
                 m_typeDescriptorResolution.Add(descriptor.Name, resolvedDescriptor);
             }
@@ -173,10 +173,9 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 
         private void BuildEnum(TypeDescriptor descriptor, TypeBuilder typeBuilder)
         {
-            Type fieldType = descriptor.Fields.Where(field => field.DefaultValue != null).FirstOrDefault()?.DefaultValue.GetType();
             foreach (FieldDescriptor field in descriptor.Fields)
             {
-                FieldBuilder fb = typeBuilder.DefineField(field.Name, fieldType ?? ResolveTypeReference(field.Type), field.Attributes);
+                FieldBuilder fb = typeBuilder.DefineField(field.Name, ResolveTypeReference(field.Type), field.Attributes);
                 if (field.DefaultValue != null)
                 {
                     fb.SetConstant(field.DefaultValue);
