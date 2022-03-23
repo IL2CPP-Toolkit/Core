@@ -24,7 +24,6 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
         private AssemblyBuilder m_asm;
         private ModuleBuilder m_module;
         private readonly Dictionary<TypeDescriptor, GeneratedType> m_generatedTypes = new();
-        private readonly Dictionary<string, TypeDescriptor> m_typeDescriptorResolution = new();
         private HashSet<TypeDescriptor> m_pendingDescriptors = new();
         private BuildTypeResolver m_typeResolver;
 
@@ -81,17 +80,11 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
             {
                 return null;
             }
-            if (!m_typeDescriptorResolution.TryGetValue(descriptor.Name, out TypeDescriptor resolvedDescriptor))
-            {
-                resolvedDescriptor = descriptor;
-                m_typeDescriptorResolution.Add(descriptor.Name, resolvedDescriptor);
-            }
-            if (m_generatedTypes.TryGetValue(resolvedDescriptor, out GeneratedType value))
+            if (m_generatedTypes.TryGetValue(descriptor, out GeneratedType value))
             {
                 return value.Type;
             }
-            Debug.Assert(resolvedDescriptor == descriptor);
-            return BuildType(resolvedDescriptor);
+            return BuildType(descriptor);
         }
 
         private Type BuildType(TypeDescriptor descriptor)
