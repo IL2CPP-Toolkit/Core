@@ -101,7 +101,19 @@ namespace Il2CppToolkit.Runtime
             {
                 RuntimeError.ReadProcessMemoryReadFailed.Raise($"Failed to read memory location. GetLastError() = {NativeWrapper.LastError}");
             }
-            return new (buffer);
+            return new(buffer);
+        }
+
+        public void WriteMemory(ulong address, ulong size, byte[] buffer)
+        {
+            if ((ulong)buffer.Length != size)
+            {
+                throw new ArgumentOutOfRangeException("Buffer length does not match size parameter;");
+            }
+            if (!NativeWrapper.WriteProcessMemoryArray<byte>(processHandle, (IntPtr)address, buffer))
+            {
+                RuntimeError.WriteProcessMemoryWriteFailed.Raise($"Failed to write memory location. GetLastError() = {NativeWrapper.LastError}");
+            }
         }
 
         internal CachedMemoryBlock CacheMemory(ulong address, ulong size)

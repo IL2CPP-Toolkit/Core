@@ -100,7 +100,8 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
                 try
                 {
                     ProcessField(td, tb, field, type);
-                }catch(Exception ex)
+                }
+                catch (Exception ex)
                 { }
             }
 
@@ -280,6 +281,8 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
             mbil.Emit(OpCodes.Ldarg_0);
             mbil.Emit(OpCodes.Ldfld, fb);
             mbil.Emit(OpCodes.Ret);
+
+            // TODO add setter for primitive types
 
             PropertyBuilder pb = tb.DefineProperty(field.Name, PropertyAttributes.None, fieldType, null);
             pb.SetGetMethod(mb);

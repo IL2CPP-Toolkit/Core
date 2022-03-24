@@ -10,5 +10,6 @@ namespace Il2CppToolkit.Runtime
         [ErrorSeverity(ErrorSeverity.Error)] ReadProcessMemoryReadArrayFailed,
         [ErrorSeverity(ErrorSeverity.Error)] ReadProcessMemoryCacheRangeError,
         [ErrorSeverity(ErrorSeverity.Error)] StaticAddressMissing,
+        [ErrorSeverity(ErrorSeverity.Error)] WriteProcessMemoryWriteFailed,
     }
 }

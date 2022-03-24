@@ -24,22 +24,77 @@ namespace Il2CppToolkit.Runtime
     {
         public static event EventHandler<MemoryAccessEventArgs> ObjectReadFromMemory;
         public static event EventHandler<MemoryAccessErrorEventArgs> ObjectReadError;
+        public static event EventHandler<MemoryAccessErrorEventArgs> ObjectWriteError;
 
-        private static readonly Dictionary<Type, Func<IMemorySource, ulong, object>> s_impl = new();
+        private class ConvertPrimitive
+        {
+            public Func<IMemorySource, ulong, object> ReadFn;
+            public Action<IMemorySource, ulong, object> WriteFn;
+        }
+
+        private static readonly Dictionary<Type, ConvertPrimitive> s_implMap = new();
         static MemorySourceExtensions()
         {
-            s_impl.Add(typeof(Char), (context, address) => context.ReadMemory(address, sizeof(Char)).ToChar());
-            s_impl.Add(typeof(Boolean), (context, address) => context.ReadMemory(address, sizeof(Boolean)).ToBoolean());
-            s_impl.Add(typeof(Double), (context, address) => context.ReadMemory(address, sizeof(Double)).ToDouble());
-            s_impl.Add(typeof(Single), (context, address) => context.ReadMemory(address, sizeof(Single)).ToSingle());
-            s_impl.Add(typeof(Int16), (context, address) => context.ReadMemory(address, sizeof(Int16)).ToInt16());
-            s_impl.Add(typeof(Int32), (context, address) => context.ReadMemory(address, sizeof(Int32)).ToInt32());
-            s_impl.Add(typeof(Int64), (context, address) => context.ReadMemory(address, sizeof(Int64)).ToInt64());
-            s_impl.Add(typeof(UInt16), (context, address) => context.ReadMemory(address, sizeof(UInt16)).ToUInt16());
-            s_impl.Add(typeof(UInt32), (context, address) => context.ReadMemory(address, sizeof(UInt32)).ToUInt32());
-            s_impl.Add(typeof(UInt64), (context, address) => context.ReadMemory(address, sizeof(UInt64)).ToUInt64());
-            s_impl.Add(typeof(IntPtr), (context, address) => context.ReadMemory(address, sizeof(Int64)).ToIntPtr());
-            s_impl.Add(typeof(UIntPtr), (context, address) => context.ReadMemory(address, sizeof(UInt64)).ToUIntPtr());
+            s_implMap.Add(typeof(Char), new()
+            {
+                ReadFn = (context, address) => context.ReadMemory(address, sizeof(Char)).ToChar(),
+                WriteFn = (context, address, value) => context.ParentContext.WriteMemory(address, sizeof(Char), BitConverter.GetBytes((char)value)),
+            });
+            s_implMap.Add(typeof(Boolean), new()
+            {
+                ReadFn = (context, address) => context.ReadMemory(address, sizeof(Boolean)).ToBoolean(),
+                WriteFn = (context, address, value) => context.ParentContext.WriteMemory(address, sizeof(Boolean), BitConverter.GetBytes((Boolean)value)),
+            });
+            s_implMap.Add(typeof(Double), new()
+            {
+                ReadFn = (context, address) => context.ReadMemory(address, sizeof(Double)).ToDouble(),
+                WriteFn = (context, address, value) => context.ParentContext.WriteMemory(address, sizeof(Double), BitConverter.GetBytes((Double)value)),
+            });
+            s_implMap.Add(typeof(Single), new()
+            {
+                ReadFn = (context, address) => context.ReadMemory(address, sizeof(Single)).ToSingle(),
+                WriteFn = (context, address, value) => context.ParentContext.WriteMemory(address, sizeof(Single), BitConverter.GetBytes((Single)value)),
+            });
+            s_implMap.Add(typeof(Int16), new()
+            {
+                ReadFn = (context, address) => context.ReadMemory(address, sizeof(Int16)).ToInt16(),
+                WriteFn = (context, address, value) => context.ParentContext.WriteMemory(address, sizeof(Int16), BitConverter.GetBytes((Int16)value)),
+            });
+            s_implMap.Add(typeof(Int32), new()
+            {
+                ReadFn = (context, address) => context.ReadMemory(address, sizeof(Int32)).ToInt32(),
+                WriteFn = (context, address, value) => context.ParentContext.WriteMemory(address, sizeof(Int32), BitConverter.GetBytes((Int32)value)),
+            });
+            s_implMap.Add(typeof(Int64), new()
+            {
+                ReadFn = (context, address) => context.ReadMemory(address, sizeof(Int64)).ToInt64(),
+                WriteFn = (context, address, value) => context.ParentContext.WriteMemory(address, sizeof(Int64), BitConverter.GetBytes((Int64)value)),
+            });
+            s_implMap.Add(typeof(UInt16), new()
+            {
+                ReadFn = (context, address) => context.ReadMemory(address, sizeof(UInt16)).ToUInt16(),
+                WriteFn = (context, address, value) => context.ParentContext.WriteMemory(address, sizeof(UInt16), BitConverter.GetBytes((UInt16)value)),
+            });
+            s_implMap.Add(typeof(UInt32), new()
+            {
+                ReadFn = (context, address) => context.ReadMemory(address, sizeof(UInt32)).ToUInt32(),
+                WriteFn = (context, address, value) => context.ParentContext.WriteMemory(address, sizeof(UInt32), BitConverter.GetBytes((UInt32)value)),
+            });
+            s_implMap.Add(typeof(UInt64), new()
+            {
+                ReadFn = (context, address) => context.ReadMemory(address, sizeof(UInt64)).ToUInt64(),
+                WriteFn = (context, address, value) => context.ParentContext.WriteMemory(address, sizeof(UInt64), BitConverter.GetBytes((UInt64)value)),
+            });
+            s_implMap.Add(typeof(IntPtr), new()
+            {
+                ReadFn = (context, address) => context.ReadMemory(address, sizeof(Int64)).ToIntPtr(),
+                WriteFn = (context, address, value) => context.ParentContext.WriteMemory(address, sizeof(Int64), BitConverter.GetBytes((Int64)value)),
+            });
+            s_implMap.Add(typeof(UIntPtr), new()
+            {
+                ReadFn = (context, address) => context.ReadMemory(address, sizeof(UInt64)).ToUIntPtr(),
+                WriteFn = (context, address, value) => context.ParentContext.WriteMemory(address, sizeof(UInt64), BitConverter.GetBytes((UInt64)value)),
+            });
         }
 
 
@@ -84,6 +139,51 @@ namespace Il2CppToolkit.Runtime
             catch (Exception ex)
             {
                 ObjectReadError?.Invoke(source, new(type, address, ex));
+                throw;
+            }
+        }
+
+        public static T WriteValue<T>(this IMemorySource source, ulong address, byte indirection, object value)
+        {
+            return (T)WriteValue(source, typeof(T), address, value, indirection);
+        }
+
+        public static object WriteValue(this IMemorySource source, Type type, ulong address, object value, byte indirection)
+        {
+            try
+            {
+                if (!type.IsValueType)
+                {
+                    ++indirection;
+                }
+                for (; indirection > 1; --indirection)
+                {
+                    address = ReadPointer(source, address);
+                    if (address == 0)
+                        break;
+                }
+                if (address == 0 && !type.IsAssignableTo(typeof(INullConstructable)))
+                {
+                    return default;
+                }
+                // TODO: requires allocation >:O
+                // if (type == typeof(string))
+                // {
+                //     return WriteString(source, address);
+                // }
+                if (type.IsEnum)
+                {
+                    return WritePrimitive(source, type.GetEnumUnderlyingType(), address, value);
+                }
+                if (type.IsPrimitive)
+                {
+                    return WritePrimitive(source, type, address, value);
+                }
+                throw new InvalidOperationException($"Type '{type.FullName}' does not support writing");
+            }
+            catch (Exception ex)
+            {
+                ObjectWriteError?.Invoke(source, new(type, address, ex));
                 throw;
             }
         }
@@ -197,20 +297,52 @@ namespace Il2CppToolkit.Runtime
             field.SetValue(target, result);
         }
 
+        private static void WriteField(this IMemorySource source, object target, ulong targetAddress, FieldInfo field, object value)
+        {
+            ulong offset = targetAddress + source.ParentContext.GetMemberFieldOffset(field, targetAddress);
+            byte indirection = 1;
+            IndirectionAttribute indirectionAttr = field.GetCustomAttribute<IndirectionAttribute>(inherit: true);
+            if (indirectionAttr != null)
+            {
+                indirection = indirectionAttr.Indirection;
+            }
+
+            object result = WriteValue(source, field.FieldType, offset, value, indirection);
+            field.SetValue(target, result);
+        }
+
         private static object ReadPrimitive(this IMemorySource context, Type type, ulong address)
         {
-            if (s_impl.TryGetValue(type, out Func<IMemorySource, ulong, object> fn))
+            if (s_implMap.TryGetValue(type, out var impl))
             {
-                return fn(context, address);
+                return impl.ReadFn(context, address);
             }
             throw new ArgumentException($"Type '{type.FullName}' is not a valid primitive type");
         }
 
         private static T ReadPrimitive<T>(this IMemorySource context, ulong address)
         {
-            if (s_impl.TryGetValue(typeof(T), out Func<IMemorySource, ulong, object> fn))
+            if (s_implMap.TryGetValue(typeof(T), out var impl))
             {
-                return (T)fn(context, address);
+                return (T)impl.ReadFn(context, address);
+            }
+            throw new ArgumentException($"Type '{typeof(T).FullName}' is not a valid primitive type");
+        }
+
+        private static object WritePrimitive(this IMemorySource context, Type type, ulong address, object value)
+        {
+            if (s_implMap.TryGetValue(type, out var impl))
+            {
+                impl.WriteFn(context, address, value);
+            }
+            throw new ArgumentException($"Type '{type.FullName}' is not a valid primitive type");
+        }
+
+        private static void WritePrimitive<T>(this IMemorySource context, ulong address, T value)
+        {
+            if (s_implMap.TryGetValue(typeof(T), out var impl))
+            {
+                impl.WriteFn(context, address, value);
             }
             throw new ArgumentException($"Type '{typeof(T).FullName}' is not a valid primitive type");
         }
