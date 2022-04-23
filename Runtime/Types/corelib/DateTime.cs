@@ -9,7 +9,7 @@ namespace Il2CppToolkit.Runtime.Types.corelib
 	[TypeMapping(typeof(DateTime))]
 	public struct Native__DateTime
 	{
-		private static long NativeSize => sizeof(long);
+		private static ulong NativeSize => sizeof(long);
 
 		[Offset(0)]
 #pragma warning disable 649
