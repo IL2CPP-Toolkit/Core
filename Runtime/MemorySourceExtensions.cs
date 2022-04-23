@@ -206,22 +206,23 @@ namespace Il2CppToolkit.Runtime
                 return result;
             }
 
+            Type originalType = type;
             if (type.IsInterface || type.IsAbstract || type == typeof(Object))
             {
                 UnknownClass unk = (UnknownClass)ReadStruct(source, typeof(UnknownClass), address);
 
                 if (unk?.ClassDefinition == null)
-                    return null;
+                    return originalType == typeof(object) ? unk : null;
 
                 type = LoadedTypes.GetType(unk.ClassDefinition);
 
                 if (type == null)
-                    return null;
+                    return originalType == typeof(object) ? unk : null;
 
                 if (type.IsGenericType)
                 {
                     // TODO: Get generic type arguments at runtime
-                    return null;
+                    return originalType == typeof(object) ? unk : null;
                 }
             }
             if (type.IsAssignableTo(typeof(StructBase)))
