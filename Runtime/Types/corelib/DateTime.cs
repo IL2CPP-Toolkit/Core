@@ -22,8 +22,7 @@ namespace Il2CppToolkit.Runtime.Types.corelib
 		{
 			get
 			{
-
-				return DateTime.FromBinary(0x10 | m_value & 0x3FFFFFFFFFFFFFFF);
+				return DateTime.FromBinary(m_value).ToLocalTime();
 			}
 		}
 	}
