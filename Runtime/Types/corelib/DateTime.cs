@@ -9,18 +9,21 @@ namespace Il2CppToolkit.Runtime.Types.corelib
 	[TypeMapping(typeof(DateTime))]
 	public struct Native__DateTime
 	{
-		private static ulong NativeSize => sizeof(ulong);
+		private static long NativeSize => sizeof(long);
 
 		[Offset(0)]
 #pragma warning disable 649
-		private ulong m_value;
+		private long m_value;
 #pragma warning restore 649
+
+		public long BinaryValue => m_value;
 
 		public DateTime Value
 		{
 			get
 			{
-				return new DateTime((long)m_value);
+
+				return DateTime.FromBinary(0x10 | m_value & 0x3FFFFFFFFFFFFFFF);
 			}
 		}
 	}
