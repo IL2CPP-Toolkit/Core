@@ -1,5 +1,7 @@
 # Il2Cpp-Toolkit
 
+![Nuget version badge](https://img.shields.io/nuget/v/Il2CppToolkit.ReverseCompiler.Cli?style=flat-square)
+
 ## Cli Usage
 
 | Parameter              | Short Form | Arguments             | Description                                 |
