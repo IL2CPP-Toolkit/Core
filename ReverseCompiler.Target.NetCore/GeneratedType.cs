@@ -3,6 +3,7 @@ using System.Reflection;
 using System.Reflection.Emit;
 using Il2CppToolkit.Model;
 using Il2CppToolkit.Runtime;
+using Il2CppToolkit.Runtime.Types;
 using Il2CppToolkit.Runtime.Types.Reflection;
 
 namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
@@ -44,6 +45,45 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
             }
             StaticType?.CreateType();
             IsCreated = true;
+        }
+
+        internal static void CreateConstructor(TypeBuilder tb, Type[] ctorArgs, ConstructorInfo ctorInfo)
+        {
+            ConstructorBuilder ctor = tb.DefineConstructor(MethodAttributes.Public,
+                CallingConventions.Standard | CallingConventions.HasThis, ctorArgs);
+            ILGenerator ilCtor = ctor.GetILGenerator();
+            ilCtor.Emit(OpCodes.Ldarg_0);
+            ilCtor.Emit(OpCodes.Ldarg_1);
+            ilCtor.Emit(OpCodes.Ldarg_2);
+            ilCtor.Emit(OpCodes.Call, ctorInfo);
+            ilCtor.Emit(OpCodes.Ret);
+        }
+
+        public void CreateConstructor()
+        {
+            if (Type is not TypeBuilder tb)
+                return;
+
+            // constructor
+            if (!Descriptor.TypeDef.IsEnum && !Descriptor.Attributes.HasFlag(TypeAttributes.Interface))
+            {
+                if (Descriptor.TypeDef.IsValueType)
+                {
+                    tb.DefineDefaultConstructor(MethodAttributes.Public);
+                }
+                else
+                {
+                    if (Descriptor.IsStatic)
+                    {
+                        ConstructorInfo ctorInfo = TypeBuilder.GetConstructor(typeof(StaticInstance<>).MakeGenericType(tb), StaticReflectionHandles.StaticInstance.Ctor.ConstructorInfo);
+                        CreateConstructor(tb, StaticReflectionHandles.StaticInstance.Ctor.Parameters, ctorInfo);
+                    }
+                    else
+                    {
+                        CreateConstructor(tb, StaticReflectionHandles.StructBase.Ctor.Parameters, StaticReflectionHandles.StructBase.Ctor.ConstructorInfo);
+                    }
+                }
+            }
         }
 
         public TypeBuilder EnsureStaticType()
