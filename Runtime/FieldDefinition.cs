@@ -13,7 +13,7 @@ namespace Il2CppToolkit.Runtime
         where TClass : IRuntimeObject
     {
         private ulong __offset;
-        public FieldDefinition(ulong offset)
+        public FieldDefinition(ulong offset, byte indirection = 1)
         {
             __offset = offset;
         }
@@ -28,7 +28,7 @@ namespace Il2CppToolkit.Runtime
         private string __moduleName;
         private ulong __clsOffset;
         private ulong __offset;
-        public StaticFieldDefinition(string moduleName, ulong clsOffset, ulong offset)
+        public StaticFieldDefinition(string moduleName, ulong clsOffset, ulong offset, byte indirection = 1)
         {
             __moduleName = moduleName;
             __clsOffset = clsOffset;
