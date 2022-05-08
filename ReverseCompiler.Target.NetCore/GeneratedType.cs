@@ -165,7 +165,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
                 else
                 {
                     Type fieldDefType = typeof(FieldDefinition<,>).MakeGenericType(TypeBuilder, fieldType);
-                    MethodInfo getValueMethod = fieldDefType.GetMethod("GetValue");
+                    MethodInfo getValueMethod = TypeBuilder.GetMethod(fieldDefType, typeof(FieldDefinition<,>).GetMethod("GetValue"));
                     ConstructorInfo fieldDefCtor = typeof(FieldDefinition<,>).GetConstructor(new Type[] { typeof(ulong), typeof(byte) });
                     fieldDefCtor = TypeBuilder.GetConstructor(fieldDefType, fieldDefCtor);
                     FieldBuilder fb = TypeBuilder.DefineField($"s_fieldDef_{field.Name}", fieldDefType, FieldDefAttrs);
@@ -179,10 +179,10 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
                     ILGenerator mbil = mb.GetILGenerator();
                     mbil.Emit(OpCodes.Ldsfld, fb);
                     mbil.Emit(OpCodes.Ldarg_0);
-                    mbil.EmitCall(OpCodes.Callvirt, getValueMethod, Type.EmptyTypes);
+                    mbil.EmitCall(OpCodes.Callvirt, getValueMethod, null);
                     mbil.Emit(OpCodes.Ret);
 
-                    PropertyBuilder pb = TypeBuilder.DefineProperty(field.Name, PropertyAttributes.None, fieldType, null);
+                    PropertyBuilder pb = TypeBuilder.DefineProperty(field.Name, PropertyAttributes.None, fieldType, Type.EmptyTypes);
                     pb.SetGetMethod(mb);
                 }
 
