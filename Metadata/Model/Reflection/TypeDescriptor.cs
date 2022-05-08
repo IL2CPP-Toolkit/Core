@@ -10,12 +10,22 @@ namespace Il2CppToolkit.Model
     [DebuggerDisplay("{DebuggerDisplay,nq}")]
     public class TypeDescriptor
     {
-        public TypeDescriptor(string name, Il2CppTypeDefinition typeDef, int typeIndex, Il2CppImageDefinition imageDef)
+        public TypeDescriptor(string name, Il2CppTypeDefinition typeDef, Il2CppImageDefinition imageDef)
         {
             m_name = name;
             TypeDef = typeDef;
-            TypeIndex = typeIndex;
             ImageDef = imageDef;
+            Attributes = Helpers.GetTypeAttributes(typeDef);
+        }
+
+        public TypeDescriptor(string name, Il2CppTypeDefinition typeDef, Il2CppImageDefinition imageDef, Il2CppGenericClass genericClass, uint genericTypeIndex)
+        {
+            m_name = name;
+            TypeDef = typeDef;
+            ImageDef = imageDef;
+            GenericClass = genericClass;
+            GenericTypeIndex = genericTypeIndex;
+            Attributes = Helpers.GetTypeAttributes(typeDef);
         }
 
         public string Tag
@@ -60,7 +70,8 @@ namespace Il2CppToolkit.Model
         }
         public readonly Il2CppImageDefinition ImageDef;
         public readonly Il2CppTypeDefinition TypeDef;
-        public readonly int TypeIndex;
+        public readonly Il2CppGenericClass GenericClass;
+        public readonly uint GenericTypeIndex;
         public readonly List<ITypeReference> Implements = new();
         public readonly List<TypeDescriptor> NestedTypes = new();
         public TypeDescriptor DeclaringParent;
