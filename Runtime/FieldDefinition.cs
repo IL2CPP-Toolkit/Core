@@ -3,14 +3,14 @@ using System.Collections.Generic;
 
 namespace Il2CppToolkit.Runtime
 {
-    public interface IClassInterop
+    public interface IRuntimeObject
     {
         public IMemorySource Source { get; }
         public ulong Address { get; }
     }
 
     public class FieldDefinition<TClass, TValue>
-        where TClass : IClassInterop
+        where TClass : IRuntimeObject
     {
         private ulong __offset;
         public FieldDefinition(ulong offset)

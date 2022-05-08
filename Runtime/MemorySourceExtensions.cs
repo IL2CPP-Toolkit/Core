@@ -230,7 +230,7 @@ namespace Il2CppToolkit.Runtime
                 object classObject = Activator.CreateInstance(type, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance, null, new object[] { (IMemorySource)source, address }, null);
                 return classObject;
             }
-            if (type.IsAssignableTo(typeof(IClassInterop)))
+            if (type.IsAssignableTo(typeof(IRuntimeObject)))
             {
                 object classObject = Activator.CreateInstance(type, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance, null, new object[] { (IMemorySource)source, address }, null);
                 return classObject;

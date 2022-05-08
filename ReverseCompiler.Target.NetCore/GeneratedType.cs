@@ -10,10 +10,11 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 {
     public interface IGeneratedType
     {
+        ConstructorInfo Ctor { get; }
         Type Type { get; }
         TypeDescriptor Descriptor { get; }
         void Create();
-        void Build(BuildTypeResolver resolver);
+        void Build(BuildTypeResolver resolver, ConstructorCache ctorCache);
     }
 
     public static class GeneratedTypeFactory
@@ -30,9 +31,10 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 
     public class BuiltInType : IGeneratedType
     {
+        public ConstructorInfo Ctor => null;
         public Type Type { get; }
         public TypeDescriptor Descriptor { get; }
-        public void Build(BuildTypeResolver resolver) { }
+        public void Build(BuildTypeResolver resolver, ConstructorCache ctorCache) { }
         public void Create() { }
 
         public BuiltInType(Type type, TypeDescriptor descriptor)
@@ -46,11 +48,13 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
     {
         private static readonly Type[] CtorArgs = new Type[] { typeof(IMemorySource) /*source*/, typeof(ulong) /*address*/ };
         private static readonly ConstructorInfo Object_Ctor = typeof(object).GetConstructor(Type.EmptyTypes);
-        private const MethodAttributes InstanceGetterAttribs = MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.RTSpecialName | MethodAttributes.SpecialName;
+        private const MethodAttributes InstanceGetterAttribs = MethodAttributes.Public | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.Virtual | MethodAttributes.RTSpecialName | MethodAttributes.SpecialName | MethodAttributes.NewSlot;
 
         private TypeBuilder TypeBuilder;
         private bool IsCreated = false;
+        private bool IsBuilt = false;
 
+        public ConstructorInfo Ctor { get; private set; }
         public Type Type => TypeBuilder;
         public TypeDescriptor Descriptor { get; }
 
@@ -82,8 +86,11 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
             IsCreated = true;
         }
 
-        public void Build(BuildTypeResolver typeResolver)
+        public void Build(BuildTypeResolver typeResolver, ConstructorCache ctorCache)
         {
+            if (IsBuilt)
+                return;
+
             if (Descriptor.TypeDef.IsEnum)
             {
                 BuildEnum(typeResolver);
@@ -95,7 +102,9 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
                 TypeBuilder.SetParent(typeResolver.ResolveTypeReference(Descriptor.Base));
             }
 
-            CreateConstructor();
+            CreateConstructor(typeResolver, ctorCache);
+
+            IsBuilt = true;
         }
 
         private void BuildEnum(BuildTypeResolver typeResolver)
@@ -108,11 +117,11 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
             }
         }
 
-        private FieldBuilder AddInitField<T>(string name, FieldAttributes fieldAttribs)
+        private FieldBuilder AddExplicitIRuntimeObjectFieldImpl<T>(string name, FieldAttributes fieldAttribs)
         {
-            FieldBuilder fb = TypeBuilder.DefineField($"<{name}>k__BackingField", typeof(ulong), FieldAttributes.Private | FieldAttributes.InitOnly);
+            FieldBuilder fb = TypeBuilder.DefineField($"<{name}>k__BackingField", typeof(T), FieldAttributes.Private | FieldAttributes.InitOnly);
 
-            MethodBuilder mb = TypeBuilder.DefineMethod($"get_{name}", InstanceGetterAttribs, typeof(long), Type.EmptyTypes);
+            MethodBuilder mb = TypeBuilder.DefineMethod($"IRuntimeObject.get_{name}", InstanceGetterAttribs, typeof(T), Type.EmptyTypes);
             ILGenerator mbil = mb.GetILGenerator();
             {
                 mbil.Emit(OpCodes.Ldarg_0);
@@ -120,29 +129,38 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
                 mbil.Emit(OpCodes.Ret);
             }
 
-            PropertyBuilder pb = TypeBuilder.DefineProperty(name, PropertyAttributes.None, typeof(T), null);
+            PropertyBuilder pb = TypeBuilder.DefineProperty($"IRuntimeObject.{name}", PropertyAttributes.None, typeof(T), null);
             pb.SetGetMethod(mb);
+
+            TypeBuilder.DefineMethodOverride(mb, typeof(IRuntimeObject).GetProperty(name).GetGetMethod());
+
             return fb;
         }
 
-        private void CreateConstructor()
+        private void CreateConstructor(BuildTypeResolver typeResolver, ConstructorCache ctorCache)
         {
             if (TypeBuilder.IsInterface || TypeBuilder.IsEnum || Descriptor.IsStatic)
                 return;
 
+            ConstructorInfo ctor;
             if (TypeBuilder.BaseType is TypeBuilder)
-                InitDerivedType();
+                ctor = InitDerivedType(typeResolver, ctorCache);
             else
-                InitBaseType();
+                ctor = InitBaseType();
+
+            ctorCache.Add(Type, ctor);
         }
 
-        private void InitBaseType()
+        private ConstructorInfo InitBaseType()
         {
-            FieldBuilder fbAddress = AddInitField<ulong>("Address", FieldAttributes.Private | FieldAttributes.InitOnly);
-            FieldBuilder fbSource = AddInitField<IMemorySource>("Source", FieldAttributes.Private | FieldAttributes.InitOnly);
+            TypeBuilder.AddInterfaceImplementation(typeof(IRuntimeObject));
 
-            ConstructorBuilder ctor = TypeBuilder.DefineConstructor(MethodAttributes.Public, CallingConventions.Standard | CallingConventions.HasThis, CtorArgs);
-            ILGenerator ilCtor = ctor.GetILGenerator();
+            FieldBuilder fbAddress = AddExplicitIRuntimeObjectFieldImpl<ulong>("Address", FieldAttributes.Private | FieldAttributes.InitOnly);
+            FieldBuilder fbSource = AddExplicitIRuntimeObjectFieldImpl<IMemorySource>("Source", FieldAttributes.Private | FieldAttributes.InitOnly);
+
+            ConstructorBuilder cb = TypeBuilder.DefineConstructor(MethodAttributes.Public, CallingConventions.Standard | CallingConventions.HasThis, CtorArgs);
+            Ctor = cb;
+            ILGenerator ilCtor = cb.GetILGenerator();
             {
                 // valuetype doesn't need to call base ctor
                 if (!Descriptor.TypeDef.IsValueType)
@@ -164,11 +182,15 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 
                 ilCtor.Emit(OpCodes.Ret);
             }
+            return cb;
         }
 
-        private void InitDerivedType()
+        private ConstructorInfo InitDerivedType(BuildTypeResolver typeResolver, ConstructorCache ctorCache)
         {
-            ConstructorInfo baseCtor = TypeBuilder.GetConstructor(CtorArgs);
+            Type baseType = typeResolver.ResolveTypeReference(Descriptor.Base);
+            if (!ctorCache.TryGetValue(baseType, out ConstructorInfo baseCtor))
+                throw new ArgumentOutOfRangeException("Base constructor is referenced before it is created");
+
             ConstructorBuilder ctor = TypeBuilder.DefineConstructor(MethodAttributes.Public, CallingConventions.Standard | CallingConventions.HasThis, CtorArgs);
             ILGenerator ilCtor = ctor.GetILGenerator();
             ilCtor.Emit(OpCodes.Ldarg_0);                      // this
@@ -176,8 +198,8 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
             ilCtor.Emit(OpCodes.Ldarg_2);                      // address
             ilCtor.Emit(OpCodes.Call, baseCtor);               // instance void base::.ctor(class [Il2CppToolkit.Runtime]Il2CppToolkit.Runtime.IMemorySource, unsigned int64)
             ilCtor.Emit(OpCodes.Ret);
+
+            return ctor;
         }
-
-
     }
 }

@@ -31,6 +31,90 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
             return resolver?.EnsureType(descriptor);
         }
 
+        public ISet<TypeDescriptor> GetGeneratedDependents(ITypeReference reference, HashSet<TypeDescriptor> set = null)
+        {
+            set ??= new();
+            if (reference == null)
+                return set;
+
+            switch (reference)
+            {
+                case DotNetTypeReference dotnet: return set;
+                case TypeDescriptorReference typeRef:
+                    {
+                        set.Add(typeRef.Descriptor);
+                        return set;
+                    }
+                case GenericTypeReference genericTypeRef:
+                    {
+                        foreach (var arg in genericTypeRef.TypeArguments)
+                            GetGeneratedDependents(arg, set);
+                        return set;
+                    }
+                case Il2CppTypeReference cppType:
+                    {
+                        ResolveCppTypeDependents(cppType.CppType, cppType.TypeContext, set);
+                        return set;
+                    }
+                default:
+                    CompilerError.UnknownTypeReference.Raise("Unsupported type reference");
+                    return set;
+            }
+        }
+
+        private void ResolveCppTypeDependents(Il2CppType il2CppType, TypeDescriptor typeContext, HashSet<TypeDescriptor> set)
+        {
+            string shortTypeNameForLogging = m_context.Model.GetTypeName(il2CppType, false, false);
+            switch (il2CppType.type)
+            {
+                case Il2CppTypeEnum.IL2CPP_TYPE_ARRAY:
+                    {
+                        Il2CppArrayType arrayType = m_context.Model.Il2Cpp.MapVATR<Il2CppArrayType>(il2CppType.data.array);
+                        Il2CppType elementCppType = m_context.Model.Il2Cpp.GetIl2CppType(arrayType.etype);
+                        ResolveCppTypeDependents(elementCppType, typeContext, set);
+                        return;
+                    }
+                case Il2CppTypeEnum.IL2CPP_TYPE_SZARRAY:
+                    {
+                        Il2CppType elementCppType = m_context.Model.Il2Cpp.GetIl2CppType(il2CppType.data.type);
+                        ResolveCppTypeDependents(elementCppType, typeContext, set);
+                        return;
+                    }
+                case Il2CppTypeEnum.IL2CPP_TYPE_PTR:
+                    {
+                        Il2CppType oriType = m_context.Model.Il2Cpp.GetIl2CppType(il2CppType.data.type);
+                        ResolveCppTypeDependents(oriType, typeContext, set);
+                        return;
+                    }
+                case Il2CppTypeEnum.IL2CPP_TYPE_VAR:
+                case Il2CppTypeEnum.IL2CPP_TYPE_MVAR:
+                    {
+                        // TODO: Is this even remotely correct? :S
+                        Il2CppGenericParameter param = m_context.Model.GetGenericParameterFromIl2CppType(il2CppType);
+                        set.Add(typeContext);
+                        return;
+                    }
+                case Il2CppTypeEnum.IL2CPP_TYPE_CLASS:
+                case Il2CppTypeEnum.IL2CPP_TYPE_VALUETYPE:
+                    {
+                        Il2CppTypeDefinition typeDef = m_context.Model.GetTypeDefinitionFromIl2CppType(il2CppType);
+                        int typeDefIndex = Array.IndexOf(m_context.Model.Metadata.typeDefs, typeDef);
+                        set.Add(m_context.Model.TypeDefsByIndex[typeDefIndex]);
+                        return;
+                    }
+                case Il2CppTypeEnum.IL2CPP_TYPE_GENERICINST:
+                    {
+                        Il2CppGenericClass genericClass = m_context.Model.Il2Cpp.MapVATR<Il2CppGenericClass>(il2CppType.data.generic_class);
+                        Il2CppTypeDefinition genericTypeDef = m_context.Model.GetGenericClassTypeDefinition(genericClass);
+                        int typeDefIndex = Array.IndexOf(m_context.Model.Metadata.typeDefs, genericTypeDef);
+                        set.Add(m_context.Model.TypeDefsByIndex[typeDefIndex]);
+                        return;
+                    }
+                default:
+                    return;
+            }
+        }
+
         public Type ResolveTypeReference(ITypeReference reference, IResolveTypeFromTypeDefinition resolver = null)
         {
             if (reference == null)
