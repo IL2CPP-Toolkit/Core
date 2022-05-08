@@ -14,9 +14,9 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
     public class BuildTypeResolver
     {
         private readonly CompileContext m_context;
-        private readonly IReadOnlyDictionary<TypeDescriptor, GeneratedType> m_generatedTypeMap;
+        private readonly IReadOnlyDictionary<TypeDescriptor, IGeneratedType> m_generatedTypeMap;
 
-        public BuildTypeResolver(CompileContext context, IReadOnlyDictionary<TypeDescriptor, GeneratedType> generatedTypeMap)
+        public BuildTypeResolver(CompileContext context, IReadOnlyDictionary<TypeDescriptor, IGeneratedType> generatedTypeMap)
         {
             m_context = context;
             m_generatedTypeMap = generatedTypeMap;
@@ -24,7 +24,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 
         public Type TryEnsureType(TypeDescriptor descriptor, IResolveTypeFromTypeDefinition resolver)
         {
-            if (m_generatedTypeMap.TryGetValue(descriptor, out GeneratedType type))
+            if (m_generatedTypeMap.TryGetValue(descriptor, out IGeneratedType type))
             {
                 return type.Type;
             }

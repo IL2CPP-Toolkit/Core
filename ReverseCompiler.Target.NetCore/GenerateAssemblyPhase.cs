@@ -16,9 +16,9 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
         public override string Name => "Generate Assembly";
 
         private CompileContext m_context;
-        private IReadOnlyDictionary<TypeDescriptor, GeneratedType> m_generatedTypes;
-        private readonly Dictionary<string, GeneratedType> m_generatedTypeByFullName = new();
-        private readonly Dictionary<string, List<GeneratedType>> m_generatedTypeByClassName = new();
+        private IReadOnlyDictionary<TypeDescriptor, IGeneratedType> m_generatedTypes;
+        private readonly Dictionary<string, IGeneratedType> m_generatedTypeByFullName = new();
+        private readonly Dictionary<string, List<IGeneratedType>> m_generatedTypeByClassName = new();
         private ModuleBuilder m_module;
         private string m_outputPath;
 
@@ -32,12 +32,12 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
             foreach (var kvp in m_generatedTypes)
             {
                 TypeDescriptor descriptor = kvp.Key;
-                GeneratedType type = kvp.Value;
+                IGeneratedType type = kvp.Value;
                 if (!m_generatedTypeByFullName.TryAdd(descriptor.FullName, type))
                     continue;
                 if (!m_generatedTypeByClassName.ContainsKey(descriptor.Name))
                 {
-                    m_generatedTypeByClassName.Add(descriptor.Name, new List<GeneratedType>());
+                    m_generatedTypeByClassName.Add(descriptor.Name, new List<IGeneratedType>());
                 }
                 m_generatedTypeByClassName[descriptor.Name].Add(type);
             }
@@ -108,7 +108,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 
         public Assembly ResolveEvent(object _, ResolveEventArgs args)
         {
-            if (s_resolutionStack.Count > 0 && m_generatedTypeByFullName.TryGetValue($"{s_resolutionStack.Peek().FullName}+{args.Name}", out GeneratedType type))
+            if (s_resolutionStack.Count > 0 && m_generatedTypeByFullName.TryGetValue($"{s_resolutionStack.Peek().FullName}+{args.Name}", out IGeneratedType type))
             {
                 ResolveType(type);
                 return type.Type.Assembly;
@@ -120,7 +120,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
             }
             else
             {
-                if (m_generatedTypeByClassName.TryGetValue(args.Name, out List<GeneratedType> types))
+                if (m_generatedTypeByClassName.TryGetValue(args.Name, out List<IGeneratedType> types))
                 {
                     types.ForEach(ResolveType);
                 }
@@ -134,7 +134,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
             return m_module.Assembly;
         }
 
-        private void ResolveType(GeneratedType type)
+        private void ResolveType(IGeneratedType type)
         {
             s_resolutionStack.Push(type.Type);
             type.Create();

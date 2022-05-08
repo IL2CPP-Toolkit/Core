@@ -23,7 +23,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
         private AssemblyName m_asmName;
         private AssemblyBuilder m_asm;
         private ModuleBuilder m_module;
-        private readonly Dictionary<TypeDescriptor, GeneratedType> m_generatedTypes = new();
+        private readonly Dictionary<TypeDescriptor, IGeneratedType> m_generatedTypes = new();
         private HashSet<TypeDescriptor> m_pendingDescriptors = new();
         private BuildTypeResolver m_typeResolver;
 
@@ -80,7 +80,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
             {
                 return null;
             }
-            if (m_generatedTypes.TryGetValue(descriptor, out GeneratedType value))
+            if (m_generatedTypes.TryGetValue(descriptor, out IGeneratedType value))
             {
                 return value.Type;
             }
@@ -113,42 +113,12 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
                         new object[] { descriptor.TypeInfo.Address, descriptor.TypeInfo.ModuleName }));
                 }
 
-                // enum
-                if (descriptor.TypeDef.IsEnum)
-                {
-                    BuildEnum(descriptor, tb);
-                }
-
                 // generics
                 if (descriptor.GenericParameterNames.Length > 0)
                 {
                     tb.DefineGenericParameters(descriptor.GenericParameterNames);
                 }
-
-                // constructor
-                if (!descriptor.TypeDef.IsEnum && !descriptor.Attributes.HasFlag(TypeAttributes.Interface))
-                {
-                    if (descriptor.TypeDef.IsValueType)
-                    {
-                        tb.DefineDefaultConstructor(MethodAttributes.Public);
-                    }
-                    else
-                    {
-                        if (descriptor.IsStatic)
-                        {
-                            ConstructorInfo ctorInfo = TypeBuilder.GetConstructor(typeof(StaticInstance<>).MakeGenericType(tb), StaticReflectionHandles.StaticInstance.Ctor.ConstructorInfo);
-                            CreateConstructor(tb, StaticReflectionHandles.StaticInstance.Ctor.Parameters, ctorInfo);
-                        }
-                        else
-                        {
-                            CreateConstructor(tb, StaticReflectionHandles.StructBase.Ctor.Parameters, StaticReflectionHandles.StructBase.Ctor.ConstructorInfo);
-                        }
-                    }
-                }
             }
-
-            // visit members, don't create them.
-            // VisitMembers(descriptor);
 
             return type;
         }
@@ -162,30 +132,6 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
                 EnsureType(descriptor.GenericParent);
                 descriptor.Implements.ForEach(iface => ResolveTypeReference(iface));
             }
-        }
-
-        private void BuildEnum(TypeDescriptor descriptor, TypeBuilder typeBuilder)
-        {
-            foreach (FieldDescriptor field in descriptor.Fields)
-            {
-                FieldBuilder fb = typeBuilder.DefineField(field.Name, ResolveTypeReference(field.Type), field.Attributes);
-                if (field.DefaultValue != null)
-                {
-                    fb.SetConstant(field.DefaultValue);
-                }
-            }
-        }
-
-        internal static void CreateConstructor(TypeBuilder tb, Type[] ctorArgs, ConstructorInfo ctorInfo)
-        {
-            ConstructorBuilder ctor = tb.DefineConstructor(MethodAttributes.Public,
-                CallingConventions.Standard | CallingConventions.HasThis, ctorArgs);
-            ILGenerator ilCtor = ctor.GetILGenerator();
-            ilCtor.Emit(OpCodes.Ldarg_0);
-            ilCtor.Emit(OpCodes.Ldarg_1);
-            ilCtor.Emit(OpCodes.Ldarg_2);
-            ilCtor.Emit(OpCodes.Call, ctorInfo);
-            ilCtor.Emit(OpCodes.Ret);
         }
 
         private Type GetBaseTypeFromDescriptorIfSimple(TypeDescriptor descriptor)
@@ -231,7 +177,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 
         private Type RegisterType(TypeDescriptor descriptor, Type type)
         {
-            if (m_generatedTypes.TryAdd(descriptor, new(type, descriptor)))
+            if (m_generatedTypes.TryAdd(descriptor, GeneratedTypeFactory.Make(type, descriptor)))
             {
                 m_pendingDescriptors.Add(descriptor);
             }

@@ -8,16 +8,55 @@ using Il2CppToolkit.Runtime.Types.Reflection;
 
 namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 {
-    public class GeneratedType
+    public interface IGeneratedType
     {
-        public Type Type;
-        public TypeBuilder StaticType;
-        public TypeDescriptor Descriptor;
-        private bool IsCreated = false;
+        Type Type { get; }
+        TypeDescriptor Descriptor { get; }
+        void Create();
+        void Build(BuildTypeResolver resolver);
+    }
 
-        public GeneratedType(Type type, TypeDescriptor td)
+    public static class GeneratedTypeFactory
+    {
+        public static IGeneratedType Make(Type type, TypeDescriptor descriptor)
+        {
+            if (type is TypeBuilder tb)
+            {
+                return new GeneratedType(tb, descriptor);
+            }
+            return new BuiltInType(type, descriptor);
+        }
+    }
+
+    public class BuiltInType : IGeneratedType
+    {
+        public Type Type { get; }
+        public TypeDescriptor Descriptor { get; }
+        public void Build(BuildTypeResolver resolver) { }
+        public void Create() { }
+
+        public BuiltInType(Type type, TypeDescriptor descriptor)
         {
             Type = type;
+            Descriptor = descriptor;
+        }
+    }
+
+    public class GeneratedType : IGeneratedType
+    {
+        private static readonly Type[] CtorArgs = new Type[] { typeof(IMemorySource) /*source*/, typeof(ulong) /*address*/ };
+        private static readonly ConstructorInfo Object_Ctor = typeof(object).GetConstructor(Type.EmptyTypes);
+        private const MethodAttributes InstanceGetterAttribs = MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.RTSpecialName | MethodAttributes.SpecialName;
+
+        private TypeBuilder TypeBuilder;
+        private bool IsCreated = false;
+
+        public Type Type => TypeBuilder;
+        public TypeDescriptor Descriptor { get; }
+
+        public GeneratedType(TypeBuilder tb, TypeDescriptor td)
+        {
+            TypeBuilder = tb;
             Descriptor = td;
         }
 
@@ -26,122 +65,119 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
             if (IsCreated)
                 return;
 
-            if (Type is TypeBuilder tb)
+            try
             {
-                try
-                {
-                    tb.CreateType();
-                }
-                catch (InvalidOperationException)
-                {
-                    // This is needed to throw away InvalidOperationException.
-                    // Loader might send the TypeResolve event more than once
-                    // and the type might be complete already.
-                }
-                catch (Exception ex)
-                {
-                    CompilerError.ResolveTypeError.Raise($"Failed to resolve type. Exception={ex}");
-                }
+                TypeBuilder.CreateType();
             }
-            StaticType?.CreateType();
+            catch (InvalidOperationException)
+            {
+                // This is needed to throw away InvalidOperationException.
+                // Loader might send the TypeResolve event more than once
+                // and the type might be complete already.
+            }
+            catch (Exception ex)
+            {
+                CompilerError.ResolveTypeError.Raise($"Failed to resolve type. Exception={ex}");
+            }
             IsCreated = true;
         }
 
-        internal static void CreateConstructor(TypeBuilder tb, Type[] ctorArgs, ConstructorInfo ctorInfo)
+        public void Build(BuildTypeResolver typeResolver)
         {
-            ConstructorBuilder ctor = tb.DefineConstructor(MethodAttributes.Public,
-                CallingConventions.Standard | CallingConventions.HasThis, ctorArgs);
+            if (Descriptor.TypeDef.IsEnum)
+            {
+                BuildEnum(typeResolver);
+                return;
+            }
+
+            if (Descriptor.Base != null)
+            {
+                TypeBuilder.SetParent(typeResolver.ResolveTypeReference(Descriptor.Base));
+            }
+
+            CreateConstructor();
+        }
+
+        private void BuildEnum(BuildTypeResolver typeResolver)
+        {
+            foreach (FieldDescriptor field in Descriptor.Fields)
+            {
+                FieldBuilder fb = TypeBuilder.DefineField(field.Name, typeResolver.ResolveTypeReference(field.Type), field.Attributes);
+                if (field.DefaultValue != null)
+                    fb.SetConstant(field.DefaultValue);
+            }
+        }
+
+        private FieldBuilder AddInitField<T>(string name, FieldAttributes fieldAttribs)
+        {
+            FieldBuilder fb = TypeBuilder.DefineField($"<{name}>k__BackingField", typeof(ulong), FieldAttributes.Private | FieldAttributes.InitOnly);
+
+            MethodBuilder mb = TypeBuilder.DefineMethod($"get_{name}", InstanceGetterAttribs, typeof(long), Type.EmptyTypes);
+            ILGenerator mbil = mb.GetILGenerator();
+            {
+                mbil.Emit(OpCodes.Ldarg_0);
+                mbil.Emit(OpCodes.Ldfld, fb);
+                mbil.Emit(OpCodes.Ret);
+            }
+
+            PropertyBuilder pb = TypeBuilder.DefineProperty(name, PropertyAttributes.None, typeof(T), null);
+            pb.SetGetMethod(mb);
+            return fb;
+        }
+
+        private void CreateConstructor()
+        {
+            if (TypeBuilder.IsInterface || TypeBuilder.IsEnum || Descriptor.IsStatic)
+                return;
+
+            if (TypeBuilder.BaseType is TypeBuilder)
+                InitDerivedType();
+            else
+                InitBaseType();
+        }
+
+        private void InitBaseType()
+        {
+            FieldBuilder fbAddress = AddInitField<ulong>("Address", FieldAttributes.Private | FieldAttributes.InitOnly);
+            FieldBuilder fbSource = AddInitField<IMemorySource>("Source", FieldAttributes.Private | FieldAttributes.InitOnly);
+
+            ConstructorBuilder ctor = TypeBuilder.DefineConstructor(MethodAttributes.Public, CallingConventions.Standard | CallingConventions.HasThis, CtorArgs);
             ILGenerator ilCtor = ctor.GetILGenerator();
-            ilCtor.Emit(OpCodes.Ldarg_0);
-            ilCtor.Emit(OpCodes.Ldarg_1);
-            ilCtor.Emit(OpCodes.Ldarg_2);
-            ilCtor.Emit(OpCodes.Call, ctorInfo);
+            {
+                // valuetype doesn't need to call base ctor
+                if (!Descriptor.TypeDef.IsValueType)
+                {
+                    // ALWAYS call object ctor, *even if* we have an intermediate inherited class
+                    // since all generated code does the same thing in its ctor
+                    // this is slightly less code, and substantially easier implementation
+                    ilCtor.Emit(OpCodes.Ldarg_0);                   // this
+                    ilCtor.Emit(OpCodes.Call, Object_Ctor);         // instance void [System.Runtime]System.Object::.ctor()
+                }
+
+                ilCtor.Emit(OpCodes.Ldarg_0);                       // this
+                ilCtor.Emit(OpCodes.Ldarg_1);                       // memorySource
+                ilCtor.Emit(OpCodes.Stfld, fbSource);               // class [Il2CppToolkit.Runtime]Il2CppToolkit.Runtime.IMemorySource Client.App.Application::__source
+
+                ilCtor.Emit(OpCodes.Ldarg_0);                       // this
+                ilCtor.Emit(OpCodes.Ldarg_2);                       // address
+                ilCtor.Emit(OpCodes.Stfld, fbAddress);              // unsigned int64 Client.App.Application::__address
+
+                ilCtor.Emit(OpCodes.Ret);
+            }
+        }
+
+        private void InitDerivedType()
+        {
+            ConstructorInfo baseCtor = TypeBuilder.GetConstructor(CtorArgs);
+            ConstructorBuilder ctor = TypeBuilder.DefineConstructor(MethodAttributes.Public, CallingConventions.Standard | CallingConventions.HasThis, CtorArgs);
+            ILGenerator ilCtor = ctor.GetILGenerator();
+            ilCtor.Emit(OpCodes.Ldarg_0);                      // this
+            ilCtor.Emit(OpCodes.Ldarg_1);                      // memorySource
+            ilCtor.Emit(OpCodes.Ldarg_2);                      // address
+            ilCtor.Emit(OpCodes.Call, baseCtor);               // instance void base::.ctor(class [Il2CppToolkit.Runtime]Il2CppToolkit.Runtime.IMemorySource, unsigned int64)
             ilCtor.Emit(OpCodes.Ret);
         }
 
-        public void CreateConstructor()
-        {
-            if (Type is not TypeBuilder tb)
-                return;
-
-            // constructor
-            if (!Descriptor.TypeDef.IsEnum && !Descriptor.Attributes.HasFlag(TypeAttributes.Interface))
-            {
-                if (Descriptor.TypeDef.IsValueType)
-                {
-                    tb.DefineDefaultConstructor(MethodAttributes.Public);
-                }
-                else
-                {
-                    if (Descriptor.IsStatic)
-                    {
-                        ConstructorInfo ctorInfo = TypeBuilder.GetConstructor(typeof(StaticInstance<>).MakeGenericType(tb), StaticReflectionHandles.StaticInstance.Ctor.ConstructorInfo);
-                        CreateConstructor(tb, StaticReflectionHandles.StaticInstance.Ctor.Parameters, ctorInfo);
-                    }
-                    else
-                    {
-                        CreateConstructor(tb, StaticReflectionHandles.StructBase.Ctor.Parameters, StaticReflectionHandles.StructBase.Ctor.ConstructorInfo);
-                    }
-                }
-            }
-        }
-
-        public TypeBuilder EnsureStaticType()
-        {
-            if (StaticType == null)
-            {
-                if (!(Type is TypeBuilder tb))
-                    throw new ApplicationException("Cannot build nested types for non-generated types");
-
-                if (Descriptor.GenericParameterNames != null && Descriptor.GenericParameterNames.Length > 0)
-                    return null;
-
-                if (Descriptor.TypeInfo == null)
-                    return null;
-
-                StaticType = tb.DefineNestedType("StaticFields", TypeAttributes.NestedPublic, typeof(StructBase));
-                DefineTypesPhase.CreateConstructor(StaticType, StaticReflectionHandles.StructBase.Ctor.Parameters, StaticReflectionHandles.StructBase.Ctor.ConstructorInfo);
-
-                MethodBuilder mb = tb.DefineMethod("GetStaticFields", MethodAttributes.Public | MethodAttributes.NewSlot | MethodAttributes.Static, StaticType, new Type[] { typeof(Il2CsRuntimeContext) });
-                ILGenerator mbil = mb.GetILGenerator();
-                mbil.DeclareLocal(typeof(ulong));
-                mbil.Emit(OpCodes.Ldc_I8, (long)Descriptor.TypeInfo.Address);
-                mbil.Emit(OpCodes.Ldarg_0); // context
-                mbil.Emit(OpCodes.Ldstr, Descriptor.TypeInfo.ModuleName);
-                mbil.EmitCall(OpCodes.Callvirt, Il2CppRuntimeContext_Types.GetModuleAddress, null);
-                mbil.Emit(OpCodes.Add);
-                mbil.Emit(OpCodes.Stloc_0); // address
-
-                mbil.Emit(OpCodes.Ldarg_0); // context
-                mbil.Emit(OpCodes.Ldloc_0); // address
-                mbil.Emit(OpCodes.Ldc_I4_1);
-                mbil.EmitCall(OpCodes.Call, MemorySourceExtensions_Types.ReadValue.MakeGenericMethod(typeof(ClassDefinition)), null);
-                mbil.EmitCall(OpCodes.Callvirt, ClassDefinition_Types.get_StaticFields, null);
-                mbil.EmitCall(OpCodes.Callvirt, StructBase_Types.As.MakeGenericMethod(StaticType), null);
-                mbil.Emit(OpCodes.Ret);
-            }
-            return StaticType;
-        }
-
-        public static class Il2CppRuntimeContext_Types
-        {
-            public static readonly MethodInfo GetModuleAddress = typeof(Il2CsRuntimeContext).GetMethod("GetModuleAddress");
-        }
-
-        public static class MemorySourceExtensions_Types
-        {
-            public static readonly MethodInfo ReadValue = typeof(MemorySourceExtensions).GetMethod("ReadValue", new Type[] { typeof(IMemorySource), typeof(ulong), typeof(byte) });
-        }
-
-        public static class ClassDefinition_Types
-        {
-            public static readonly MethodInfo get_StaticFields = typeof(ClassDefinition).GetMethod("get_StaticFields", BindingFlags.Public | BindingFlags.Instance | BindingFlags.GetProperty, null, CallingConventions.HasThis, Array.Empty<Type>(), null);
-        }
-
-        public static class StructBase_Types
-        {
-            public static readonly MethodInfo As = typeof(StructBase).GetMethod("As", Array.Empty<Type>());
-        }
 
     }
 }

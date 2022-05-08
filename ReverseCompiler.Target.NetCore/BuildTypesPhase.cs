@@ -16,7 +16,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
         public override string Name => "Build Types";
 
         private CompileContext m_context;
-        private IReadOnlyDictionary<TypeDescriptor, GeneratedType> m_generatedTypes;
+        private IReadOnlyDictionary<TypeDescriptor, IGeneratedType> m_generatedTypes;
         private BuildTypeResolver m_typeResolver;
 
         public override async Task Initialize(CompileContext context)
@@ -42,14 +42,8 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
             foreach (var kvp in m_generatedTypes)
             {
                 TypeDescriptor td = kvp.Key;
-                GeneratedType type = kvp.Value;
-                if (type.Type is TypeBuilder tb)
-                {
-                    if (td.TypeDef.IsEnum)
-                        continue;
-
-                    ProcessType(td, tb, type);
-                }
+                IGeneratedType type = kvp.Value;
+                type.Build(m_typeResolver);
             }
         }
 
@@ -196,7 +190,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
         {
             if (property.GetMethodAttributes.HasFlag(MethodAttributes.Static) && !type.Descriptor.IsStatic)
             {
-                tb = type.EnsureStaticType();
+                // tb = type.EnsureStaticType();
                 if (tb == null)
                 {
                     return;
@@ -219,7 +213,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
         {
             if (field.Attributes.HasFlag(FieldAttributes.Static) && !td.IsStatic)
             {
-                tb = type.EnsureStaticType();
+                // tb = type.EnsureStaticType();
                 if (tb == null)
                     return;
             }
