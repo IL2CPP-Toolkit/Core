@@ -125,7 +125,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
             switch (reference)
             {
                 case DotNetTypeReference dotnet: return dotnet.Type;
-                case TypeDescriptorReference typeRef: return m_generatedTypeMap[typeRef.Descriptor].Type;
+                case TypeDescriptorReference typeRef: return TryEnsureType(typeRef.Descriptor, resolver);
                 case GenericTypeReference genericTypeRef:
                     {
                         Type[] typeArgs = genericTypeRef.TypeArguments.Select(arg => ResolveTypeReference(arg, resolver)).ToArray();
