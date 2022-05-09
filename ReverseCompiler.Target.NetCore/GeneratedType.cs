@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
+using Il2CppToolkit.Common.Errors;
 using Il2CppToolkit.Model;
 using Il2CppToolkit.Runtime;
 using Il2CppToolkit.Runtime.Types;
@@ -194,11 +195,9 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
             HideFromIntellisense(fb);
 
             cctoril.Emit(OpCodes.Ldstr, Descriptor.TypeInfo.ModuleName);
-            cctoril.Emit(OpCodes.Ldc_I4, (int)Descriptor.TypeInfo.Address);
-            cctoril.Emit(OpCodes.Conv_I8);
-            cctoril.Emit(OpCodes.Ldc_I4, (int)field.Offset);
-            cctoril.Emit(OpCodes.Conv_I8);
-            cctoril.Emit(OpCodes.Ldc_I4, indirection);
+            cctoril.Emit(OpCodes.Ldc_I8, (Int64)Descriptor.TypeInfo.Address);
+            cctoril.Emit(OpCodes.Ldc_I8, (Int64)field.Offset);
+            cctoril.Emit(OpCodes.Ldc_I4_S, (byte)indirection);
             cctoril.Emit(OpCodes.Newobj, fieldDefCtor);
             cctoril.Emit(OpCodes.Stsfld, fb);
         }
@@ -212,9 +211,8 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
             FieldBuilder fb = TypeBuilder.DefineField($"s_fieldDef_{field.Name}", fieldDefType, FieldDefAttrs);
             HideFromIntellisense(fb);
 
-            cctoril.Emit(OpCodes.Ldc_I4, (int)field.Offset);
-            cctoril.Emit(OpCodes.Conv_I8);
-            cctoril.Emit(OpCodes.Ldc_I4, indirection);
+            cctoril.Emit(OpCodes.Ldc_I8, (Int64)field.Offset);
+            cctoril.Emit(OpCodes.Ldc_I4_S, (byte)indirection);
             cctoril.Emit(OpCodes.Newobj, fieldDefCtor);
             cctoril.Emit(OpCodes.Stsfld, fb);
 
@@ -280,11 +278,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
             if (TypeBuilder.IsInterface || TypeBuilder.IsEnum || Descriptor.IsStatic)
                 return;
 
-            ConstructorInfo ctor;
-            if (TypeBuilder.BaseType is TypeBuilder)
-                ctor = InitDerivedType(typeResolver, ctorCache);
-            else
-                ctor = InitBaseType();
+            ConstructorInfo ctor = InitType(typeResolver, ctorCache);
 
             ctorCache.Add(Type, ctor);
         }
@@ -323,11 +317,31 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
             return cb;
         }
 
-        private ConstructorInfo InitDerivedType(BuildTypeResolver typeResolver, ConstructorCache ctorCache)
+        private ConstructorInfo InitType(BuildTypeResolver typeResolver, ConstructorCache ctorCache)
         {
+            if (Descriptor.Base == null || Descriptor.Base is DotNetTypeReference)
+                return InitBaseType();
+
+            ConstructorInfo baseCtor = null;
             Type baseType = typeResolver.ResolveTypeReference(Descriptor.Base);
-            if (!ctorCache.TryGetValue(baseType, out ConstructorInfo baseCtor))
-                throw new ArgumentOutOfRangeException("Base constructor is referenced before it is created");
+            if (baseType is not System.Reflection.Emit.TypeBuilder)
+            {
+                if (baseType?.IsGenericType == true)
+                {
+                    if (!ctorCache.TryGetValue(baseType.GetGenericTypeDefinition(), out baseCtor))
+                        throw new ArgumentOutOfRangeException("Base constructor is referenced before it is created");
+
+                    baseCtor = TypeBuilder.GetConstructor(baseType, baseCtor);
+                }
+                else
+                    return InitBaseType();
+            }
+            else
+            {
+                if (!ctorCache.TryGetValue(baseType, out baseCtor))
+                    throw new ArgumentOutOfRangeException("Base constructor is referenced before it is created");
+            }
+            ErrorHandler.Assert(baseCtor != null, "Could not obtain base constructor");
 
             ConstructorBuilder ctor = TypeBuilder.DefineConstructor(MethodAttributes.Public, CallingConventions.Standard | CallingConventions.HasThis, CtorArgs);
             ILGenerator ilCtor = ctor.GetILGenerator();
