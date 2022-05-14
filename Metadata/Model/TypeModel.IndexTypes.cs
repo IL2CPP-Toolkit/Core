@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -12,6 +13,8 @@ namespace Il2CppToolkit.Model
         private readonly Dictionary<Il2CppMethodDefinition, ulong> methodAddresses = new();
         private readonly Dictionary<Il2CppMethodSpec, ulong> methodSpecAddresses = new();
         private readonly Dictionary<Il2CppTypeDefinition, ulong> m_typeDefToAddress = new();
+        private readonly Dictionary<Il2CppType, ulong> m_typeInstToAddress = new();
+        private readonly Dictionary<int, TypeDescriptor> m_parentTypeIndexToTypeInstDescriptor = new();
         private readonly Dictionary<int, TypeDescriptor> m_typeCache = new();
         private readonly List<TypeDescriptor> m_typeDescriptors = new();
 
@@ -40,8 +43,7 @@ namespace Il2CppToolkit.Model
             // Build dependencies
             foreach (TypeDescriptor td in m_typeDescriptors)
             {
-                TypeAttributes attribs = Helpers.GetTypeAttributes(td.TypeDef);
-                td.Attributes = attribs;
+                TypeAttributes attribs = td.Attributes;
 
                 // nested within type (parent)
                 if (td.TypeDef.declaringTypeIndex != -1)
@@ -65,26 +67,11 @@ namespace Il2CppToolkit.Model
                 }
 
                 // generic parameters
-                if (td.TypeDef.genericContainerIndex != -1)
+                // TODO: fork based on whether this is a generic inst vs. generic def
+                if (td.GenericClass != null) // generic inst
                 {
-                    Il2CppGenericContainer genericContainer = m_loader.Metadata.genericContainers[td.TypeDef.genericContainerIndex];
-                    td.GenericParameterNames = GetGenericContainerParamNames(genericContainer);
-                    ErrorHandler.Assert(td.GenericParameterNames.Length > 0, "Generic class must have template arguments");
-                }
-
-                // base class
-                if (attribs.HasFlag(TypeAttributes.Interface))
-                {
-                    td.Base = null;
-                }
-                else if (td.TypeDef.IsEnum)
-                {
-                    // TODO: Replace with flag?
-                    td.Base = new DotNetTypeReference(typeof(Enum));
-                }
-                else if (td.TypeDef.parentIndex >= 0)
-                {
-                    ITypeReference parentTypeReference = MakeTypeReferenceFromCppTypeIndex(td.TypeDef.parentIndex, td);
+                    ITypeReference parentTypeReference = MakeTypeReferenceFromCppTypeIndex((int)td.GenericTypeIndex, td);
+                    ErrorHandler.Assert(parentTypeReference.Name != "System.Object", "generic class instance must derive from a generic class definition");
                     if (parentTypeReference.Name != "System.Object")
                     {
                         td.Base = parentTypeReference;
@@ -92,13 +79,48 @@ namespace Il2CppToolkit.Model
                 }
                 else
                 {
-                    ErrorHandler.Assert(!td.TypeDef.IsValueType, "Unexpected value type");
-                }
+                    if (td.TypeDef.genericContainerIndex != -1)
+                    {
+                        Il2CppGenericContainer genericContainer = m_loader.Metadata.genericContainers[td.TypeDef.genericContainerIndex];
+                        td.GenericParameterNames = GetGenericContainerParamNames(genericContainer);
+                        ErrorHandler.Assert(td.GenericParameterNames.Length > 0, "Generic class must have template arguments");
+                    }
 
-                // interfaces
-                foreach (int interfaceTypeIndex in m_loader.Metadata.interfaceIndices.Range(td.TypeDef.interfacesStart, td.TypeDef.interfaces_count))
-                {
-                    td.Implements.Add(MakeTypeReferenceFromCppTypeIndex(interfaceTypeIndex, td));
+                    // base class
+                    if (attribs.HasFlag(TypeAttributes.Interface))
+                    {
+                        td.Base = null;
+                    }
+                    else if (td.TypeDef.IsEnum)
+                    {
+                        // TODO: Replace with flag?
+                        td.Base = new DotNetTypeReference(typeof(Enum));
+                    }
+                    else if (td.TypeDef.parentIndex >= 0)
+                    {
+                        if (m_parentTypeIndexToTypeInstDescriptor.TryGetValue(td.TypeDef.parentIndex, out TypeDescriptor parentInstDescriptor))
+                        {
+                            td.Base = new TypeDescriptorReference(parentInstDescriptor);
+                        }
+                        else
+                        {
+                            ITypeReference parentTypeReference = MakeTypeReferenceFromCppTypeIndex(td.TypeDef.parentIndex, td);
+                            if (parentTypeReference.Name != "System.Object")
+                            {
+                                td.Base = parentTypeReference;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        ErrorHandler.Assert(!td.TypeDef.IsValueType, "Unexpected value type");
+                    }
+
+                    // interfaces
+                    foreach (int interfaceTypeIndex in m_loader.Metadata.interfaceIndices.Range(td.TypeDef.interfacesStart, td.TypeDef.interfaces_count))
+                    {
+                        td.Implements.Add(MakeTypeReferenceFromCppTypeIndex(interfaceTypeIndex, td));
+                    }
                 }
 
                 // fields
@@ -265,10 +287,19 @@ namespace Il2CppToolkit.Model
             if (typeIndex >= m_loader.Il2Cpp.Types.Length) return;
             Il2CppType il2CppType = m_loader.Il2Cpp.Types[typeIndex];
             Il2CppTypeDefinition typeDef = GetTypeDefinitionFromIl2CppType(il2CppType, false);
-            if (typeDef == null) return;
-
             address = m_loader.Il2Cpp.GetRVA(address);
-            m_typeDefToAddress.Add(typeDef, address);
+
+            if (il2CppType.type == Il2CppTypeEnum.IL2CPP_TYPE_GENERICINST)
+            {
+                TypeDescriptor td = MakeGenericTypeInstDescriptor(typeIndex);
+                if (td.Attributes.HasFlag(TypeAttributes.Interface)) return;
+                m_typeInstToAddress.Add(il2CppType, address);
+                m_typeDescriptors.Add(td);
+            }
+            else if (typeDef != null)
+            {
+                m_typeDefToAddress.Add(typeDef, address);
+            }
         }
 
         private ITypeReference MakeTypeReferenceFromCppTypeIndex(int typeIndex, TypeDescriptor descriptor)
@@ -281,9 +312,9 @@ namespace Il2CppToolkit.Model
         private TypeDescriptor MakeTypeDescriptor(Il2CppTypeDefinition typeDef, int typeIndex, Il2CppImageDefinition imageDef)
         {
             string typeName = GetTypeDefName(typeDef);
-            TypeDescriptor td = new(typeName, typeDef, typeIndex, imageDef);
+            TypeDescriptor td = new(typeName, typeDef, imageDef);
             td.SizeInBytes = (uint)m_loader.Il2Cpp.TypeDefinitionSizes[typeIndex].instance_size;
-            if (TypeDefToAddress.TryGetValue(typeDef, out ulong address))
+            if (m_typeDefToAddress.TryGetValue(typeDef, out ulong address))
             {
                 td.TypeInfo = new()
                 {
@@ -293,6 +324,30 @@ namespace Il2CppToolkit.Model
             }
 
             m_typeCache.Add(typeIndex, td);
+            return td;
+        }
+
+        private TypeDescriptor MakeGenericTypeInstDescriptor(uint typeIndex)
+        {
+            Il2CppType il2CppType = m_loader.Il2Cpp.Types[typeIndex];
+            ErrorHandler.Assert(il2CppType.type == Il2CppTypeEnum.IL2CPP_TYPE_GENERICINST, "Expected GenericInst type");
+            string typeName = GetTypeName(il2CppType, addNamespace: true, is_nested: false);
+            Il2CppGenericClass genericClass = m_loader.Il2Cpp.MapVATR<Il2CppGenericClass>(il2CppType.data.generic_class);
+            long genericTypeDefIdx = GetGenericClassTypeDefinitionIndex(genericClass);
+            ErrorHandler.Assert(genericTypeDefIdx != -1, "Could not find generic type index");
+            Il2CppTypeDefinition genericTypeDef = m_loader.Metadata.typeDefs[genericTypeDefIdx];
+            TypeDescriptor td = new(typeName, genericTypeDef, null, genericClass, typeIndex);
+            td.SizeInBytes = (uint)m_loader.Il2Cpp.TypeDefinitionSizes[genericTypeDefIdx].instance_size;
+            if (m_typeInstToAddress.TryGetValue(il2CppType, out ulong address))
+            {
+                td.TypeInfo = new()
+                {
+                    Address = address,
+                    ModuleName = ModuleName,
+                };
+            }
+
+            m_parentTypeIndexToTypeInstDescriptor[(int)typeIndex] = td;
             return td;
         }
 

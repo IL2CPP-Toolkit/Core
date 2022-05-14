@@ -15,7 +15,6 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
     {
         ConstructorInfo Ctor { get; }
         Type Type { get; }
-        TypeDescriptor Descriptor { get; }
         void Create();
         void Build(BuildTypeResolver resolver, ConstructorCache ctorCache);
     }
@@ -28,7 +27,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
             {
                 return new GeneratedType(tb, descriptor);
             }
-            return new BuiltInType(type, descriptor);
+            return new BuiltInType(type);
         }
     }
 
@@ -36,14 +35,29 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
     {
         public ConstructorInfo Ctor => null;
         public Type Type { get; }
-        public TypeDescriptor Descriptor { get; }
         public void Build(BuildTypeResolver resolver, ConstructorCache ctorCache) { }
         public void Create() { }
 
-        public BuiltInType(Type type, TypeDescriptor descriptor)
+        public BuiltInType(Type type)
         {
             Type = type;
-            Descriptor = descriptor;
+        }
+    }
+
+    public class GenericClassImplementation : IGeneratedType
+    {
+        public ConstructorInfo Ctor => throw new NotImplementedException();
+
+        public Type Type => throw new NotImplementedException();
+
+        public void Build(BuildTypeResolver resolver, ConstructorCache ctorCache)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Create()
+        {
+            throw new NotImplementedException();
         }
     }
 
