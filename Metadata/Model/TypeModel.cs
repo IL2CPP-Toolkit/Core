@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace Il2CppToolkit.Model
 {
-	public partial class TypeModel : ITypeModel
+	public partial class TypeModel : ITypeModelMetadata
 	{
 		private readonly Loader m_loader;
 		private ulong[] m_fieldOffsets;

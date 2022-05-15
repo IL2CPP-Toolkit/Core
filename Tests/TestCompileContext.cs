@@ -27,9 +27,9 @@ namespace Il2CppToolkit.ReverseCompiler
 		public List<TypeDescriptor> TypeDescriptors { get; } = new();
 		public List<Func<TypeDescriptor, bool>> TypeSelectors { get; } = new();
 		public ArtifactContainer Artifacts { get; } = new();
-		public Mock<ITypeModel> ModelMock { get; } = new();
+		public Mock<ITypeModelMetadata> ModelMock { get; } = new();
 		public Mock<ICompileContext> ContextMock { get; } = new();
-		ITypeModel ICompileContext.Model => ModelMock.Object;
+		ITypeModelMetadata ICompileContext.Model => ModelMock.Object;
 
 		public void AddPhase<T>(T compilePhase) where T : CompilePhase => ContextMock.Object.AddPhase(compilePhase);
 		public Task Execute() => ContextMock.Object.Execute();

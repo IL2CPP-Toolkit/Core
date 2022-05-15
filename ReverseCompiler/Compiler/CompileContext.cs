@@ -13,10 +13,10 @@ namespace Il2CppToolkit.ReverseCompiler
 		private readonly HashSet<CompilePhase> m_phases = new();
 		private readonly ArtifactContainer m_artifacts = new();
 
-		public ITypeModel Model { get; }
+		public ITypeModelMetadata Model { get; }
 		public ArtifactContainer Artifacts => m_artifacts;
 
-		public CompileContext(ITypeModel model)
+		public CompileContext(ITypeModelMetadata model)
 		{
 			Model = model;
 		}

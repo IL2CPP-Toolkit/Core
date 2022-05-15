@@ -6,7 +6,7 @@ namespace Il2CppToolkit.ReverseCompiler
 {
 	public interface ICompileContext
 	{
-		ITypeModel Model { get; }
+		ITypeModelMetadata Model { get; }
 		ArtifactContainer Artifacts { get; }
 
 		void AddPhase<T>(T compilePhase) where T : CompilePhase;
