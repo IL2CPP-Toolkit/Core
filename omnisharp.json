@@ -1,4 +1,8 @@
 {
+  "RoslynExtensionsOptions": {
+    "EnableDecompilationSupport": true,
+    "EnableAnalyzersSupport": true
+  },
   "FormattingOptions": {
     "IndentationSize": 4,
     "TabSize": 4,

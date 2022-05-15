@@ -8,7 +8,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 {
     public interface IResolveTypeFromTypeDefinition
     {
-        Type EnsureType(TypeDescriptor descriptor);
+        IGeneratedType EnsureType(TypeDescriptor descriptor);
     }
 
     public class BuildTypeResolver

@@ -17,8 +17,8 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
         {
             new SortDependenciesPhase(),
             new DefineTypesPhase(),
-            new BuildTypesPhase(),
-            new GenerateAssemblyPhase()
+            // new BuildTypesPhase(),
+            // new GenerateAssemblyPhase()
         };
     }
 }
