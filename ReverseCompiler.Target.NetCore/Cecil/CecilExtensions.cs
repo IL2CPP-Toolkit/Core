@@ -2,38 +2,50 @@ using System;
 
 namespace Mono.Cecil
 {
-    public static class CecilExtensions
-    {
-        public static TypeReference MakeGenericType(this TypeReference self, params TypeReference[] arguments)
-        {
-            if (self.GenericParameters.Count != arguments.Length)
-                throw new ArgumentOutOfRangeException(nameof(self));
+	public static class CecilExtensions
+	{
+		public static TypeReference MakeGenericType(this TypeReference self, params TypeReference[] arguments)
+		{
+			if (self.GenericParameters.Count != arguments.Length)
+				throw new ArgumentOutOfRangeException(nameof(self));
 
-            GenericInstanceType instance = new(self);
+			GenericInstanceType instance = new(self);
 
-            foreach (var argument in arguments)
-                instance.GenericArguments.Add(argument);
+			foreach (var argument in arguments)
+				instance.GenericArguments.Add(argument);
 
-            return instance;
-        }
+			return instance;
+		}
 
-        public static MethodReference MakeGeneric(this MethodReference self, params TypeReference[] arguments)
-        {
-            MethodReference reference = new(self.Name, self.ReturnType)
-            {
-                DeclaringType = self.DeclaringType.MakeGenericType(arguments),
-                HasThis = self.HasThis,
-                ExplicitThis = self.ExplicitThis,
-                CallingConvention = self.CallingConvention,
-            };
+		public static MethodReference GetConstructor(this TypeReference typeReference)
+		{
+			MethodReference methodRef = new(".ctor", typeReference.Module.TypeSystem.Void)
+			{
+				DeclaringType = typeReference,
+				HasThis = true,
+				ExplicitThis = false,
+				CallingConvention = MethodCallingConvention.Default,
+			};
+			return methodRef;
+		}
 
-            foreach (ParameterDefinition parameter in self.Parameters)
-                reference.Parameters.Add(new ParameterDefinition(parameter.ParameterType));
+		public static MethodReference MakeGeneric(this MethodReference self, params TypeReference[] arguments)
+		{
+			MethodReference reference = new(self.Name, self.ReturnType)
+			{
+				DeclaringType = self.DeclaringType.MakeGenericType(arguments),
+				HasThis = self.HasThis,
+				ExplicitThis = self.ExplicitThis,
+				CallingConvention = self.CallingConvention,
+			};
 
-            foreach (GenericParameter generic_parameter in self.GenericParameters)
-                reference.GenericParameters.Add(new GenericParameter(generic_parameter.Name, reference));
+			foreach (ParameterDefinition parameter in self.Parameters)
+				reference.Parameters.Add(new ParameterDefinition(parameter.ParameterType));
 
-            return reference;
-        }
-    }
+			foreach (GenericParameter generic_parameter in self.GenericParameters)
+				reference.GenericParameters.Add(new GenericParameter(generic_parameter.Name, reference));
+
+			return reference;
+		}
+	}
 }
