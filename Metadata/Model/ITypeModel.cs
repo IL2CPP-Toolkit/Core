@@ -11,11 +11,13 @@ namespace Il2CppToolkit.Model
 		IReadOnlyDictionary<Il2CppMethodDefinition, ulong> MethodAddresses { get; }
 		IReadOnlyDictionary<Il2CppMethodSpec, ulong> MethodSpecAddresses { get; }
 		IReadOnlyDictionary<Il2CppTypeDefinition, ulong> TypeDefToAddress { get; }
+		IReadOnlyDictionary<Il2CppType, ulong> TypeToTypeInfoAddress { get; }
 		IReadOnlyDictionary<int, TypeDescriptor> TypeDefsByIndex { get; }
 	}
 
 	public interface ITypeModelMetadata : ITypeModel
 	{
+		ulong GetFieldOffsetFromIndex(Il2CppTypeDefinition typeDefinition, int fieldIndex);
 		Il2CppGenericParameter GetGenericParameterFromIl2CppType(Il2CppType il2CppType);
 		Il2CppTypeDefinition GetTypeDefinitionFromIl2CppType(Il2CppType il2CppType, bool resolveGeneric = true);
 		long GetGenericClassTypeDefinitionIndex(Il2CppGenericClass genericClass);

@@ -29,7 +29,7 @@ namespace Il2CppToolkit.Model
 			{28,typeof(object).FullName},
 		};
 
-		private ulong GetFieldOffsetFromIndex(Il2CppTypeDefinition typeDefinition, int fieldIndex)
+		public ulong GetFieldOffsetFromIndex(Il2CppTypeDefinition typeDefinition, int fieldIndex)
 		{
 			ulong offset = m_fieldOffsets[fieldIndex];
 			if (offset > 0)

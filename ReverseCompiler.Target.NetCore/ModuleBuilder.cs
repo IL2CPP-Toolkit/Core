@@ -11,6 +11,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 	public class ModuleBuilder
 	{
 		const MethodAttributes kRTObjGetterAttrs = MethodAttributes.Public | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.Virtual | MethodAttributes.RTSpecialName | MethodAttributes.SpecialName | MethodAttributes.NewSlot;
+		const MethodAttributes kGetterAttrs = MethodAttributes.Public | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.Virtual | MethodAttributes.RTSpecialName | MethodAttributes.SpecialName;
 		const MethodAttributes kCtorAttrs = MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName;
 		private readonly ICompileContext Context;
 		private readonly AssemblyDefinition AssemblyDefinition;
@@ -31,6 +32,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 		private readonly TypeReference IRuntimeObjectTypeRef;
 		private readonly TypeReference IMemorySourceTypeRef;
 		private readonly MethodReference ObjectCtorMethodRef;
+		private readonly MethodReference GetMemberValueMethodRef;
 		private ModuleDefinition Module => AssemblyDefinition.MainModule;
 
 		public ModuleBuilder(ICompileContext context, AssemblyDefinition assemblyDefinition)
@@ -42,6 +44,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 			IRuntimeObjectTypeRef = Module.ImportReference(typeof(IRuntimeObject));
 			IMemorySourceTypeRef = Module.ImportReference(typeof(IMemorySource));
 			ObjectCtorMethodRef = Module.ImportReference(typeof(object).GetConstructor(Type.EmptyTypes));
+			GetMemberValueMethodRef = Module.ImportReference(typeof(FieldMember<,>).GetMethod("GetValue"));
 		}
 
 		public void IncludeTypeDefinition(Il2CppTypeDefinition cppTypeDef)
@@ -74,12 +77,59 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 			{
 				TypeDefinition typeDef = GetTypeDefinition(cppTypeDef);
 				InitializeTypeDefinition(cppTypeDef, typeDef);
-				DefineConstructors(cppTypeDef, typeDef);
+				DefineConstructors(typeDef);
+				using TypeInfoBuilder typeInfo = new(typeDef, Module);
+				DefineFields(cppTypeDef, typeDef, typeInfo);
 			}
 		}
 
-		private void DefineConstructors(Il2CppTypeDefinition cppTypeDef, TypeDefinition typeDef)
+		private void InitializeTypeDefinition(Il2CppTypeDefinition cppTypeDef, TypeDefinition typeDef)
 		{
+			// declaring type
+			if (cppTypeDef.declaringTypeIndex >= 0)
+			{
+				Il2CppTypeDefinition declaringType = Context.Model.GetTypeDefinitionFromIl2CppType(Il2Cpp.Types[cppTypeDef.declaringTypeIndex]);
+				Debug.Assert(declaringType != null);
+				if (declaringType != null)
+					UseTypeDefinition(declaringType);
+			}
+
+			// nested types
+			for (int i = 0; i < cppTypeDef.nested_type_count; i++)
+			{
+				var nestedIndex = Metadata.nestedTypeIndices[cppTypeDef.nestedTypesStart + i];
+				var nestedTypeDef = Metadata.typeDefs[nestedIndex];
+				var nestedTypeDefinition = UseTypeDefinition(nestedTypeDef);
+				typeDef.NestedTypes.Add(nestedTypeDefinition);
+			}
+
+			// genericParameters
+			if (cppTypeDef.genericContainerIndex >= 0)
+			{
+				var genericContainer = Metadata.genericContainers[cppTypeDef.genericContainerIndex];
+				for (int i = 0; i < genericContainer.type_argc; i++)
+				{
+					var genericParameterIndex = genericContainer.genericParameterStart + i;
+					var param = Metadata.genericParameters[genericParameterIndex];
+					var genericParameter = CreateGenericParameter(param, typeDef);
+					typeDef.GenericParameters.Add(genericParameter);
+				}
+			}
+
+			// parent
+			if (cppTypeDef.parentIndex >= 0)
+			{
+				var parentType = Il2Cpp.Types[cppTypeDef.parentIndex];
+				var parentTypeRef = UseTypeReference(typeDef, parentType);
+				typeDef.BaseType = parentTypeRef;
+			}
+		}
+
+		private void DefineConstructors(TypeDefinition typeDef)
+		{
+			if (typeDef.IsInterface)
+				return;
+
 			if (typeDef.IsValueType)
 			{
 				// implement IRuntimeObject
@@ -87,7 +137,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 				return;
 			}
 
-			if (typeDef.BaseType == Module.TypeSystem.Object)
+			if (typeDef.BaseType == null || typeDef.BaseType == Module.TypeSystem.Object)
 			{
 				// inherit from RuntimeObject
 				typeDef.BaseType = RuntimeObjectTypeRef;
@@ -151,97 +201,66 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 			typeDef.Methods.Add(ctorMethod);
 		}
 
-		private void InitializeTypeDefinition(Il2CppTypeDefinition cppTypeDef, TypeDefinition typeDef)
+		private void DefineFields(Il2CppTypeDefinition cppTypeDef, TypeDefinition typeDef, TypeInfoBuilder typeInfo)
 		{
-			// declaring type
-			if (cppTypeDef.declaringTypeIndex >= 0)
+			var fieldEnd = cppTypeDef.fieldStart + cppTypeDef.field_count;
+			for (var i = cppTypeDef.fieldStart; i < fieldEnd; ++i)
 			{
-				Il2CppTypeDefinition declaringType = Context.Model.GetTypeDefinitionFromIl2CppType(Il2Cpp.Types[cppTypeDef.declaringTypeIndex]);
-				Debug.Assert(declaringType != null);
-				if (declaringType != null)
-					UseTypeDefinition(declaringType);
-			}
-
-			// nested types
-			for (int i = 0; i < cppTypeDef.nested_type_count; i++)
-			{
-				var nestedIndex = Metadata.nestedTypeIndices[cppTypeDef.nestedTypesStart + i];
-				var nestedTypeDef = Metadata.typeDefs[nestedIndex];
-				var nestedTypeDefinition = UseTypeDefinition(nestedTypeDef);
-				typeDef.NestedTypes.Add(nestedTypeDefinition);
-			}
-
-			// genericParameters
-			if (cppTypeDef.genericContainerIndex >= 0)
-			{
-				var genericContainer = Metadata.genericContainers[cppTypeDef.genericContainerIndex];
-				for (int i = 0; i < genericContainer.type_argc; i++)
+				Il2CppFieldDefinition cppFieldDef = Metadata.fieldDefs[i];
+				Il2CppType cppFieldType = Il2Cpp.Types[cppFieldDef.typeIndex];
+				string fieldName = Metadata.GetStringFromIndex(cppFieldDef.nameIndex);
+				TypeReference fieldTypeRef = UseTypeReference(typeDef, cppFieldType);
+				FieldAttributes fieldAttrs = (FieldAttributes)cppFieldType.attrs;
+				bool isStatic = fieldAttrs.HasFlag(FieldAttributes.Static);
+				if (fieldAttrs.HasFlag(FieldAttributes.Literal))
 				{
-					var genericParameterIndex = genericContainer.genericParameterStart + i;
-					var param = Metadata.genericParameters[genericParameterIndex];
-					var genericParameter = CreateGenericParameter(param, typeDef);
-					typeDef.GenericParameters.Add(genericParameter);
+					// TODO add field literal directly
+					continue;
+				}
+
+				var fieldOffset = Context.Model.GetFieldOffsetFromIndex(cppTypeDef, i);
+				if (isStatic)
+				{
+					if (Context.Model.TypeDefToAddress.TryGetValue(cppTypeDef, out ulong address))
+					{
+						typeInfo.DefineStaticField(fieldName, fieldTypeRef, Context.Model.ModuleName, address, fieldOffset, 1);
+					}
+				}
+				else
+				{
+					typeInfo.DefineField(fieldName, fieldTypeRef, fieldOffset, 1);
 				}
 			}
+			// Il2CppTypeDefinition cppParentTypeDef = null;
+			// Il2CppType cppParentType = Il2Cpp.Types[cppTypeDef.parentIndex];
+			// if (cppParentType.type == Il2CppTypeEnum.IL2CPP_TYPE_GENERICINST)
+			// {
+			// 	Il2CppGenericClass cppGenericClass = Context.Model.Il2Cpp.MapVATR<Il2CppGenericClass>(cppParentType.data.generic_class);
+			// 	cppParentTypeDef = Context.Model.GetGenericClassTypeDefinition(cppGenericClass);
+			// }
+			// else if (cppParentType.type == Il2CppTypeEnum.IL2CPP_TYPE_CLASS)
+			// {
+			// 	cppParentTypeDef = Context.Model.GetTypeDefinitionFromIl2CppType(cppParentType);
+			// }
+			// // parent class missing typeInfo? try to include static fields from there.
+			// if (cppParentTypeDef != null && !Context.Model.TypeDefToAddress.TryGetValue(cppParentTypeDef, out _))
+			// {
 
-			// parent
-			if (cppTypeDef.parentIndex >= 0)
-			{
-				var parentType = Il2Cpp.Types[cppTypeDef.parentIndex];
-				var parentTypeRef = UseTypeReference(typeDef, parentType);
-				typeDef.BaseType = parentTypeRef;
-			}
+			// }
 		}
 
-		private FieldDefinition GetFieldDefinition(Il2CppFieldDefinition cppFieldDef, TypeDefinition typeDef)
-		{
-			if (Fields.TryGetValue(cppFieldDef, out FieldDefinition fieldDef))
-				return fieldDef;
+		// private MethodDefinition GetMethodDefinition(Il2CppMethodDefinition cppMethodDef)
+		// {
+		// 	if (Methods.TryGetValue(cppMethodDef, out MethodDefinition methodDef))
+		// 		return methodDef;
 
-			Il2CppType cppFieldType = Il2Cpp.Types[cppFieldDef.typeIndex];
-			string fieldName = Metadata.GetStringFromIndex(cppFieldDef.nameIndex);
-			TypeReference fieldTypeRef = UseTypeReference(typeDef, cppFieldType);
+		// 	string methodName = Metadata.GetStringFromIndex(cppMethodDef.nameIndex);
 
-			fieldDef = new FieldDefinition(fieldName, (FieldAttributes)cppFieldType.attrs, fieldTypeRef);
-			Fields.Add(cppFieldDef, fieldDef);
-			return fieldDef;
-		}
-
-		private MethodDefinition GetMethodDefinition(Il2CppMethodDefinition cppMethodDef)
-		{
-			if (Methods.TryGetValue(cppMethodDef, out MethodDefinition methodDef))
-				return methodDef;
-
-			string methodName = Metadata.GetStringFromIndex(cppMethodDef.nameIndex);
-
-			// TODO: Give it a real return type!
-			methodDef = new MethodDefinition(methodName, (MethodAttributes)cppMethodDef.flags, AssemblyDefinition.MainModule.TypeSystem.Void);
-			Methods.Add(cppMethodDef, methodDef);
-			return methodDef;
-		}
-
-		private PropertyDefinition GetPropertyDefinition(Il2CppPropertyDefinition cppPropertyDef, Il2CppTypeDefinition cppTypeDef)
-		{
-			if (Properties.TryGetValue(cppPropertyDef, out PropertyDefinition propertyDef))
-				return propertyDef;
-
-			string propertyName = Metadata.GetStringFromIndex(cppPropertyDef.nameIndex);
-			TypeReference propertyType = null;
-			if (cppPropertyDef.get >= 0)
-			{
-				MethodDefinition methodDef = GetMethodDefinition(Metadata.methodDefs[cppTypeDef.methodStart + cppPropertyDef.get]);
-				propertyType = methodDef.ReturnType;
-			}
-			else if (cppPropertyDef.set >= 0)
-			{
-				MethodDefinition methodDef = GetMethodDefinition(Metadata.methodDefs[cppTypeDef.methodStart + cppPropertyDef.set]);
-				propertyType = methodDef.Parameters[0].ParameterType;
-			}
-
-			propertyDef = new PropertyDefinition(propertyName, (PropertyAttributes)cppPropertyDef.attrs, propertyType);
-			Properties.Add(cppPropertyDef, propertyDef);
-			return propertyDef;
-		}
+		// 	// TODO: Give it a real return type!
+		// 	methodDef = new MethodDefinition(methodName, (MethodAttributes)cppMethodDef.flags, AssemblyDefinition.MainModule.TypeSystem.Void);
+		// 	Methods.Add(cppMethodDef, methodDef);
+		// 	return methodDef;
+		// }
 
 		private TypeDefinition GetTypeDefinition(Il2CppTypeDefinition cppTypeDef)
 		{
@@ -261,7 +280,6 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 			if (BuiltInTypes.TryGetValue(cppType.type, out TypeReference typeRef))
 				return typeRef;
 
-			ModuleDefinition moduleDefinition = AssemblyDefinition.MainModule;
 			switch (cppType.type)
 			{
 				case Il2CppTypeEnum.IL2CPP_TYPE_CLASS:
@@ -269,7 +287,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 					{
 						Il2CppTypeDefinition cppTypeDef = Context.Model.GetTypeDefinitionFromIl2CppType(cppType);
 						TypeDefinition typeDef = UseTypeDefinition(cppTypeDef);
-						return moduleDefinition.ImportReference(typeDef);
+						return typeDef;
 					}
 				case Il2CppTypeEnum.IL2CPP_TYPE_ARRAY:
 					{
@@ -282,7 +300,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 						Il2CppGenericClass cppGenericClass = Context.Model.Il2Cpp.MapVATR<Il2CppGenericClass>(cppType.data.generic_class);
 						Il2CppTypeDefinition cppTypeDef = Context.Model.GetGenericClassTypeDefinition(cppGenericClass);
 						TypeDefinition typeDef = UseTypeDefinition(cppTypeDef);
-						GenericInstanceType genericInstanceType = new(moduleDefinition.ImportReference(typeDef));
+						GenericInstanceType genericInstanceType = new(typeDef);
 						Il2CppGenericInst cppGenericInst = Context.Model.Il2Cpp.MapVATR<Il2CppGenericInst>(cppGenericClass.context.class_inst);
 						ulong[] pointers = Context.Model.Il2Cpp.MapVATR<ulong>(cppGenericInst.type_argv, cppGenericInst.type_argc);
 						foreach (ulong pointer in pointers)
