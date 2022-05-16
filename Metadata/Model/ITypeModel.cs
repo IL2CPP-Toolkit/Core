@@ -13,6 +13,7 @@ namespace Il2CppToolkit.Model
 		IReadOnlyDictionary<Il2CppTypeDefinition, ulong> TypeDefToAddress { get; }
 		IReadOnlyDictionary<Il2CppType, ulong> TypeToTypeInfoAddress { get; }
 		IReadOnlyDictionary<int, TypeDescriptor> TypeDefsByIndex { get; }
+		IReadOnlyDictionary<Il2CppTypeDefinition, Il2CppGenericClass[]> GenericClassList { get; }
 	}
 
 	public interface ITypeModelMetadata : ITypeModel

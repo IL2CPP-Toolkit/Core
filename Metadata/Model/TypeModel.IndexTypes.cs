@@ -16,6 +16,7 @@ namespace Il2CppToolkit.Model
 		private readonly Dictionary<Il2CppType, ulong> m_typeToAddress = new();
 		private readonly Dictionary<int, TypeDescriptor> m_parentTypeIndexToTypeInstDescriptor = new();
 		private readonly Dictionary<int, TypeDescriptor> m_typeCache = new();
+		private Dictionary<Il2CppTypeDefinition, Il2CppGenericClass[]> m_genericClassList = new();
 		private readonly List<TypeDescriptor> m_typeDescriptors = new();
 
 		private void IndexTypeDescriptors()
@@ -208,6 +209,19 @@ namespace Il2CppToolkit.Model
 					}
 				}
 			}
+
+			// build generic instances map
+			m_genericClassList = Il2Cpp.Types
+				.Where(type => type.type == Il2CppTypeEnum.IL2CPP_TYPE_GENERICINST)
+				.Select(type =>
+				{
+					ulong pointer = type.data.generic_class;
+					var genericClass = Il2Cpp.MapVATR<Il2CppGenericClass>(type.data.generic_class);
+					var typeDef = GetGenericClassTypeDefinition(genericClass);
+					return new Tuple<Il2CppGenericClass, Il2CppTypeDefinition>(genericClass, typeDef);
+				})
+				.GroupBy(tuple => tuple.Item2, tuple => tuple.Item1)
+				.ToDictionary(group => group.Key, group => group.ToArray());
 		}
 
 		private void ProcessTypeMetadata()

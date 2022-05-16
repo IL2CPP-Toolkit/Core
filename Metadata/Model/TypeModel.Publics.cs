@@ -15,5 +15,6 @@ namespace Il2CppToolkit.Model
 		public IReadOnlyDictionary<Il2CppTypeDefinition, ulong> TypeDefToAddress => m_typeDefToAddress;
 		public IReadOnlyDictionary<Il2CppType, ulong> TypeToTypeInfoAddress => m_typeToAddress;
 		public IReadOnlyDictionary<int, TypeDescriptor> TypeDefsByIndex => m_typeCache;
+		public IReadOnlyDictionary<Il2CppTypeDefinition, Il2CppGenericClass[]> GenericClassList => m_genericClassList;
 	}
 }
