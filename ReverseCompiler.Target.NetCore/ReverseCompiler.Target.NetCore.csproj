@@ -12,11 +12,6 @@
     <PackageReference Include="Vestris.ResourceLib" Version="2.1.0" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Compile Remove="**\*.test.cs"></Compile>
-    <None Include="**\*.test.cs"></None>
-  </ItemGroup>
-
   <PropertyGroup>
     <TargetFrameworks>net472;net5.0</TargetFrameworks>
     <LangVersion>9.0</LangVersion>
