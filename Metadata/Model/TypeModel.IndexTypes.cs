@@ -16,7 +16,7 @@ namespace Il2CppToolkit.Model
 		private readonly Dictionary<Il2CppType, ulong> m_typeToAddress = new();
 		private readonly Dictionary<int, TypeDescriptor> m_parentTypeIndexToTypeInstDescriptor = new();
 		private readonly Dictionary<int, TypeDescriptor> m_typeCache = new();
-		private Dictionary<Il2CppTypeDefinition, Il2CppGenericClass[]> m_genericClassList = new();
+		private Dictionary<Il2CppTypeDefinition, Il2CppType[]> m_genericClassList = new();
 		private readonly List<TypeDescriptor> m_typeDescriptors = new();
 
 		private void IndexTypeDescriptors()
@@ -218,9 +218,9 @@ namespace Il2CppToolkit.Model
 					ulong pointer = type.data.generic_class;
 					var genericClass = Il2Cpp.MapVATR<Il2CppGenericClass>(type.data.generic_class);
 					var typeDef = GetGenericClassTypeDefinition(genericClass);
-					return new Tuple<Il2CppGenericClass, Il2CppTypeDefinition>(genericClass, typeDef);
+					return new Tuple<Il2CppTypeDefinition, Il2CppType>(typeDef, type);
 				})
-				.GroupBy(tuple => tuple.Item2, tuple => tuple.Item1)
+				.GroupBy(tuple => tuple.Item1, tuple => tuple.Item2)
 				.ToDictionary(group => group.Key, group => group.ToArray());
 		}
 

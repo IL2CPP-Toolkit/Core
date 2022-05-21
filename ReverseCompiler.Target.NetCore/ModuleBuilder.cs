@@ -78,6 +78,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 				TypeDefinition typeDef = GetTypeDefinition(cppTypeDef);
 				InitializeTypeDefinition(cppTypeDef, typeDef);
 				DefineConstructors(typeDef);
+
 				using TypeInfoBuilder typeInfo = new(typeDef, Module);
 				DefineFields(cppTypeDef, typeDef, typeInfo);
 			}
