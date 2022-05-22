@@ -5,13 +5,12 @@
     "tasks": [
         {
             "label": "build",
-            "command": "dotnet",
+            "command": "D:/Program Files/Microsoft Visual Studio/2022/Enterprise/MSBuild/Current/Bin/amd64/MSBuild.exe",
             "type": "process",
             "args": [
-                "build",
-                "${workspaceFolder}",
-                "/property:GenerateFullPaths=true",
-                "/consoleloggerparameters:NoSummary"
+                "${workspaceFolder}/Core.sln",
+                "-m:8",
+                "-verbosity:m"
             ],
             "problemMatcher": "$msCompile",
             "group": {
