@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Label="ConanVariables">
+    <ConanprotobufRootFolder>C:/.conan/eae72a/1</ConanprotobufRootFolder>
+    <ConanprotobufBinaryDirectories>C:/.conan/eae72a/1/bin;</ConanprotobufBinaryDirectories>
+    <ConanprotobufDependencies>zlib</ConanprotobufDependencies>
+    <ConanprotobufCompilerFlags></ConanprotobufCompilerFlags>
+    <ConanprotobufLinkerFlags></ConanprotobufLinkerFlags>
+    <ConanprotobufPreprocessorDefinitions></ConanprotobufPreprocessorDefinitions>
+    <ConanprotobufIncludeDirectories>C:/.conan/eae72a/1/include;</ConanprotobufIncludeDirectories>
+    <ConanprotobufResourceDirectories>C:/.conan/eae72a/1/res;</ConanprotobufResourceDirectories>
+    <ConanprotobufLibraryDirectories>C:/.conan/eae72a/1/lib;</ConanprotobufLibraryDirectories>
+    <ConanprotobufLibraries>libprotoc.lib;libprotobuf.lib;</ConanprotobufLibraries>
+    <ConanprotobufSystemLibs></ConanprotobufSystemLibs>
+  </PropertyGroup>
+</Project>

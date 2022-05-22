@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Label="ConanVariables">
+    <ConanopensslRootFolder>C:/Users/PowerSpec/.conan/data/openssl/1.1.1n/_/_/package/6cc50b139b9c3d27b3e9042d5f5372d327b3a9f7</ConanopensslRootFolder>
+    <ConanopensslBinaryDirectories>C:/Users/PowerSpec/.conan/data/openssl/1.1.1n/_/_/package/6cc50b139b9c3d27b3e9042d5f5372d327b3a9f7/bin;</ConanopensslBinaryDirectories>
+    <ConanopensslDependencies></ConanopensslDependencies>
+    <ConanopensslCompilerFlags></ConanopensslCompilerFlags>
+    <ConanopensslLinkerFlags></ConanopensslLinkerFlags>
+    <ConanopensslPreprocessorDefinitions></ConanopensslPreprocessorDefinitions>
+    <ConanopensslIncludeDirectories>C:/Users/PowerSpec/.conan/data/openssl/1.1.1n/_/_/package/6cc50b139b9c3d27b3e9042d5f5372d327b3a9f7/include;</ConanopensslIncludeDirectories>
+    <ConanopensslResourceDirectories>C:/Users/PowerSpec/.conan/data/openssl/1.1.1n/_/_/package/6cc50b139b9c3d27b3e9042d5f5372d327b3a9f7/res;</ConanopensslResourceDirectories>
+    <ConanopensslLibraryDirectories>C:/Users/PowerSpec/.conan/data/openssl/1.1.1n/_/_/package/6cc50b139b9c3d27b3e9042d5f5372d327b3a9f7/lib;</ConanopensslLibraryDirectories>
+    <ConanopensslLibraries>libssl.lib;libcrypto.lib;</ConanopensslLibraries>
+    <ConanopensslSystemLibs>crypt32.lib;ws2_32.lib;advapi32.lib;user32.lib;</ConanopensslSystemLibs>
+  </PropertyGroup>
+</Project>

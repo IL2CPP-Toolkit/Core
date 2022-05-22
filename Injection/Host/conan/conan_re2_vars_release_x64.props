@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Label="ConanVariables">
+    <Conanre2RootFolder>C:/Users/PowerSpec/.conan/data/re2/20220201/_/_/package/6cc50b139b9c3d27b3e9042d5f5372d327b3a9f7</Conanre2RootFolder>
+    <Conanre2BinaryDirectories>C:/Users/PowerSpec/.conan/data/re2/20220201/_/_/package/6cc50b139b9c3d27b3e9042d5f5372d327b3a9f7/bin;</Conanre2BinaryDirectories>
+    <Conanre2Dependencies></Conanre2Dependencies>
+    <Conanre2CompilerFlags></Conanre2CompilerFlags>
+    <Conanre2LinkerFlags></Conanre2LinkerFlags>
+    <Conanre2PreprocessorDefinitions></Conanre2PreprocessorDefinitions>
+    <Conanre2IncludeDirectories>C:/Users/PowerSpec/.conan/data/re2/20220201/_/_/package/6cc50b139b9c3d27b3e9042d5f5372d327b3a9f7/include;</Conanre2IncludeDirectories>
+    <Conanre2ResourceDirectories>C:/Users/PowerSpec/.conan/data/re2/20220201/_/_/package/6cc50b139b9c3d27b3e9042d5f5372d327b3a9f7/res;</Conanre2ResourceDirectories>
+    <Conanre2LibraryDirectories>C:/Users/PowerSpec/.conan/data/re2/20220201/_/_/package/6cc50b139b9c3d27b3e9042d5f5372d327b3a9f7/lib;</Conanre2LibraryDirectories>
+    <Conanre2Libraries>re2.lib;</Conanre2Libraries>
+    <Conanre2SystemLibs></Conanre2SystemLibs>
+  </PropertyGroup>
+</Project>

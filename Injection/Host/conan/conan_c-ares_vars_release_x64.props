@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Label="ConanVariables">
+    <Conanc-aresRootFolder>C:/Users/PowerSpec/.conan/data/c-ares/1.18.1/_/_/package/f059349eaf562dce3ec19f03f4eb650e35bc02be</Conanc-aresRootFolder>
+    <Conanc-aresBinaryDirectories>C:/Users/PowerSpec/.conan/data/c-ares/1.18.1/_/_/package/f059349eaf562dce3ec19f03f4eb650e35bc02be/bin;</Conanc-aresBinaryDirectories>
+    <Conanc-aresDependencies></Conanc-aresDependencies>
+    <Conanc-aresCompilerFlags></Conanc-aresCompilerFlags>
+    <Conanc-aresLinkerFlags></Conanc-aresLinkerFlags>
+    <Conanc-aresPreprocessorDefinitions>CARES_STATICLIB;</Conanc-aresPreprocessorDefinitions>
+    <Conanc-aresIncludeDirectories>C:/Users/PowerSpec/.conan/data/c-ares/1.18.1/_/_/package/f059349eaf562dce3ec19f03f4eb650e35bc02be/include;</Conanc-aresIncludeDirectories>
+    <Conanc-aresResourceDirectories>C:/Users/PowerSpec/.conan/data/c-ares/1.18.1/_/_/package/f059349eaf562dce3ec19f03f4eb650e35bc02be/res;</Conanc-aresResourceDirectories>
+    <Conanc-aresLibraryDirectories>C:/Users/PowerSpec/.conan/data/c-ares/1.18.1/_/_/package/f059349eaf562dce3ec19f03f4eb650e35bc02be/lib;</Conanc-aresLibraryDirectories>
+    <Conanc-aresLibraries>cares.lib;</Conanc-aresLibraries>
+    <Conanc-aresSystemLibs>ws2_32.lib;advapi32.lib;iphlpapi.lib;</Conanc-aresSystemLibs>
+  </PropertyGroup>
+</Project>

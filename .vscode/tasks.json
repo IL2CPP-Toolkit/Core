@@ -4,9 +4,24 @@
     "version": "2.0.0",
     "tasks": [
         {
+            "label": "conan",
+            "command": "C:/Program Files/Conan/conan/conan.exe",
+            "type": "process",
+            "args": [
+                "install",
+                "${workspaceFolder}\\Injection\\Host\\Conan",
+                "--profile=debug",
+                "--build=missing"
+            ],
+            "problemMatcher": "$msCompile"
+        },
+        {
             "label": "build",
             "command": "D:/Program Files/Microsoft Visual Studio/2022/Enterprise/MSBuild/Current/Bin/amd64/MSBuild.exe",
             "type": "process",
+            "dependsOn": [
+                "conan"
+            ],
             "args": [
                 "${workspaceFolder}/Core.sln",
                 "-m:8",

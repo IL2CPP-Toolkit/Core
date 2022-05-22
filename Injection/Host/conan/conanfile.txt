@@ -1,0 +1,5 @@
+[requires]
+grpc/1.45.2
+
+[generators]
+visual_studio

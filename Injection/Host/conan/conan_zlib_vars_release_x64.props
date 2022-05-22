@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Label="ConanVariables">
+    <ConanzlibRootFolder>C:/Users/PowerSpec/.conan/data/zlib/1.2.12/_/_/package/6cc50b139b9c3d27b3e9042d5f5372d327b3a9f7</ConanzlibRootFolder>
+    <ConanzlibBinaryDirectories>C:/Users/PowerSpec/.conan/data/zlib/1.2.12/_/_/package/6cc50b139b9c3d27b3e9042d5f5372d327b3a9f7/bin;</ConanzlibBinaryDirectories>
+    <ConanzlibDependencies></ConanzlibDependencies>
+    <ConanzlibCompilerFlags></ConanzlibCompilerFlags>
+    <ConanzlibLinkerFlags></ConanzlibLinkerFlags>
+    <ConanzlibPreprocessorDefinitions></ConanzlibPreprocessorDefinitions>
+    <ConanzlibIncludeDirectories>C:/Users/PowerSpec/.conan/data/zlib/1.2.12/_/_/package/6cc50b139b9c3d27b3e9042d5f5372d327b3a9f7/include;</ConanzlibIncludeDirectories>
+    <ConanzlibResourceDirectories>C:/Users/PowerSpec/.conan/data/zlib/1.2.12/_/_/package/6cc50b139b9c3d27b3e9042d5f5372d327b3a9f7/res;</ConanzlibResourceDirectories>
+    <ConanzlibLibraryDirectories>C:/Users/PowerSpec/.conan/data/zlib/1.2.12/_/_/package/6cc50b139b9c3d27b3e9042d5f5372d327b3a9f7/lib;</ConanzlibLibraryDirectories>
+    <ConanzlibLibraries>zlib.lib;</ConanzlibLibraries>
+    <ConanzlibSystemLibs></ConanzlibSystemLibs>
+  </PropertyGroup>
+</Project>

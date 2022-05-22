@@ -1,0 +1,25 @@
+{
+	"solution": "${workspaceRoot}/Core.sln",
+	"variables": {
+		"MSBUILD": "D:/Program Files/Microsoft Visual Studio/2022/Enterprise/MSBuild/Current/Bin/amd64/MSBuild.exe",
+		"DEVENV": "D:/Program Files/Microsoft Visual Studio/2022/Enterprise/Common7/IDE/devenv.exe"
+	},
+	"buildConfigurations": [
+		"Debug",
+		"Release"
+	],
+	"platformConfigurations": [
+		"x64",
+		"x86"
+	],
+	"preBuildTasks": [],
+	"postBuildTasks": [],
+	"debugConfigurations": [
+		{
+			"name": "test",
+			"cwd": "${workspaceRoot}",
+			"program": "${workspaceRoot}/x64/${buildConfig}/helloworld.exe",
+			"args": []
+		}
+	]
+}

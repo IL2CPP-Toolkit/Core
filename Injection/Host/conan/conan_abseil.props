@@ -1,0 +1,9 @@
+<?xml version="1.0" ?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+	<ImportGroup Label="PropertySheets">
+		<Import Condition="'$(Configuration)' == 'Release' And '$(Platform)' == 'x64'" Project="conan_abseil_release_x64.props"/>
+	</ImportGroup>
+	<PropertyGroup>
+		<conan_abseil_props_imported>True</conan_abseil_props_imported>
+	</PropertyGroup>
+</Project>
