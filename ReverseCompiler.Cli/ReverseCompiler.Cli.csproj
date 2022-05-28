@@ -28,6 +28,7 @@
     <RootNamespace>Il2CppToolkit.ReverseCompiler.Cli</RootNamespace>
     <RepositoryUrl>https://github.com/IL2CPP-Toolkit/Core</RepositoryUrl>
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
+    <Platforms>x64</Platforms>
   </PropertyGroup>
 
 </Project>

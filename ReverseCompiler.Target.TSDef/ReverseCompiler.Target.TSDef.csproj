@@ -19,6 +19,7 @@
     <OutputType>Library</OutputType>
     <AssemblyName>Il2CppToolkit.Target.TSDef</AssemblyName>
     <RootNamespace>Il2CppToolkit.Target.TSDef</RootNamespace>
+    <Platforms>x64</Platforms>
   </PropertyGroup>
 
 </Project>

@@ -11,7 +11,7 @@
 			</BuildGenerateSourcesDependsOn>
 		</PropertyGroup>
 	</Target>
-	<Target Name="protocpp" BeforeTargets="BuildGenerateSources">
+	<Target Name="protocpp" BeforeTargets="BuildGenerateSources" Condition=" Exists('$(ProjectDir)$(VCPkgInstalledDir)\x64-windows\tools\protobuf\protoc.exe') ">
 		<Exec Command="$(ProjectDir)$(VCPkgInstalledDir)\x64-windows\tools\protobuf\protoc.exe -I=$(MSBuildThisFileDirectory) --cpp_out=$(ProjectDir)gen Protocol.proto" />
 		<Exec Command="$(ProjectDir)$(VCPkgInstalledDir)\x64-windows\tools\protobuf\protoc.exe -I=$(MSBuildThisFileDirectory) --grpc_out=$(ProjectDir)gen --plugin=protoc-gen-grpc=$(ProjectDir)$(VCPkgInstalledDir)\x64-windows\tools\grpc\grpc_cpp_plugin.exe Protocol.proto" />
 	</Target>
