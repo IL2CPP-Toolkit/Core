@@ -1,0 +1,16 @@
+syntax = "proto3";
+package rtk;
+
+option csharp_namespace = "Raid.Toolkit.Interop";
+
+message MessageRequest {
+	string msg = 1;
+}
+
+message MessageReply {
+	string reply = 1;
+}
+
+service MessageService {
+	rpc SendMessage (MessageRequest) returns (MessageReply){}
+}

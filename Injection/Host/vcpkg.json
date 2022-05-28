@@ -1,0 +1,15 @@
+{
+	"name": "injection-host",
+	"version": "1.0.0",
+	"dependencies": [
+	 {
+	  "name": "grpc",
+	  "version>=": "1.44.0"
+	 },
+	 {
+	  "name": "protobuf",
+	  "version>=": "3.19.4"
+	 }
+	],
+	"builtin-baseline": "314018fef43c7e3a52a3e46599313b70ace3977a"
+}
