@@ -11,6 +11,7 @@ public:
 	bool FindProcess(DWORD procId) noexcept;
 	bool FindProcess(const std::wstring& wzName) noexcept;
 	bool FindFirstThread() noexcept;
+	bool FindModule(const std::wstring& wzName) noexcept;
 	bool NextProcess() noexcept;
 	bool NextModule() noexcept;
 	bool NextThread() noexcept;

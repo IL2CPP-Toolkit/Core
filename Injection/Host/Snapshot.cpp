@@ -39,6 +39,18 @@ bool Snapshot::FindProcess(const std::wstring& wzName) noexcept
 	return false;
 }
 
+bool Snapshot::FindModule(const std::wstring& wzName) noexcept
+{
+	while (NextModule())
+	{
+		if (_wcsicmp(m_module.szModule, wzName.c_str()) == 0)
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
 bool Snapshot::FindFirstThread() noexcept
 {
 	m_thread = {};

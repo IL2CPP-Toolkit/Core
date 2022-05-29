@@ -119,7 +119,9 @@
     <ClInclude Include="pch.h" />
     <ClInclude Include="Framework.h" />
     <ClInclude Include="PublicApi.h" />
+    <ClInclude Include="SmartHandle.h" />
     <ClInclude Include="Snapshot.h" />
+    <ClInclude Include="WindowHelpers.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
@@ -133,6 +135,7 @@
     </ClCompile>
     <ClCompile Include="PublicApi.cpp" />
     <ClCompile Include="Snapshot.cpp" />
+    <ClCompile Include="WindowHelpers.cpp" />
   </ItemGroup>
   <Import Project="..\Protocol.targets" />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
