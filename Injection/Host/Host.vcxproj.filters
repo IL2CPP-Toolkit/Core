@@ -33,9 +33,6 @@
     <ClInclude Include="Snapshot.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="MessageTypes.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="InjectionHost.h">
       <Filter>Header Files</Filter>
     </ClInclude>

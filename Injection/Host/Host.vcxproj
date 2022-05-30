@@ -115,7 +115,6 @@
     <ClInclude Include="InjectionHost.h" />
     <ClInclude Include="MessageHandler.h" />
     <ClInclude Include="MessageService.h" />
-    <ClInclude Include="MessageTypes.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Framework.h" />
     <ClInclude Include="PublicApi.h" />
