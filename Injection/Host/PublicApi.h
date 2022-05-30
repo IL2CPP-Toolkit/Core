@@ -13,8 +13,8 @@ struct PublicState
 	int port{ -1 };
 };
 
-extern "C" __declspec(dllexport) HRESULT WINAPI InjectHook(DWORD procId);
-extern "C" __declspec(dllexport) HRESULT WINAPI ReleaseHook(DWORD procId);
+extern "C" __declspec(dllexport) HRESULT WINAPI InjectHook(DWORD procId) noexcept;
+extern "C" __declspec(dllexport) HRESULT WINAPI ReleaseHook(DWORD procId) noexcept;
 /* @deprecated */
-extern "C" __declspec(dllexport) InjectResult WINAPI GetHookState(DWORD procId);
-extern "C" __declspec(dllexport) HRESULT WINAPI GetState(DWORD procId, PublicState* pState, long timeoutMs = 3000);
+extern "C" __declspec(dllexport) InjectResult WINAPI GetHookState(DWORD procId) noexcept;
+extern "C" __declspec(dllexport) HRESULT WINAPI GetState(DWORD procId, PublicState* pState, long timeoutMs = 3000) noexcept;

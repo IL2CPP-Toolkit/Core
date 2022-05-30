@@ -13,6 +13,7 @@ namespace Il2CppToolkit.Injection.Client
 		static async Task Main()
 		{
 			Process.Start(@"C:\Windows\System32\notepad.exe");
+
 			Process proc = Process.GetProcessesByName("Notepad")[0];
 			int result = NativeMethods.InjectHook((uint)proc.Id);
 			if (result < 0)

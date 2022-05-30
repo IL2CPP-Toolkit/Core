@@ -14,7 +14,7 @@ std::unordered_map<DWORD, std::unique_ptr<HookHandle>> g_hookMap;
 
 /*static*/ PublicState PublicState::value{ 0 };
 
-extern "C" __declspec(dllexport) HRESULT WINAPI GetState(DWORD procId, PublicState * pState, long timeoutMs)
+extern "C" __declspec(dllexport) HRESULT WINAPI GetState(DWORD procId, PublicState * pState, long timeoutMs) noexcept
 {
 	HMODULE thisModule{};
 	
@@ -99,7 +99,7 @@ extern "C" __declspec(dllexport) HRESULT WINAPI ReleaseHook(DWORD procId) noexce
 	return S_OK;
 }
 
-extern "C" __declspec(dllexport) InjectResult WINAPI GetHookState(DWORD procId)
+extern "C" __declspec(dllexport) InjectResult WINAPI GetHookState(DWORD procId) noexcept
 {
 	if (g_hookMap.find(procId) != g_hookMap.cend())
 		return InjectResult::Hooked;
