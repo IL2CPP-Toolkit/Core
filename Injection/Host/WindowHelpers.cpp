@@ -6,7 +6,7 @@ BOOL CALLBACK EnumWindowCallback(HWND handle, LPARAM lParam) noexcept
 	FindWindowData& data{ *reinterpret_cast<FindWindowData*>(lParam) };
 	DWORD dwProcId;
 	GetWindowThreadProcessId(handle, &dwProcId);
-	if (data.procId != dwProcId || (GetWindow(handle, GW_OWNER) == (HWND)0 && IsWindowVisible(handle)))
+	if (data.procId != dwProcId || (GetWindow(handle, GW_OWNER) != (HWND)0 || !IsWindowVisible(handle)))
 		return TRUE;
 
 	data.hwnd = handle;

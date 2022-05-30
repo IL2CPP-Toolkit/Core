@@ -43,7 +43,7 @@ bool Snapshot::FindModule(const std::wstring& wzName) noexcept
 {
 	while (NextModule())
 	{
-		if (_wcsicmp(m_module.szModule, wzName.c_str()) == 0)
+		if (_wcsicmp(m_module.szExePath, wzName.c_str()) == 0)
 		{
 			return true;
 		}

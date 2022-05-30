@@ -75,6 +75,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -100,6 +101,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -111,6 +113,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="ExecutionQueue.h" />
     <ClInclude Include="InjectionHook.h" />
     <ClInclude Include="InjectionHost.h" />
     <ClInclude Include="MessageHandler.h" />
@@ -118,6 +121,7 @@
     <ClInclude Include="pch.h" />
     <ClInclude Include="Framework.h" />
     <ClInclude Include="PublicApi.h" />
+    <ClInclude Include="safe_queue.h" />
     <ClInclude Include="SmartHandle.h" />
     <ClInclude Include="Snapshot.h" />
     <ClInclude Include="WindowHelpers.h" />

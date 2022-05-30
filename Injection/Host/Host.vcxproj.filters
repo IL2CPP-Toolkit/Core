@@ -45,6 +45,12 @@
     <ClInclude Include="WindowHelpers.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="safe_queue.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ExecutionQueue.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">

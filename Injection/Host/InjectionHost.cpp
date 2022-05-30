@@ -21,14 +21,36 @@ static std::unique_ptr<InjectionHost>& GetInstancePtr() noexcept
 	return s_instance;
 }
 
-static void Teardown() noexcept
+void InjectionHost::Teardown() noexcept
 {
-	GetInstancePtr().reset();
+	if (m_spServer)
+	{
+		const std::chrono::system_clock::time_point deadline{
+			std::chrono::system_clock::now() +
+			std::chrono::milliseconds(100) };
+		m_spServer->Shutdown(deadline);
+		m_executionQueue.Shutdown();
+		m_thServer.join();
+
+		// if shutting down on watcher thread, detach (to avoid `abort`)
+		if (std::this_thread::get_id() == m_thWatcher.get_id())
+			m_thWatcher.detach();
+		else
+			m_thWatcher.join();
+
+		m_spServer.reset();
+	}
 }
 
 /* static */ InjectionHost& InjectionHost::GetInstance() noexcept
 {
 	return *GetInstancePtr();
+}
+
+/* static */ void InjectionHost::ServerThread() noexcept
+{
+	InjectionHost& self{ GetInstance() };
+	self.m_spServer->Wait();
 }
 
 /* static */ void InjectionHost::WatcherThread() noexcept
@@ -41,39 +63,29 @@ static void Teardown() noexcept
 		SendMessage(hwndMain, WM_NULL, 0, 0);
 		std::this_thread::sleep_for(s_hookTTL);
 	}
-	Teardown();
+	self.Teardown();
 }
 
 InjectionHost::InjectionHost() noexcept
 	: m_tpKeepAliveExpiry{ std::chrono::system_clock::now() + s_hookTTL }
+	, m_executionQueue{}
+	, m_messageService{ m_executionQueue }
 {
 	ServerBuilder builder;
 	builder.AddListeningPort("0.0.0.0:0", InsecureServerCredentials(), &PublicState::value.port);
-	MessageServiceImpl svc{};
-	builder.RegisterService(&svc);
-	m_spCompletionQueue = builder.AddCompletionQueue();
+	builder.RegisterService(&m_messageService);
 	m_spServer = builder.BuildAndStart();
 	m_thWatcher = std::thread{ InjectionHost::WatcherThread };
+	m_thServer = std::thread{ InjectionHost::ServerThread };
 }
 
 InjectionHost::~InjectionHost() noexcept
 {
-	if (m_spServer)
-	{
-		const std::chrono::system_clock::time_point deadline{
-			std::chrono::system_clock::now() +
-			std::chrono::milliseconds(100) };
-		m_spServer->Shutdown(deadline);
-
-		// if shutting down on watcher thread, detach (to avoid `abort`)
-		if (std::this_thread::get_id() == m_thWatcher.get_id())
-			m_thWatcher.detach();
-		else
-			m_thWatcher.join();
-	}
+	Teardown();
 }
 
 void InjectionHost::ProcessMessages() noexcept
 {
 	m_tpKeepAliveExpiry = std::chrono::system_clock::now() + s_hookTTL;
+	m_executionQueue.DoWork();
 }

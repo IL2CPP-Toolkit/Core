@@ -1,12 +1,13 @@
 #include "pch.h"
 #include <unordered_map>
 #include <memory>
+#include <chrono>
+#include <thread>
 #include "Snapshot.h"
 #include "InjectionHook.h"
 #include "MessageHandler.h"
 #include "PublicApi.h"
 #include "SmartHandle.h"
-#include <chrono>
 #include "WindowHelpers.h"
 
 std::unordered_map<DWORD, std::unique_ptr<HookHandle>> g_hookMap;
@@ -46,11 +47,18 @@ extern "C" __declspec(dllexport) HRESULT WINAPI GetState(DWORD procId, PublicSta
 			std::chrono::system_clock::now() +
 			std::chrono::milliseconds{timeoutMs} };
 	int count{ 0 };
+	bool lastResult{ false };
 	while (std::chrono::system_clock::now() < deadline && pState->port <= 0)
 	{
 		++count;
-		if (!ReadProcessMemory(hProcess, remoteAddr, pState, sizeof(PublicState), &readBytes))
-			return GetLastError();
+		lastResult = ReadProcessMemory(hProcess, remoteAddr, pState, sizeof(PublicState), &readBytes);
+		std::this_thread::sleep_for(std::chrono::milliseconds{ 10 });
+	}
+
+	if (!lastResult)
+	{
+		DWORD err{ GetLastError() };
+		return err != 0 ? err : ERROR_TIMEOUT;
 	}
 
 	return S_OK;
