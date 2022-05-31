@@ -5,10 +5,10 @@
 #include <chrono>
 #include <thread>
 #include <winapifamily.h>
-#include "InjectionHost.h"
+#include "service/MessageService.h"
+#include "win/WindowHelpers.h"
 #include "PublicApi.h"
-#include "MessageService.h"
-#include "WindowHelpers.h"
+#include "InjectionHost.h"
 
 using namespace grpc;
 using namespace std::chrono_literals;

@@ -1,6 +1,6 @@
 #pragma once
-#include "gen\Protocol.pb.h"
-#include "gen\Protocol.grpc.pb.h"
+#include "Protocol.pb.h"
+#include "Protocol.grpc.pb.h"
 
 class ExecutionQueue;
 

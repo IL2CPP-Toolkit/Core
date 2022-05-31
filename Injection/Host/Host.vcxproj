@@ -11,6 +11,34 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\inc\ExecutionQueue.h" />
+    <ClInclude Include="src\inc\framework.h" />
+    <ClInclude Include="src\inc\pch.h" />
+    <ClInclude Include="src\inc\PublicApi.h" />
+    <ClInclude Include="src\inc\safe_queue.h" />
+    <ClInclude Include="src\inc\SmartHandle.h" />
+    <ClInclude Include="src\InjectionHost.h" />
+    <ClInclude Include="src\MessageHandler.h" />
+    <ClInclude Include="src\service\MessageService.h" />
+    <ClInclude Include="src\win\InjectionHook.h" />
+    <ClInclude Include="src\win\Snapshot.h" />
+    <ClInclude Include="src\win\WindowHelpers.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\InjectionHost.cpp" />
+    <ClCompile Include="src\MessageHandler.cpp" />
+    <ClCompile Include="src\pch.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="src\PublicApi.cpp" />
+    <ClCompile Include="src\service\MessageService.cpp" />
+    <ClCompile Include="src\win\dllmain.cpp" />
+    <ClCompile Include="src\win\InjectionHook.cpp" />
+    <ClCompile Include="src\win\Snapshot.cpp" />
+    <ClCompile Include="src\win\WindowHelpers.cpp" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
@@ -48,10 +76,12 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <TargetName>Il2CppToolkit.Injection.Host</TargetName>
+    <IncludePath>$(ProjectDir)src\inc;$(ProjectDir)src\gen;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <TargetName>Il2CppToolkit.Injection.Host</TargetName>
+    <IncludePath>$(ProjectDir)src\inc;$(ProjectDir)src\gen;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Label="Vcpkg">
     <VcpkgEnableManifest>true</VcpkgEnableManifest>
@@ -112,34 +142,6 @@
       <AdditionalDependencies>Iphlpapi.lib;CRYPT32.LIB;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClInclude Include="ExecutionQueue.h" />
-    <ClInclude Include="InjectionHook.h" />
-    <ClInclude Include="InjectionHost.h" />
-    <ClInclude Include="MessageHandler.h" />
-    <ClInclude Include="MessageService.h" />
-    <ClInclude Include="pch.h" />
-    <ClInclude Include="Framework.h" />
-    <ClInclude Include="PublicApi.h" />
-    <ClInclude Include="safe_queue.h" />
-    <ClInclude Include="SmartHandle.h" />
-    <ClInclude Include="Snapshot.h" />
-    <ClInclude Include="WindowHelpers.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="dllmain.cpp" />
-    <ClCompile Include="InjectionHook.cpp" />
-    <ClCompile Include="InjectionHost.cpp" />
-    <ClCompile Include="MessageHandler.cpp" />
-    <ClCompile Include="MessageService.cpp" />
-    <ClCompile Include="pch.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="PublicApi.cpp" />
-    <ClCompile Include="Snapshot.cpp" />
-    <ClCompile Include="WindowHelpers.cpp" />
-  </ItemGroup>
   <Import Project="..\Protocol.targets" />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />

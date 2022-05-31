@@ -3,12 +3,12 @@
 #include <memory>
 #include <chrono>
 #include <thread>
-#include "Snapshot.h"
-#include "InjectionHook.h"
+#include "SmartHandle.h"
+#include "win/Snapshot.h"
+#include "win/InjectionHook.h"
+#include "win/WindowHelpers.h"
 #include "MessageHandler.h"
 #include "PublicApi.h"
-#include "SmartHandle.h"
-#include "WindowHelpers.h"
 
 std::unordered_map<DWORD, std::unique_ptr<HookHandle>> g_hookMap;
 

@@ -1,7 +1,7 @@
 #include "pch.h"
 #include <string>
-#include "gen\Protocol.pb.cc"
-#include "gen\Protocol.grpc.pb.cc"
+#include "Protocol.pb.cc"
+#include "Protocol.grpc.pb.cc"
 #include "MessageService.h"
 #include "ExecutionQueue.h"
 

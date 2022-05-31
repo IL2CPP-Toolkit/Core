@@ -2,9 +2,9 @@
 #include <memory>
 #include <thread>
 #include <queue>
-#include "MessageService.h"
 #include "safe_queue.h"
 #include "ExecutionQueue.h"
+#include "service/MessageService.h"
 
 // fwd decls
 namespace grpc

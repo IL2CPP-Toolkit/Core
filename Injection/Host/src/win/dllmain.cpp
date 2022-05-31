@@ -1,9 +1,7 @@
 // dllmain.cpp : Defines the entry point for the DLL application.
 #include "pch.h"
-#include <string>
 #include <winapifamily.h>
 #include "Snapshot.h"
-#include "MessageService.h"
 #include "PublicApi.h"
 
 
