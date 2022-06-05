@@ -26,6 +26,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Injection.Host", "Injection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Injection", "Injection", "{DF42F438-2BF8-463A-9758-9CC0576E993B}"
 	ProjectSection(SolutionItems) = preProject
+		Injection\il2cpp.proto = Injection\il2cpp.proto
 		Injection\Protocol.proto = Injection\Protocol.proto
 		Injection\Protocol.targets = Injection\Protocol.targets
 	EndProjectSection

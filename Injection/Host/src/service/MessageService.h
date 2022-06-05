@@ -4,11 +4,11 @@
 
 class ExecutionQueue;
 
-class MessageServiceImpl : public rtk::MessageService::Service
+class MessageServiceImpl : public messageService::MessageService::Service
 {
 public:
 	MessageServiceImpl(ExecutionQueue& queue) noexcept;
-	::grpc::Status SendMessage(::grpc::ServerContext* context, const ::rtk::MessageRequest* request, ::rtk::MessageReply* response) override;
+	::grpc::Status SendMessage(::grpc::ServerContext* context, const ::messageService::MessageRequest* request, ::messageService::MessageReply* response) override;
 private:
 	ExecutionQueue& m_executionQueue;
 };

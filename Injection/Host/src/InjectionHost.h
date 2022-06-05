@@ -5,6 +5,7 @@
 #include "safe_queue.h"
 #include "ExecutionQueue.h"
 #include "service/MessageService.h"
+#include "service/Il2CppService.h"
 
 // fwd decls
 namespace grpc
@@ -12,7 +13,7 @@ namespace grpc
 	class Server;
 	class ServerCompletionQueue;
 }
-namespace rtk
+namespace messageService
 {
 	class MessageServiceImpl;
 }
@@ -34,6 +35,7 @@ private:
 
 	std::unique_ptr<grpc::Server> m_spServer;
 	MessageServiceImpl m_messageService;
+	Il2CppServiceImpl m_il2cppService;
 
 	std::thread m_thWatcher;
 	std::thread m_thServer;

@@ -12,6 +12,15 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\il2cpp\il2cpp-api-functions.h" />
+    <ClInclude Include="src\il2cpp\il2cpp-api.h" />
+    <ClInclude Include="src\il2cpp\il2cpp-config-api.h" />
+    <ClInclude Include="src\il2cpp\il2cpp-object-internals.h" />
+    <ClInclude Include="src\il2cpp\il2cpp.h" />
+    <ClInclude Include="src\il2cpp\Il2CppClassHolder.h" />
+    <ClInclude Include="src\il2cpp\imported_method.h" />
+    <ClInclude Include="src\il2cpp\Method.h" />
+    <ClInclude Include="src\il2cpp\UnityTypes.h" />
     <ClInclude Include="src\inc\ExecutionQueue.h" />
     <ClInclude Include="src\inc\framework.h" />
     <ClInclude Include="src\inc\pch.h" />
@@ -20,12 +29,14 @@
     <ClInclude Include="src\inc\SmartHandle.h" />
     <ClInclude Include="src\InjectionHost.h" />
     <ClInclude Include="src\MessageHandler.h" />
+    <ClInclude Include="src\service\Il2cppService.h" />
     <ClInclude Include="src\service\MessageService.h" />
     <ClInclude Include="src\win\InjectionHook.h" />
     <ClInclude Include="src\win\Snapshot.h" />
     <ClInclude Include="src\win\WindowHelpers.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\il2cpp\Il2CppClassHolder.cpp" />
     <ClCompile Include="src\InjectionHost.cpp" />
     <ClCompile Include="src\MessageHandler.cpp" />
     <ClCompile Include="src\pch.cpp">
@@ -33,6 +44,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="src\PublicApi.cpp" />
+    <ClCompile Include="src\service\Il2cppService.cpp" />
     <ClCompile Include="src\service\MessageService.cpp" />
     <ClCompile Include="src\win\dllmain.cpp" />
     <ClCompile Include="src\win\InjectionHook.cpp" />

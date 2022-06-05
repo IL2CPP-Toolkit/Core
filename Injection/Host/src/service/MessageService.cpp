@@ -10,7 +10,7 @@ MessageServiceImpl::MessageServiceImpl(ExecutionQueue& queue) noexcept
 {
 }
 
-::grpc::Status MessageServiceImpl::SendMessage(::grpc::ServerContext* context, const ::rtk::MessageRequest* request, ::rtk::MessageReply* response)
+::grpc::Status MessageServiceImpl::SendMessage(::grpc::ServerContext* context, const ::messageService::MessageRequest* request, ::messageService::MessageReply* response)
 {
 	std::optional<::grpc::Status> result{ m_executionQueue.Invoke<::grpc::Status>([&]() mutable noexcept
 	{

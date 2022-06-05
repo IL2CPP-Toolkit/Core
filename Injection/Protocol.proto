@@ -1,7 +1,7 @@
 syntax = "proto3";
-package rtk;
+package messageService;
 
-option csharp_namespace = "Raid.Toolkit.Interop";
+option csharp_namespace = "Il2CppToolkit.Interop";
 
 message MessageRequest {
 	string msg = 1;

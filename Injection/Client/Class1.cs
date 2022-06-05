@@ -1,6 +1,6 @@
 ﻿using Grpc.Core;
 using Grpc.Net.Client;
-using Raid.Toolkit.Interop;
+using Il2CppToolkit.Interop;
 using System;
 using System.Diagnostics;
 using System.Threading;
@@ -33,9 +33,12 @@ namespace Il2CppToolkit.Injection.Client
 			}
 
 			GrpcChannel channel = GrpcChannel.ForAddress($"http://localhost:{state.port}");
-			var client = new MessageService.MessageServiceClient(channel);
-			MessageReply reply = client.SendMessage(new MessageRequest { Msg = "foo" });
-			Console.WriteLine(reply.Reply);
+			var client = new Il2CppService.Il2CppServiceClient(channel);
+			var response = client.FindClass(new() { Name = "Time", Namespaze = "UnityEngine" });
+			Console.WriteLine($"Class address @{response.Address:X16}");
+			//var client = new MessageService.MessageServiceClient(channel);
+			//MessageReply reply = client.SendMessage(new MessageRequest { Msg = "foo" });
+			//Console.WriteLine(reply.Reply);
 
 			proc.Kill();
 		}

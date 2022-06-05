@@ -1,0 +1,17 @@
+syntax = "proto3";
+package il2cppservice;
+
+option csharp_namespace = "Il2CppToolkit.Interop";
+
+message FindClassRequest {
+	optional string namespaze = 1;
+	string name = 2;
+}
+
+message FindClassResponse {
+	uint64 address = 1;
+}
+
+service Il2CppService {
+	rpc FindClass (FindClassRequest) returns (FindClassResponse);
+}

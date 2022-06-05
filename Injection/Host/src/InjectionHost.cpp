@@ -70,10 +70,12 @@ InjectionHost::InjectionHost() noexcept
 	: m_tpKeepAliveExpiry{ std::chrono::system_clock::now() + s_hookTTL }
 	, m_executionQueue{}
 	, m_messageService{ m_executionQueue }
+	, m_il2cppService{ m_executionQueue }
 {
 	ServerBuilder builder;
 	builder.AddListeningPort("0.0.0.0:0", InsecureServerCredentials(), &PublicState::value.port);
 	builder.RegisterService(&m_messageService);
+	builder.RegisterService(&m_il2cppService);
 	m_spServer = builder.BuildAndStart();
 	m_thWatcher = std::thread{ InjectionHost::WatcherThread };
 	m_thServer = std::thread{ InjectionHost::ServerThread };
