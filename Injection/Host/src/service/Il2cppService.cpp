@@ -4,7 +4,7 @@
 #include "il2cpp.grpc.pb.cc"
 #include "Il2CppService.h"
 #include "ExecutionQueue.h"
-#include "../il2cpp/il2cpp-api.h"
+#include <il2cpp/il2cpp-api.h>
 
 Il2CppServiceImpl::Il2CppServiceImpl(ExecutionQueue& queue) noexcept
 	: m_executionQueue{ queue }
@@ -25,7 +25,7 @@ Il2CppServiceImpl::Il2CppServiceImpl(ExecutionQueue& queue) noexcept
 			size_t cclass{ il2cpp_image_get_class_count(pImage) };
 			for (size_t iClass{ 0 }; iClass < cclass; ++iClass) {
 				const Il2CppClass* pClass{ il2cpp_image_get_class(pImage, iClass) };
-				if (_strcmpi(pClass->_1.namespaze, request->namespaze().c_str()) == 0 && _strcmpi(pClass->_1.name, request->name().c_str()) == 0)
+				if (_strcmpi(pClass->namespaze, request->namespaze().c_str()) == 0 && _strcmpi(pClass->name, request->name().c_str()) == 0)
 				{
 					response->set_address(reinterpret_cast<uint64_t>(pClass));
 					return ::grpc::Status::OK;

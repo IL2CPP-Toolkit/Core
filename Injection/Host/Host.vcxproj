@@ -12,24 +12,35 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\il2cpp\il2cpp-api-functions.h" />
-    <ClInclude Include="src\il2cpp\il2cpp-api.h" />
-    <ClInclude Include="src\il2cpp\il2cpp-config-api.h" />
-    <ClInclude Include="src\il2cpp\il2cpp-object-internals.h" />
-    <ClInclude Include="src\il2cpp\il2cpp.h" />
     <ClInclude Include="src\il2cpp\Il2CppClassHolder.h" />
-    <ClInclude Include="src\il2cpp\imported_method.h" />
-    <ClInclude Include="src\il2cpp\Method.h" />
-    <ClInclude Include="src\il2cpp\UnityTypes.h" />
     <ClInclude Include="src\inc\ExecutionQueue.h" />
     <ClInclude Include="src\inc\framework.h" />
+    <ClInclude Include="src\inc\il2cpp\il2cpp-api-functions.h" />
+    <ClInclude Include="src\inc\il2cpp\il2cpp-api-types.h" />
+    <ClInclude Include="src\inc\il2cpp\il2cpp-api.h" />
+    <ClInclude Include="src\inc\il2cpp\il2cpp-blob.h" />
+    <ClInclude Include="src\inc\il2cpp\il2cpp-class-internals.h" />
+    <ClInclude Include="src\inc\il2cpp\il2cpp-config-api-platforms.h" />
+    <ClInclude Include="src\inc\il2cpp\il2cpp-config-api.h" />
+    <ClInclude Include="src\inc\il2cpp\il2cpp-config-platforms.h" />
+    <ClInclude Include="src\inc\il2cpp\il2cpp-config.h" />
+    <ClInclude Include="src\inc\il2cpp\il2cpp-metadata.h" />
+    <ClInclude Include="src\inc\il2cpp\il2cpp-object-internals.h" />
+    <ClInclude Include="src\inc\il2cpp\il2cpp-pinvoke-support.h" />
+    <ClInclude Include="src\inc\il2cpp\il2cpp-runtime-metadata.h" />
+    <ClInclude Include="src\inc\il2cpp\il2cpp-string-types.h" />
+    <ClInclude Include="src\inc\il2cpp\il2cpp-tabledefs.h" />
+    <ClInclude Include="src\inc\il2cpp\il2cpp-tokentype.h" />
+    <ClInclude Include="src\inc\il2cpp\il2cpp-windowsruntime-types.h" />
+    <ClInclude Include="src\inc\il2cpp\utils\StringView.h" />
+    <ClInclude Include="src\inc\import-helpers.h" />
     <ClInclude Include="src\inc\pch.h" />
     <ClInclude Include="src\inc\PublicApi.h" />
     <ClInclude Include="src\inc\safe_queue.h" />
     <ClInclude Include="src\inc\SmartHandle.h" />
     <ClInclude Include="src\InjectionHost.h" />
     <ClInclude Include="src\MessageHandler.h" />
-    <ClInclude Include="src\service\Il2cppService.h" />
+    <ClInclude Include="src\service\Il2CppService.h" />
     <ClInclude Include="src\service\MessageService.h" />
     <ClInclude Include="src\win\InjectionHook.h" />
     <ClInclude Include="src\win\Snapshot.h" />
@@ -44,7 +55,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="src\PublicApi.cpp" />
-    <ClCompile Include="src\service\Il2cppService.cpp" />
+    <ClCompile Include="src\service\Il2CppService.cpp" />
     <ClCompile Include="src\service\MessageService.cpp" />
     <ClCompile Include="src\win\dllmain.cpp" />
     <ClCompile Include="src\win\InjectionHook.cpp" />

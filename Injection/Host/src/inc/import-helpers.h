@@ -2,8 +2,6 @@
 #include <string>
 #include <wtypes.h>
 
-struct Il2CppClass;
-
 struct imported_module
 {
 private:

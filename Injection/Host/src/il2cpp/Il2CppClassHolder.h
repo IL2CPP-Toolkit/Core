@@ -1,6 +1,8 @@
 #pragma once
-#include "GameAssembly.h"
 #include <string>
+
+struct MethodInfo;
+struct Il2CppClass;
 
 class Il2CppClassHolder
 {
