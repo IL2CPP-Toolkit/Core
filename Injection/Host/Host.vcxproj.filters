@@ -116,6 +116,15 @@
     <ClInclude Include="src\inc\il2cpp\utils\StringView.h">
       <Filter>inc\il2cpp\utils</Filter>
     </ClInclude>
+    <ClInclude Include="src\il2cpp\Il2CppClassInfo.h">
+      <Filter>il2cpp</Filter>
+    </ClInclude>
+    <ClInclude Include="src\il2cpp\SystemString.h">
+      <Filter>il2cpp</Filter>
+    </ClInclude>
+    <ClInclude Include="src\il2cpp\Il2CppContext.h">
+      <Filter>il2cpp</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\service\MessageService.cpp">
@@ -142,6 +151,15 @@
     </ClCompile>
     <ClCompile Include="src\service\Il2CppService.cpp">
       <Filter>service</Filter>
+    </ClCompile>
+    <ClCompile Include="src\il2cpp\Il2CppClassInfo.cpp">
+      <Filter>il2cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="src\il2cpp\SystemString.cpp">
+      <Filter>il2cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="src\il2cpp\Il2CppContext.cpp">
+      <Filter>il2cpp</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

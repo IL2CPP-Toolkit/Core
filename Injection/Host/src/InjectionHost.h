@@ -34,8 +34,8 @@ private:
 	static const std::chrono::milliseconds s_hookTTL;
 
 	std::unique_ptr<grpc::Server> m_spServer;
-	MessageServiceImpl m_messageService;
-	Il2CppServiceImpl m_il2cppService;
+	std::unique_ptr<MessageServiceImpl> m_spMessageService;
+	std::unique_ptr<Il2CppServiceImpl> m_spIl2cppService;
 
 	std::thread m_thWatcher;
 	std::thread m_thServer;

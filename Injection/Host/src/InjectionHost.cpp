@@ -39,6 +39,9 @@ void InjectionHost::Teardown() noexcept
 			m_thWatcher.join();
 
 		m_spServer.reset();
+
+		m_spMessageService.reset();
+		m_spIl2cppService.reset();
 	}
 }
 
@@ -57,8 +60,8 @@ void InjectionHost::Teardown() noexcept
 {
 	InjectionHost& self{ GetInstance() };
 	DWORD dwCurrentProcessId{ GetCurrentProcessId() };
-	HWND hwndMain{ GetMainWindowForProcessId(dwCurrentProcessId) };
-	while (std::chrono::system_clock::now() < self.m_tpKeepAliveExpiry)
+	HWND hwndMain{ GetMainWindowForProcessId(dwCurrentProcessId, L"UnityWndClass")};
+	while (std::chrono::system_clock::now() < self.m_tpKeepAliveExpiry || IsDebuggerPresent())
 	{
 		SendMessage(hwndMain, WM_NULL, 0, 0);
 		std::this_thread::sleep_for(s_hookTTL);
@@ -69,13 +72,13 @@ void InjectionHost::Teardown() noexcept
 InjectionHost::InjectionHost() noexcept
 	: m_tpKeepAliveExpiry{ std::chrono::system_clock::now() + s_hookTTL }
 	, m_executionQueue{}
-	, m_messageService{ m_executionQueue }
-	, m_il2cppService{ m_executionQueue }
+	, m_spMessageService{ std::make_unique<MessageServiceImpl>(m_executionQueue) }
+	, m_spIl2cppService{ std::make_unique<Il2CppServiceImpl>(m_executionQueue) }
 {
 	ServerBuilder builder;
 	builder.AddListeningPort("0.0.0.0:0", InsecureServerCredentials(), &PublicState::value.port);
-	builder.RegisterService(&m_messageService);
-	builder.RegisterService(&m_il2cppService);
+	builder.RegisterService(m_spMessageService.get());
+	builder.RegisterService(m_spIl2cppService.get());
 	m_spServer = builder.BuildAndStart();
 	m_thWatcher = std::thread{ InjectionHost::WatcherThread };
 	m_thServer = std::thread{ InjectionHost::ServerThread };

@@ -13,6 +13,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\il2cpp\Il2CppClassHolder.h" />
+    <ClInclude Include="src\il2cpp\Il2CppClassInfo.h" />
+    <ClInclude Include="src\il2cpp\Il2CppContext.h" />
+    <ClInclude Include="src\il2cpp\SystemString.h" />
     <ClInclude Include="src\inc\ExecutionQueue.h" />
     <ClInclude Include="src\inc\framework.h" />
     <ClInclude Include="src\inc\il2cpp\il2cpp-api-functions.h" />
@@ -48,6 +51,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\il2cpp\Il2CppClassHolder.cpp" />
+    <ClCompile Include="src\il2cpp\Il2CppClassInfo.cpp" />
+    <ClCompile Include="src\il2cpp\Il2CppContext.cpp" />
+    <ClCompile Include="src\il2cpp\SystemString.cpp" />
     <ClCompile Include="src\InjectionHost.cpp" />
     <ClCompile Include="src\MessageHandler.cpp" />
     <ClCompile Include="src\pch.cpp">
@@ -123,7 +129,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING;_DEBUG;HOST_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING;_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING;_DEBUG;HOST_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
@@ -149,7 +155,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING;NDEBUG;HOST_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING;_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING;NDEBUG;HOST_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>

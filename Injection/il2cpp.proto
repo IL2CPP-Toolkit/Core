@@ -3,15 +3,50 @@ package il2cppservice;
 
 option csharp_namespace = "Il2CppToolkit.Interop";
 
+message Value {
+	oneof value {
+		double double_ = 1;
+		double float_ = 2;
+		int32 int32_ = 3;
+		uint32 uint32_ = 4;
+		int64 int64_ = 5;
+		uint64 uint64_ = 6;
+		bool bit_ = 7;
+		string str_ = 8;
+		// bytes buffer_ = 9;
+	}
+}
+
+message ClassId {
+	string name = 1;
+}
+
+message Il2CppObject {
+	uint64 address = 1;
+	ClassId klass = 2;
+}
+
+
 message FindClassRequest {
-	optional string namespaze = 1;
-	string name = 2;
+	ClassId klass = 1;
 }
 
 message FindClassResponse {
 	uint64 address = 1;
 }
 
+message CallMethodRequest {
+	ClassId klass = 1;
+	string methodName = 2;
+	optional uint64 instanceAddress = 3;
+	repeated Value arguments = 4;
+}
+
+message CallMethodResponse {
+	optional Il2CppObject returnValue = 1;
+}
+
 service Il2CppService {
 	rpc FindClass (FindClassRequest) returns (FindClassResponse);
+	rpc CallMethod (CallMethodRequest) returns (CallMethodResponse);
 }
