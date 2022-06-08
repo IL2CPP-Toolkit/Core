@@ -192,11 +192,11 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 
 			ctorMethodIL.Emit(OpCodes.Ldarg_0);                 // this
 			ctorMethodIL.Emit(OpCodes.Ldarg_1);                 // memorySource
-			ctorMethodIL.Emit(OpCodes.Stfld, sourceFieldDef);   // class [Il2CppToolkit.Runtime]Il2CppToolkit.Runtime.IMemorySource Client.App.Application::__source
+			ctorMethodIL.Emit(OpCodes.Stfld, sourceFieldDef);   // class [Il2CppToolkit.Runtime]Il2CppToolkit.Runtime.IMemorySource T::__source
 
 			ctorMethodIL.Emit(OpCodes.Ldarg_0);                 // this
 			ctorMethodIL.Emit(OpCodes.Ldarg_2);                 // address
-			ctorMethodIL.Emit(OpCodes.Stfld, addressFieldDef);  // unsigned int64 Client.App.Application::__address
+			ctorMethodIL.Emit(OpCodes.Stfld, addressFieldDef);  // unsigned int64 T::__address
 
 			ctorMethodIL.Emit(OpCodes.Ret);
 			typeDef.Methods.Add(ctorMethod);

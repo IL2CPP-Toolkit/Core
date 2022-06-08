@@ -41,14 +41,25 @@ namespace Il2CppToolkit.Injection.Client
 				var response = client.FindClass(new() { Klass = new() { Name = "Client.App.SingleInstance<Client.Model.AppModel>" } }, deadline: DateTime.MaxValue);
 				Console.WriteLine($"Class address @{response.Address:X16}");
 
-				CallMethodRequest request = new()
 				{
-					Klass = new() { Name = "UnityEngine.Time" },
-					MethodName = "set_timeScale",
-					InstanceAddress = 0
-				};
-				request.Arguments.Add(new Value() { Float = 1.0f });
-				CallMethodResponse rsp = client.CallMethod(request);
+					CallMethodRequest request = new()
+					{
+						Klass = new() { Name = "Client.App.SingleInstance<Client.Model.AppModel>" },
+						MethodName = "get_Instance",
+						InstanceAddress = 0
+					};
+					CallMethodResponse rsp = client.CallMethod(request);
+				}
+				{
+					CallMethodRequest request = new()
+					{
+						Klass = new() { Name = "UnityEngine.Time" },
+						MethodName = "set_timeScale",
+						InstanceAddress = 0
+					};
+					request.Arguments.Add(new Value() { Float = 1.0f });
+					CallMethodResponse rsp = client.CallMethod(request);
+				}
 			}
 			catch (Exception ex)
 			{
