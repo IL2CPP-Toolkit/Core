@@ -19,7 +19,7 @@ namespace Il2CppToolkit.Runtime
 		}
 	}
 
-	public class StaticFieldMember<TValue>
+	public class StaticFieldMember<TClass, TValue>
 	{
 		private readonly string __moduleName;
 		private readonly ulong __clsOffset;

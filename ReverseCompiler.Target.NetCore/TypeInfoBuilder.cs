@@ -13,8 +13,8 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 		const MethodAttributes kGetterAttrs = MethodAttributes.Public | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.Virtual | MethodAttributes.RTSpecialName | MethodAttributes.SpecialName;
 		private static readonly Type FieldMemberType = typeof(FieldMember<,>);
 		private static readonly System.Reflection.ConstructorInfo FieldMemberTypeCtor = typeof(FieldMember<,>).GetConstructors()[0];
-		private static readonly Type StaticFieldMemberType = typeof(StaticFieldMember<>);
-		private static readonly System.Reflection.ConstructorInfo StaticFieldMemberTypeCtor = typeof(StaticFieldMember<>).GetConstructors()[0];
+		private static readonly Type StaticFieldMemberType = typeof(StaticFieldMember<,>);
+		private static readonly System.Reflection.ConstructorInfo StaticFieldMemberTypeCtor = typeof(StaticFieldMember<,>).GetConstructors()[0];
 		private readonly TypeDefinition DeclaringType;
 		private readonly TypeDefinition TypeInfo;
 		private readonly MethodDefinition TypeInfoCctor;
@@ -66,7 +66,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 		public FieldDefinition DefineStaticField(string name, TypeReference fieldType, string moduleName, ulong address, ulong offset, byte indirection)
 		{
 			ShouldWrite = true;
-			TypeReference fieldTypeDefType = ModuleDefinition.ImportReference(StaticFieldMemberType).MakeGenericType(fieldType);
+			TypeReference fieldTypeDefType = ModuleDefinition.ImportReference(StaticFieldMemberType).MakeGenericType(DeclaringType, fieldType);
 			MethodReference ctor = new(".ctor", ModuleDefinition.TypeSystem.Void, fieldTypeDefType);
 			foreach (var param in StaticFieldMemberTypeCtor.GetParameters())
 				ctor.Parameters.Add(new ParameterDefinition(param.Name, (ParameterAttributes)param.Attributes, ModuleDefinition.ImportReference(param.ParameterType)));

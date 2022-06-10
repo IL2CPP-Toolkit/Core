@@ -19,7 +19,7 @@ namespace Il2CppToolkit.Injection.Client
 			//);
 
 
-			Process proc = Process.GetProcessesByName("Raid")[0];
+			Process proc = Process.GetProcessesByName("Sample")[0];
 			int result = NativeMethods.InjectHook((uint)proc.Id);
 			if (result < 0)
 			{
@@ -38,18 +38,6 @@ namespace Il2CppToolkit.Injection.Client
 			var client = new Il2CppService.Il2CppServiceClient(channel);
 			try
 			{
-				var response = client.FindClass(new() { Klass = new() { Name = "Client.App.SingleInstance<Client.Model.AppModel>" } }, deadline: DateTime.MaxValue);
-				Console.WriteLine($"Class address @{response.Address:X16}");
-
-				{
-					CallMethodRequest request = new()
-					{
-						Klass = new() { Name = "Client.App.SingleInstance<Client.Model.AppModel>" },
-						MethodName = "get_Instance",
-						InstanceAddress = 0
-					};
-					CallMethodResponse rsp = client.CallMethod(request);
-				}
 				{
 					CallMethodRequest request = new()
 					{
