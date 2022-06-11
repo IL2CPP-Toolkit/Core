@@ -24,6 +24,7 @@ public:
 	InjectionHost() noexcept;
 	virtual ~InjectionHost() noexcept;
 
+	void KeepAlive() noexcept;
 	void ProcessMessages() noexcept;
 	uint32_t Port() const noexcept { return m_iPort; }
 

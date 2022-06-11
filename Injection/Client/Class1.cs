@@ -53,6 +53,8 @@ namespace Il2CppToolkit.Injection.Client
 			{
 				Console.WriteLine($"Error: {ex.Message}");
 			}
+
+			Thread.Sleep(60000);
 			//var client = new MessageService.MessageServiceClient(channel);
 			//MessageReply reply = client.SendMessage(new MessageRequest { Msg = "foo" });
 			//Console.WriteLine(reply.Reply);

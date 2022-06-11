@@ -61,7 +61,7 @@ void InjectionHost::Teardown() noexcept
 	InjectionHost& self{ GetInstance() };
 	DWORD dwCurrentProcessId{ GetCurrentProcessId() };
 	HWND hwndMain{ GetMainWindowForProcessId(dwCurrentProcessId, L"UnityWndClass")};
-	while (std::chrono::system_clock::now() < self.m_tpKeepAliveExpiry || IsDebuggerPresent())
+	while (std::chrono::system_clock::now() < self.m_tpKeepAliveExpiry) // || IsDebuggerPresent())
 	{
 		SendMessage(hwndMain, WM_NULL, 0, 0);
 		std::this_thread::sleep_for(s_hookTTL);
@@ -89,8 +89,12 @@ InjectionHost::~InjectionHost() noexcept
 	Teardown();
 }
 
-void InjectionHost::ProcessMessages() noexcept
+void InjectionHost::KeepAlive() noexcept
 {
 	m_tpKeepAliveExpiry = std::chrono::system_clock::now() + s_hookTTL;
+}
+
+void InjectionHost::ProcessMessages() noexcept
+{
 	m_executionQueue.DoWork();
 }

@@ -81,12 +81,13 @@ extern "C" __declspec(dllexport) HRESULT WINAPI InjectHook(DWORD procId) noexcep
 	if (!snapshot.FindProcess(procId) || !snapshot.FindFirstThread())
 		return E_INVALIDARG;
 
+	g_hookMap.emplace(procId, injection.Hook(WH_CALLWNDPROC, snapshot.Thread().th32ThreadID));
+
 	// bootstrap the hook with a ping WM_NULL message
 	HWND hwndMain{ GetMainWindowForProcessId(procId, L"UnityWndClass") };
 	if (hwndMain)
 		SendMessage(hwndMain, WM_NULL, 0, 0);
 
-	g_hookMap.emplace(procId, injection.Hook(WH_CALLWNDPROC, snapshot.Thread().th32ThreadID));
 	return S_OK;
 }
 
