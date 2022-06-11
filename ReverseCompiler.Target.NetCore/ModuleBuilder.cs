@@ -23,7 +23,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 		private readonly Dictionary<Il2CppTypeEnum, TypeReference> BuiltInTypes = new();
 
 		private readonly HashSet<Il2CppTypeDefinition> EnqueuedTypes = new();
-		private readonly Queue<Il2CppTypeDefinition> TypeDefinitionQueue = new();
+		private Queue<Il2CppTypeDefinition> TypeDefinitionQueue = new();
 
 		private Il2Cpp Il2Cpp => Context.Model.Il2Cpp;
 		private Metadata Metadata => Context.Model.Metadata;
@@ -57,14 +57,16 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 			BuildDefinitionQueue();
 		}
 
-		private TypeDefinition UseTypeDefinition(Il2CppTypeDefinition cppTypeDef)
+		private TypeReference UseTypeDefinition(Il2CppTypeDefinition cppTypeDef)
 		{
-			TypeDefinition typeDef = GetTypeDefinition(cppTypeDef);
+			TypeReference typeDef = GetTypeDefinition(cppTypeDef);
 			if (EnqueuedTypes.Contains(cppTypeDef))
 				return typeDef;
 
-			if (cppTypeDef.declaringTypeIndex == -1)
-				Module.Types.Add(typeDef);
+			if (cppTypeDef.declaringTypeIndex == -1 && typeDef is TypeDefinition td)
+			{
+				Module.Types.Add(td);
+			}
 
 			EnqueuedTypes.Add(cppTypeDef);
 			TypeDefinitionQueue.Enqueue(cppTypeDef);
@@ -73,12 +75,32 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 
 		private void BuildDefinitionQueue()
 		{
-			while (TypeDefinitionQueue.TryDequeue(out Il2CppTypeDefinition cppTypeDef))
+			Queue<Il2CppTypeDefinition> typesToBuild = new();
+			do
 			{
-				TypeDefinition typeDef = GetTypeDefinition(cppTypeDef);
-				InitializeTypeDefinition(cppTypeDef, typeDef);
-				DefineConstructors(typeDef);
+				Queue<Il2CppTypeDefinition> currentQueue = TypeDefinitionQueue;
+				TypeDefinitionQueue = new();
+				while (currentQueue.TryDequeue(out Il2CppTypeDefinition cppTypeDef))
+				{
+					TypeReference typeRef = GetTypeDefinition(cppTypeDef);
+					if (typeRef is not TypeDefinition typeDef)
+						continue;
 
+					if (!cppTypeDef.IsEnum)
+					{
+						InitializeTypeDefinition(cppTypeDef, typeDef);
+						DefineConstructors(typeDef);
+					}
+					typesToBuild.Enqueue(cppTypeDef);
+				}
+			}
+			while (TypeDefinitionQueue.Count > 0);
+
+			while( typesToBuild.TryDequeue(out Il2CppTypeDefinition cppTypeDef))
+			{
+				TypeReference typeRef = GetTypeDefinition(cppTypeDef);
+				if (typeRef is not TypeDefinition typeDef)
+					continue;
 				using TypeInfoBuilder typeInfo = new(typeDef, Module);
 				DefineFields(cppTypeDef, typeDef, typeInfo);
 			}
@@ -100,7 +122,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 			{
 				var nestedIndex = Metadata.nestedTypeIndices[cppTypeDef.nestedTypesStart + i];
 				var nestedTypeDef = Metadata.typeDefs[nestedIndex];
-				var nestedTypeDefinition = UseTypeDefinition(nestedTypeDef);
+				var nestedTypeDefinition = UseTypeDefinition(nestedTypeDef) as TypeDefinition; // any nested type must also be a TypeDefinition
 				typeDef.NestedTypes.Add(nestedTypeDefinition);
 			}
 
@@ -213,9 +235,18 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 				TypeReference fieldTypeRef = UseTypeReference(typeDef, cppFieldType);
 				FieldAttributes fieldAttrs = (FieldAttributes)cppFieldType.attrs;
 				bool isStatic = fieldAttrs.HasFlag(FieldAttributes.Static);
-				if (fieldAttrs.HasFlag(FieldAttributes.Literal))
+
+				if (fieldAttrs.HasFlag(FieldAttributes.Literal) || cppTypeDef.IsEnum)
 				{
-					// TODO add field literal directly
+					FieldDefinition fld = new(fieldName, fieldAttrs, fieldTypeRef);
+					if (fieldAttrs.HasFlag(FieldAttributes.Literal) 
+						&& Metadata.GetFieldDefaultValueFromIndex(i, out Il2CppFieldDefaultValue cppDefaultValue) 
+						&& cppDefaultValue.dataIndex != -1
+						&& Context.Model.TryGetDefaultValueBytes(cppFieldDef.typeIndex, cppDefaultValue.dataIndex, out byte[] defaultValueBytes))
+					{
+						fld.InitialValue = defaultValueBytes;
+					}
+					typeDef.Fields.Add(fld);
 					continue;
 				}
 
@@ -263,13 +294,23 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 		// 	return methodDef;
 		// }
 
-		private TypeDefinition GetTypeDefinition(Il2CppTypeDefinition cppTypeDef)
+		private TypeReference GetTypeDefinition(Il2CppTypeDefinition cppTypeDef)
 		{
 			if (TypeDefinitions.TryGetValue(cppTypeDef, out TypeDefinition typeDef))
 				return typeDef;
 
 			string namespaceName = Metadata.GetStringFromIndex(cppTypeDef.namespaceIndex);
 			string typeName = Metadata.GetStringFromIndex(cppTypeDef.nameIndex);
+
+			// TODO: support injected replacements
+			if (namespaceName.StartsWith("System."))
+			{
+				Type systemType = Type.GetType($"{namespaceName}.{typeName}", false);
+				if (systemType != null)
+				{
+					return Module.ImportReference(systemType);
+				}
+			}
 
 			typeDef = new TypeDefinition(namespaceName, typeName, (TypeAttributes)cppTypeDef.flags);
 			TypeDefinitions.Add(cppTypeDef, typeDef);
@@ -287,8 +328,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 				case Il2CppTypeEnum.IL2CPP_TYPE_VALUETYPE:
 					{
 						Il2CppTypeDefinition cppTypeDef = Context.Model.GetTypeDefinitionFromIl2CppType(cppType);
-						TypeDefinition typeDef = UseTypeDefinition(cppTypeDef);
-						return typeDef;
+						return UseTypeDefinition(cppTypeDef);
 					}
 				case Il2CppTypeEnum.IL2CPP_TYPE_ARRAY:
 					{
@@ -300,7 +340,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 					{
 						Il2CppGenericClass cppGenericClass = Context.Model.Il2Cpp.MapVATR<Il2CppGenericClass>(cppType.data.generic_class);
 						Il2CppTypeDefinition cppTypeDef = Context.Model.GetGenericClassTypeDefinition(cppGenericClass);
-						TypeDefinition typeDef = UseTypeDefinition(cppTypeDef);
+						TypeReference typeDef = UseTypeDefinition(cppTypeDef);
 						GenericInstanceType genericInstanceType = new(typeDef);
 						Il2CppGenericInst cppGenericInst = Context.Model.Il2Cpp.MapVATR<Il2CppGenericInst>(cppGenericClass.context.class_inst);
 						ulong[] pointers = Context.Model.Il2Cpp.MapVATR<ulong>(cppGenericInst.type_argv, cppGenericInst.type_argc);

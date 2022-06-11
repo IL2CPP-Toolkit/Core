@@ -1,7 +1,7 @@
 syntax = "proto3";
 package il2cppservice;
 
-option csharp_namespace = "Il2CppToolkit.Interop";
+option csharp_namespace = "Il2CppToolkit.Injection.Client";
 
 message Value {
 	oneof value {
@@ -26,6 +26,24 @@ message Il2CppObject {
 	ClassId klass = 2;
 }
 
+message Il2CppClassName {
+	uint64 address = 1;
+	ClassId klass = 2;
+}
+
+message Il2CppField {
+	string name = 1;
+	uint32 offset = 2;
+
+	bool static = 15;
+}
+
+message Il2CppTypeInfo {
+	ClassId klassId = 1;
+	uint64 address = 2;
+	uint64 staticFieldsAddress = 3;
+	repeated Il2CppField fields = 4;
+}
 
 message FindClassRequest {
 	ClassId klass = 1;
@@ -33,6 +51,14 @@ message FindClassRequest {
 
 message FindClassResponse {
 	uint64 address = 1;
+}
+
+message GetTypeInfoRequest {
+	ClassId klass = 1;
+}
+
+message GetTypeInfoResponse {
+	Il2CppTypeInfo typeInfo = 1;
 }
 
 message CallMethodRequest {
@@ -49,4 +75,5 @@ message CallMethodResponse {
 service Il2CppService {
 	rpc FindClass (FindClassRequest) returns (FindClassResponse);
 	rpc CallMethod (CallMethodRequest) returns (CallMethodResponse);
+	rpc GetTypeInfo (GetTypeInfoRequest) returns (GetTypeInfoResponse);
 }

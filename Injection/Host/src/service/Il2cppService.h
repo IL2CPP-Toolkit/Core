@@ -20,9 +20,15 @@ public:
 	) noexcept override;
 
 	::grpc::Status CallMethod(
-		::grpc::ServerContext* context, 
-		const ::il2cppservice::CallMethodRequest* request, 
+		::grpc::ServerContext* context,
+		const ::il2cppservice::CallMethodRequest* request,
 		::il2cppservice::CallMethodResponse* response
+	) noexcept override;
+
+	::grpc::Status GetTypeInfo(
+		::grpc::ServerContext* context,
+		const ::il2cppservice::GetTypeInfoRequest* request,
+		::il2cppservice::GetTypeInfoResponse* response
 	) noexcept override;
 
 private:

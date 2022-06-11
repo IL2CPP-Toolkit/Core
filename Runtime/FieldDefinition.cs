@@ -1,43 +1,53 @@
-using System;
-using System.Collections.Generic;
+using Il2CppToolkit.Injection.Client;
+using System.Linq;
+using System.Runtime.CompilerServices;
 
 namespace Il2CppToolkit.Runtime
 {
+	internal class Il2CppTypeInfoLookup<TClass>
+		where TClass : IRuntimeObject
+	{
+		private static GetTypeInfoResponse s_typeInfo;
+		public static Il2CppTypeInfo GetTypeInfo(InjectionClient client)
+		{
+			s_typeInfo ??= client.Il2Cpp.GetTypeInfo(new() { Klass = new() { Name = typeof(TClass).FullName } });
+			return s_typeInfo.TypeInfo;
+		}
+	}
+
 	public class FieldMember<TClass, TValue>
 		where TClass : IRuntimeObject
 	{
-		private readonly ulong __offset;
-		private readonly byte __indirection;
-		public FieldMember(ulong offset, byte indirection = 1)
+		private readonly string Name;
+		private readonly byte Indirection;
+		public FieldMember([CallerMemberName] string name = "", byte indirection = 1)
 		{
-			__offset = offset;
-			__indirection = indirection;
+			Name = name;
+			Indirection = indirection;
 		}
 		public TValue GetValue(TClass obj)
 		{
-			return obj.Source.ReadValue<TValue>(obj.Address + __offset, __indirection);
+			Il2CppTypeInfo typeInfo = Il2CppTypeInfoLookup<TClass>.GetTypeInfo(obj.Source.ParentContext.InjectionClient);
+			Il2CppField fld = typeInfo.Fields.First(fld => fld.Name == Name);
+			return obj.Source.ReadValue<TValue>(obj.Address + fld.Offset, Indirection);
 		}
 	}
 
 	public class StaticFieldMember<TClass, TValue>
+		where TClass : IRuntimeObject
 	{
-		private readonly string __moduleName;
-		private readonly ulong __clsOffset;
-		private readonly ulong __offset;
-		private readonly byte __indirection;
-		public StaticFieldMember(string moduleName, ulong clsOffset, ulong offset, byte indirection = 1)
+		private readonly string Name;
+		private readonly byte Indirection;
+		public StaticFieldMember([CallerMemberName] string name = "", byte indirection = 1)
 		{
-			__moduleName = moduleName;
-			__clsOffset = clsOffset;
-			__offset = offset;
-			__indirection = indirection;
+			Name = name;
+			Indirection = indirection;
 		}
 		public TValue GetValue(IMemorySource source)
 		{
-			ulong modOffset = source.ParentContext.GetModuleAddress(__moduleName);
-			// var classDef = source.ReadValue<Il2CppToolkit.Runtime.Types.Reflection.ClassDefinition>(modOffset + __clsOffset);
-			ulong staticFields = source.ReadPointer(source.ReadPointer(modOffset + __clsOffset) + 0xB8);
-			return source.ReadValue<TValue>(staticFields + __offset, __indirection);
+			Il2CppTypeInfo typeInfo = Il2CppTypeInfoLookup<TClass>.GetTypeInfo(source.ParentContext.InjectionClient);
+			Il2CppField fld = typeInfo.Fields.First(fld => fld.Name == Name);
+			return source.ReadValue<TValue>(typeInfo.StaticFieldsAddress + fld.Offset, Indirection);
 		}
 	}
 }

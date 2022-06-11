@@ -11,7 +11,7 @@ namespace System
 		public static char ToChar(this ReadOnlyMemory<byte> memory)
 		{
 #if NET472
-			return BitConverter.ToChar(memory.Buffer, (int)memory.Offset);
+			return BitConverter.ToChar(memory.Span.ToArray(), (int)0);
 #else
 			return BitConverter.ToChar(memory.Span);
 #endif
@@ -19,7 +19,7 @@ namespace System
 		public static bool ToBoolean(this ReadOnlyMemory<byte> memory)
 		{
 #if NET472
-			return BitConverter.ToBoolean(memory.Buffer, (int)memory.Offset);
+			return BitConverter.ToBoolean(memory.Span.ToArray().ToArray(), (int)0);
 #else
 			return BitConverter.ToBoolean(memory.Span);
 #endif
@@ -27,7 +27,7 @@ namespace System
 		public static double ToDouble(this ReadOnlyMemory<byte> memory)
 		{
 #if NET472
-			return BitConverter.ToDouble(memory.Buffer, (int)memory.Offset);
+			return BitConverter.ToDouble(memory.Span.ToArray(), (int)0);
 #else
 			return BitConverter.ToDouble(memory.Span);
 #endif
@@ -35,7 +35,7 @@ namespace System
 		public static float ToSingle(this ReadOnlyMemory<byte> memory)
 		{
 #if NET472
-			return BitConverter.ToSingle(memory.Buffer, (int)memory.Offset);
+			return BitConverter.ToSingle(memory.Span.ToArray(), (int)0);
 #else
 			return BitConverter.ToSingle(memory.Span);
 #endif
@@ -43,7 +43,7 @@ namespace System
 		public static short ToInt16(this ReadOnlyMemory<byte> memory)
 		{
 #if NET472
-			return BitConverter.ToInt16(memory.Buffer, (int)memory.Offset);
+			return BitConverter.ToInt16(memory.Span.ToArray(), (int)0);
 #else
 			return BitConverter.ToInt16(memory.Span);
 #endif
@@ -51,7 +51,7 @@ namespace System
 		public static int ToInt32(this ReadOnlyMemory<byte> memory)
 		{
 #if NET472
-			return BitConverter.ToInt32(memory.Buffer, (int)memory.Offset);
+			return BitConverter.ToInt32(memory.Span.ToArray(), (int)0);
 #else
 			return BitConverter.ToInt32(memory.Span);
 #endif
@@ -59,7 +59,7 @@ namespace System
 		public static long ToInt64(this ReadOnlyMemory<byte> memory)
 		{
 #if NET472
-			return BitConverter.ToInt64(memory.Buffer, (int)memory.Offset);
+			return BitConverter.ToInt64(memory.Span.ToArray(), (int)0);
 #else
 			return BitConverter.ToInt64(memory.Span);
 #endif
@@ -67,7 +67,7 @@ namespace System
 		public static ushort ToUInt16(this ReadOnlyMemory<byte> memory)
 		{
 #if NET472
-			return BitConverter.ToUInt16(memory.Buffer, (int)memory.Offset);
+			return BitConverter.ToUInt16(memory.Span.ToArray(), (int)0);
 #else
 			return BitConverter.ToUInt16(memory.Span);
 #endif
@@ -75,7 +75,7 @@ namespace System
 		public static uint ToUInt32(this ReadOnlyMemory<byte> memory)
 		{
 #if NET472
-			return BitConverter.ToUInt32(memory.Buffer, (int)memory.Offset);
+			return BitConverter.ToUInt32(memory.Span.ToArray(), (int)0);
 #else
 			return BitConverter.ToUInt32(memory.Span);
 #endif
@@ -83,7 +83,7 @@ namespace System
 		public static ulong ToUInt64(this ReadOnlyMemory<byte> memory)
 		{
 #if NET472
-			return BitConverter.ToUInt64(memory.Buffer, (int)memory.Offset);
+			return BitConverter.ToUInt64(memory.Span.ToArray(), (int)0);
 #else
 			return BitConverter.ToUInt64(memory.Span);
 #endif
@@ -91,7 +91,7 @@ namespace System
 		public static IntPtr ToIntPtr(this ReadOnlyMemory<byte> memory)
 		{
 #if NET472
-			return (IntPtr)BitConverter.ToInt64(memory.Buffer, (int)memory.Offset);
+			return (IntPtr)BitConverter.ToInt64(memory.Span.ToArray(), (int)0);
 #else
 			return (IntPtr)BitConverter.ToInt64(memory.Span);
 #endif
@@ -99,48 +99,10 @@ namespace System
 		public static UIntPtr ToUIntPtr(this ReadOnlyMemory<byte> memory)
 		{
 #if NET472
-			return (UIntPtr)BitConverter.ToInt64(memory.Buffer, (int)memory.Offset);
+			return (UIntPtr)BitConverter.ToInt64(memory.Span.ToArray(), (int)0);
 #else
 			return (UIntPtr)BitConverter.ToInt64(memory.Span);
 #endif
 		}
 	}
-
-#if NET472
-	public class ReadOnlyMemory<T> where T : struct
-	{
-		public T[] Buffer { get; private set; }
-		public ulong Offset { get; private set; }
-		public ulong Length { get; private set; }
-
-		public ReadOnlyMemory(T[] initialData)
-		{
-			Buffer = initialData;
-			Offset = 0;
-			Length = (ulong)Buffer.Length;
-		}
-
-		public ReadOnlyMemory(T[] initialData, ulong offset, ulong length)
-		{
-			Buffer = initialData;
-			Offset = offset;
-			Length = length;
-		}
-
-		public ReadOnlyMemory<T> Slice(int offset, int length)
-		{
-			return new ReadOnlyMemory<T>(Buffer, Offset + (ulong)offset, (ulong)length);
-		}
-
-		public T[] Span
-		{
-			get
-			{
-				T[] copy = new T[Length];
-				Array.ConstrainedCopy(Buffer, (int)Offset, copy, 0, (int)Length);
-				return copy;
-			}
-		}
-	}
-#endif
 }

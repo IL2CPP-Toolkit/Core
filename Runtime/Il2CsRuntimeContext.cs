@@ -8,6 +8,7 @@ using System.Reflection;
 using Il2CppToolkit.Common.Errors;
 using static Il2CppToolkit.Runtime.Types.Types;
 using Il2CppToolkit.Runtime.Types.Reflection;
+using Il2CppToolkit.Injection.Client;
 
 namespace Il2CppToolkit.Runtime
 {
@@ -27,6 +28,7 @@ namespace Il2CppToolkit.Runtime
         }
         private readonly Dictionary<string, ulong> moduleAddresses = new();
         private readonly IntPtr processHandle;
+        public InjectionClient InjectionClient { get; private set; }
         public Process TargetProcess { get; }
 
         public IMemorySource Parent => null;
@@ -35,12 +37,14 @@ namespace Il2CppToolkit.Runtime
         public Il2CsRuntimeContext(Process target)
         {
             TargetProcess = target;
+            InjectionClient = new(target);
             processHandle = NativeWrapper.OpenProcess(ProcessAccessFlags.Read, inheritHandle: true, TargetProcess.Id);
         }
 
         public void Dispose()
         {
             NativeWrapper.CloseHandle(processHandle);
+            InjectionClient.Dispose();
         }
 
         public ulong GetMemberFieldOffset(FieldInfo field, ulong objectAddress)

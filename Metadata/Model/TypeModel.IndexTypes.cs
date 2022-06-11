@@ -382,7 +382,31 @@ namespace Il2CppToolkit.Model
 			return typeName;
 		}
 
-		private bool TryGetDefaultValue(int typeIndex, int dataIndex, out object value)
+		public bool TryGetDefaultValueBytes(int typeIndex, int dataIndex, out byte[] value)
+		{
+			uint pointer = m_loader.Metadata.GetDefaultValueFromIndex(dataIndex);
+			Il2CppType defaultValueType = m_loader.Il2Cpp.Types[typeIndex];
+			m_loader.Metadata.Position = pointer;
+			switch (defaultValueType.type)
+			{
+				case Il2CppTypeEnum.IL2CPP_TYPE_BOOLEAN: value = m_loader.Metadata.ReadBytes(sizeof(bool)); return true;
+				case Il2CppTypeEnum.IL2CPP_TYPE_U1: value = m_loader.Metadata.ReadBytes(sizeof(byte)); return true;
+				case Il2CppTypeEnum.IL2CPP_TYPE_I1: value = m_loader.Metadata.ReadBytes(sizeof(sbyte)); return true;
+				case Il2CppTypeEnum.IL2CPP_TYPE_CHAR: value = m_loader.Metadata.ReadBytes(2); return true;
+				case Il2CppTypeEnum.IL2CPP_TYPE_U2: value = m_loader.Metadata.ReadBytes(sizeof(ushort)); return true;
+				case Il2CppTypeEnum.IL2CPP_TYPE_I2: value = m_loader.Metadata.ReadBytes(sizeof(short)); return true;
+				case Il2CppTypeEnum.IL2CPP_TYPE_U4: value = m_loader.Metadata.ReadBytes(sizeof(uint)); return true;
+				case Il2CppTypeEnum.IL2CPP_TYPE_I4: value = m_loader.Metadata.ReadBytes(sizeof(uint)); return true;
+				case Il2CppTypeEnum.IL2CPP_TYPE_U8: value = m_loader.Metadata.ReadBytes(sizeof(ulong)); return true;
+				case Il2CppTypeEnum.IL2CPP_TYPE_I8: value = m_loader.Metadata.ReadBytes(sizeof(long)); return true;
+				case Il2CppTypeEnum.IL2CPP_TYPE_R4: value = m_loader.Metadata.ReadBytes(sizeof(float)); return true;
+				case Il2CppTypeEnum.IL2CPP_TYPE_R8: value = m_loader.Metadata.ReadBytes(sizeof(double)); return true;
+				case Il2CppTypeEnum.IL2CPP_TYPE_STRING: value = m_loader.Metadata.ReadBytes(m_loader.Metadata.ReadInt32()); return true;
+				default: value = null; return false;
+			}
+		}
+
+		public bool TryGetDefaultValue(int typeIndex, int dataIndex, out object value)
 		{
 			uint pointer = m_loader.Metadata.GetDefaultValueFromIndex(dataIndex);
 			Il2CppType defaultValueType = m_loader.Il2Cpp.Types[typeIndex];

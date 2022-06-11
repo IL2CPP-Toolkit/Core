@@ -21,7 +21,11 @@ namespace Il2CppToolkit.Runtime.Types.corelib
             }
 
             ReadOnlyMemory<byte> stringData = source.ReadMemory(address + 20, (ulong)strlen * 2);
-            Value = Encoding.Unicode.GetString(stringData.Span);
+#if NET472
+            Value = Encoding.UTF8.GetString(stringData.Span.ToArray());
+#else
+            Value = Encoding.UTF8.GetString(stringData.Span);
+#endif
         }
     }
 }

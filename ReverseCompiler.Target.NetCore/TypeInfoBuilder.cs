@@ -35,32 +35,37 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 
 		public void DefineField(string name, TypeReference fieldType, ulong offset, byte indirection)
 		{
+			try
+			{
+				fieldType = ModuleDefinition.ImportReference(fieldType);
+			}
+			catch { }
 			ShouldWrite = true;
 			TypeReference fieldTypeDefType = ModuleDefinition.ImportReference(FieldMemberType).MakeGenericType(DeclaringType, fieldType);
 			MethodReference ctor = new(".ctor", ModuleDefinition.TypeSystem.Void, fieldTypeDefType);
 			foreach (var param in FieldMemberTypeCtor.GetParameters())
 				ctor.Parameters.Add(new ParameterDefinition(param.Name, (ParameterAttributes)param.Attributes, ModuleDefinition.ImportReference(param.ParameterType)));
 			FieldDefinition typeInfoFieldDef = new(name, FieldAttributes.Static | FieldAttributes.Public | FieldAttributes.InitOnly, fieldTypeDefType);
-			CctorIL.Emit(OpCodes.Ldc_I8, (long)offset);
+			CctorIL.Emit(OpCodes.Ldstr, name);
 			CctorIL.Emit(OpCodes.Ldc_I4_S, (sbyte)indirection);
 			CctorIL.Emit(OpCodes.Newobj, ctor);
 			CctorIL.Emit(OpCodes.Stsfld, typeInfoFieldDef);
 			TypeInfo.Fields.Add(typeInfoFieldDef);
 
-			MethodDefinition instanceGetMethod = new($"get_{name}", kGetterAttrs, fieldType);
-			ILProcessor getMethodIL = instanceGetMethod.Body.GetILProcessor();
-			MethodReference getValueMethod = new("GetValue", fieldTypeDefType, fieldType);
-			getValueMethod.Parameters.Add(new ParameterDefinition("obj", ParameterAttributes.None, DeclaringType));
-			getMethodIL.Emit(OpCodes.Ldsfld, typeInfoFieldDef);
-			getMethodIL.Emit(OpCodes.Ldarg_0);
-			getMethodIL.Emit(OpCodes.Callvirt, getValueMethod);
-			getMethodIL.Emit(OpCodes.Ret);
-			DeclaringType.Methods.Add(instanceGetMethod);
-			PropertyDefinition instanceProperty = new(name, PropertyAttributes.None, fieldType)
-			{
-				GetMethod = instanceGetMethod
-			};
-			DeclaringType.Properties.Add(instanceProperty);
+			//MethodDefinition instanceGetMethod = new($"get_{name}", kGetterAttrs, fieldType);
+			//ILProcessor getMethodIL = instanceGetMethod.Body.GetILProcessor();
+			//MethodReference getValueMethod = new("GetValue", fieldType, fieldTypeDefType);
+			//getValueMethod.Parameters.Add(new ParameterDefinition("obj", ParameterAttributes.None, DeclaringType));
+			//getMethodIL.Emit(OpCodes.Ldsfld, typeInfoFieldDef);
+			//getMethodIL.Emit(OpCodes.Ldarg_0);
+			//getMethodIL.Emit(OpCodes.Callvirt, getValueMethod);
+			//getMethodIL.Emit(OpCodes.Ret);
+			//DeclaringType.Methods.Add(instanceGetMethod);
+			//PropertyDefinition instanceProperty = new(name, PropertyAttributes.None, fieldType)
+			//{
+			//	GetMethod = instanceGetMethod
+			//};
+			//DeclaringType.Properties.Add(instanceProperty);
 		}
 
 		public FieldDefinition DefineStaticField(string name, TypeReference fieldType, string moduleName, ulong address, ulong offset, byte indirection)
@@ -71,9 +76,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 			foreach (var param in StaticFieldMemberTypeCtor.GetParameters())
 				ctor.Parameters.Add(new ParameterDefinition(param.Name, (ParameterAttributes)param.Attributes, ModuleDefinition.ImportReference(param.ParameterType)));
 			FieldDefinition fieldDef = new(name, FieldAttributes.Static | FieldAttributes.Public | FieldAttributes.InitOnly, fieldTypeDefType);
-			CctorIL.Emit(OpCodes.Ldstr, moduleName);
-			CctorIL.Emit(OpCodes.Ldc_I8, (long)address);
-			CctorIL.Emit(OpCodes.Ldc_I8, (long)offset);
+			CctorIL.Emit(OpCodes.Ldstr, name);
 			CctorIL.Emit(OpCodes.Ldc_I4_S, (sbyte)indirection);
 			CctorIL.Emit(OpCodes.Newobj, ctor);
 			CctorIL.Emit(OpCodes.Stsfld, fieldDef);

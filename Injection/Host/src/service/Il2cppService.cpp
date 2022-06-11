@@ -130,6 +130,33 @@ struct numeric_value
 	return result.value_or(::grpc::Status::CANCELLED);
 }
 
+::grpc::Status Il2CppServiceImpl::GetTypeInfo(
+	::grpc::ServerContext* context,
+	const ::il2cppservice::GetTypeInfoRequest* request,
+	::il2cppservice::GetTypeInfoResponse* response
+) noexcept
+{
+	std::optional<::grpc::Status> result{ m_executionQueue.Invoke<::grpc::Status>([&]() mutable noexcept
+	{
+		const Il2CppClassInfo* pClassInfo{ Il2CppContext::instance().FindClass(request->klass().name()) };
+		if (!pClassInfo)
+			return ::grpc::Status{ grpc::StatusCode::NOT_FOUND, "Could not find class" };
+
+		const Il2CppClass* pCls{ pClassInfo->klass() };
+		response->mutable_typeinfo()->set_address(reinterpret_cast<uint64_t>(pCls));
+		response->mutable_typeinfo()->set_staticfieldsaddress(reinterpret_cast<uint64_t>(pCls->static_fields));
+		response->mutable_typeinfo()->mutable_klassid()->set_name(pClassInfo->name());
+		for (int n{ 0 }, m{ pCls->field_count }; n < m; ++n)
+		{
+			::il2cppservice::Il2CppField* pFld{ response->mutable_typeinfo()->mutable_fields()->Add() };
+			pFld->set_name(pCls->fields[n].name);
+			pFld->set_offset(pCls->fields[n].offset);
+			pFld->set_offset(pCls->fields[n].type->attrs & 0x10);
+		}
+		return ::grpc::Status::OK;
+	}) };
+	return result.value_or(::grpc::Status::CANCELLED);
+}
 
 ::grpc::Status Il2CppServiceImpl::FindClass(
 	::grpc::ServerContext* context,
@@ -139,12 +166,11 @@ struct numeric_value
 	std::optional<::grpc::Status> result{ m_executionQueue.Invoke<::grpc::Status>([&]() mutable noexcept
 	{
 		const Il2CppClassInfo* pClassInfo{ Il2CppContext::instance().FindClass(request->klass().name()) };
-		if (pClassInfo)
-		{
-			response->set_address(reinterpret_cast<uint64_t>(pClassInfo->klass()));
-			return ::grpc::Status::OK;
-		}
-		return ::grpc::Status{ grpc::StatusCode::NOT_FOUND, "Could not find class" };
+		if (!pClassInfo)
+			return ::grpc::Status{ grpc::StatusCode::NOT_FOUND, "Could not find class" };
+
+		response->set_address(reinterpret_cast<uint64_t>(pClassInfo->klass()));
+		return ::grpc::Status::OK;
 	}) };
 	return result.value_or(::grpc::Status::CANCELLED);
 }
