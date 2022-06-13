@@ -8,6 +8,7 @@ namespace Il2CppToolkit.ReverseCompiler
 	{
 		ITypeModelMetadata Model { get; }
 		ArtifactContainer Artifacts { get; }
+		ICompilerLogger Logger { get; }
 
 		void AddPhase<T>(T compilePhase) where T : CompilePhase;
 		Task WaitForPhase<T>() where T : CompilePhase;

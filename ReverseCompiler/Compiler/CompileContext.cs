@@ -15,10 +15,12 @@ namespace Il2CppToolkit.ReverseCompiler
 
 		public ITypeModelMetadata Model { get; }
 		public ArtifactContainer Artifacts => m_artifacts;
+		public ICompilerLogger Logger { get; }
 
-		public CompileContext(ITypeModelMetadata model)
+		public CompileContext(ITypeModelMetadata model, ICompilerLogger logger)
 		{
 			Model = model;
+			Logger = logger;
 		}
 
 		public void AddPhase<T>(T compilePhase) where T : CompilePhase

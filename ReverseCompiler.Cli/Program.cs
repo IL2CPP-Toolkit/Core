@@ -42,8 +42,32 @@ namespace Il2CppToolkit.ReverseCompiler.Cli
             [Option('t', "target", Required = false, Separator = ',', HelpText = "List of compile targets")]
             public IEnumerable<string> Targets { get; set; }
         }
+		class ConsoleLogger : ICompilerLogger
+        {
+            private bool Verbose;
+            public ConsoleLogger(bool verbose)
+			{
+                Verbose = verbose;
+            }
+            public void LogInfo(string message)
+            {
+                if (!Verbose)
+                    return;
+                Console.WriteLine(message);
+            }
 
-        private static int Main(string[] args)
+            public void LogError(string message)
+            {
+                Console.WriteLine(message);
+            }
+
+            public void LogMessage(string message)
+			{
+                Console.Error.WriteLine(message);
+			}
+		}
+
+		private static int Main(string[] args)
         {
             ErrorHandler.OnError += HandleError;
 
@@ -69,7 +93,7 @@ namespace Il2CppToolkit.ReverseCompiler.Cli
                 Loader loader = new();
                 loader.Init(opts.GameAssemblyPath, opts.MetadataPath);
                 TypeModel model = new(loader);
-                Compiler compiler = new(model);
+                Compiler compiler = new(model, new ConsoleLogger(opts.Verbose));
                 foreach (string target in opts.Targets)
                 {
                     Assembly targetAsm = Assembly.LoadFrom(Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), $"Il2CppToolkit.Target.{target}.dll"));

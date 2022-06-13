@@ -25,7 +25,7 @@ namespace Il2CppToolkit.Runtime
 			Name = name;
 			Indirection = indirection;
 		}
-		public TValue GetValue(TClass obj)
+		public TValue GetValue(IRuntimeObject obj)
 		{
 			Il2CppTypeInfo typeInfo = Il2CppTypeInfoLookup<TClass>.GetTypeInfo(obj.Source.ParentContext.InjectionClient);
 			Il2CppField fld = typeInfo.Fields.First(fld => fld.Name == Name);

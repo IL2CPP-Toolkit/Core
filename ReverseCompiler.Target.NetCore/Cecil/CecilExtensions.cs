@@ -4,7 +4,14 @@ namespace Mono.Cecil
 {
 	public static class CecilExtensions
 	{
-		public static TypeReference MakeGenericType(this TypeReference self, params TypeReference[] arguments)
+		public static string GetSafeName(this TypeReference self)
+		{
+			if (self.HasGenericParameters) 
+				return self.Name.Split('`')[0];
+			return self.Name;
+		}
+
+		public static GenericInstanceType MakeGenericType(this TypeReference self, params TypeReference[] arguments)
 		{
 			if (self.GenericParameters.Count != arguments.Length)
 				throw new ArgumentOutOfRangeException(nameof(self));

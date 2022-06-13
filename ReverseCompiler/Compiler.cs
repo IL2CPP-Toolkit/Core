@@ -12,9 +12,9 @@ namespace Il2CppToolkit.ReverseCompiler
 
 		public ArtifactContainer Artifacts => m_context.Artifacts;
 
-		public Compiler(TypeModel model)
+		public Compiler(TypeModel model, ICompilerLogger logger = null)
 		{
-			m_context = new(model);
+			m_context = new(model, logger);
 		}
 
 		public void AddTarget(ICompilerTarget target)
