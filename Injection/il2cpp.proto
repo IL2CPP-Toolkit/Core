@@ -18,7 +18,8 @@ message Value {
 }
 
 message ClassId {
-	string name = 1;
+	string namespaze = 1;
+	string name = 2;
 }
 
 message Il2CppObject {
@@ -26,10 +27,6 @@ message Il2CppObject {
 	ClassId klass = 2;
 }
 
-message Il2CppClassName {
-	uint64 address = 1;
-	ClassId klass = 2;
-}
 
 message Il2CppField {
 	string name = 1;

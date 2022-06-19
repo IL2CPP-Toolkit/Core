@@ -138,13 +138,13 @@ struct numeric_value
 {
 	std::optional<::grpc::Status> result{ m_executionQueue.Invoke<::grpc::Status>([&]() mutable noexcept
 	{
-		const Il2CppClassInfo* pClassInfo{ Il2CppContext::instance().FindClass(request->klass().name()) };
+		const Il2CppClassInfo* pClassInfo{ Il2CppContext::instance().FindClass(request->klass().namespaze(), request->klass().name()) };
 		if (!pClassInfo)
 			return ::grpc::Status{ grpc::StatusCode::NOT_FOUND, "Could not find class" };
 
 		const Il2CppClass* pCls{ pClassInfo->klass() };
 		response->mutable_typeinfo()->set_address(reinterpret_cast<uint64_t>(pCls));
-		response->mutable_typeinfo()->set_staticfieldsaddress(reinterpret_cast<uint64_t>(pCls->static_fields));
+		response->mutable_typeinfo()->set_staticfieldsaddress(reinterpret_cast<uint64_t>(il2cpp_class_get_static_field_data(pCls)));
 		response->mutable_typeinfo()->mutable_klassid()->set_name(pClassInfo->name());
 		for (int n{ 0 }, m{ pCls->field_count }; n < m; ++n)
 		{
@@ -165,7 +165,7 @@ struct numeric_value
 {
 	std::optional<::grpc::Status> result{ m_executionQueue.Invoke<::grpc::Status>([&]() mutable noexcept
 	{
-		const Il2CppClassInfo* pClassInfo{ Il2CppContext::instance().FindClass(request->klass().name()) };
+		const Il2CppClassInfo* pClassInfo{ Il2CppContext::instance().FindClass(request->klass().namespaze(), request->klass().name()) };
 		if (!pClassInfo)
 			return ::grpc::Status{ grpc::StatusCode::NOT_FOUND, "Could not find class" };
 

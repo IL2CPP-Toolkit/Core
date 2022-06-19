@@ -33,24 +33,9 @@ public:
         c.notify_one();
     }
 
-    // Get the "front"-element.
-    // If the queue is empty, wait till a element is avaiable.
-    T dequeue(void)
-    {
-        std::unique_lock<std::mutex> lock{ m };
-        while (q.empty())
-        {
-            // release lock as long as the wait and reaquire it afterwards.
-            c.wait(lock);
-        }
-        T val{ q.front() };
-        q.pop();
-        return val;
-    }
-
     bool try_dequeue(T& value)
     {
-        std::unique_lock<std::mutex> lock{ m };
+        std::lock_guard<std::mutex> lock{ m };
         if (q.empty())
             return false;
         value = std::move(q.front());

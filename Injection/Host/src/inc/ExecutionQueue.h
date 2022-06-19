@@ -17,8 +17,11 @@ public:
 	std::optional<T> Invoke(std::function<T()>&& task) noexcept
 	{
 		bool finished{ false };
-
 		std::optional<T> result{ std::nullopt };
+
+		if (isShutdown)
+			return result;
+
 		q.enqueue([task = std::move(task), &result, &finished]() mutable noexcept
 		{
 			result = task();
@@ -32,6 +35,9 @@ public:
 
 	void DoWork() noexcept
 	{
+		if (isShutdown)
+			return;
+
 		std::function<void()> fn;
 		while(q.try_dequeue(fn)) fn();
 	}

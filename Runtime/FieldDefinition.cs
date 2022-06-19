@@ -1,5 +1,6 @@
 using Il2CppToolkit.Injection.Client;
 using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 
@@ -11,9 +12,27 @@ namespace Il2CppToolkit.Runtime
 		private static GetTypeInfoResponse s_typeInfo;
 		public static Il2CppTypeInfo GetTypeInfo(InjectionClient client)
 		{
-			GetTypeInfoRequest req = new() { Klass = new() { Name = $"{typeof(TClass).Namespace}.{typeof(TClass).Name}".TrimStart('.') } };
-			s_typeInfo ??= client.Il2Cpp.GetTypeInfo(req);
+			GetTypeInfoRequest req = new() { Klass = new() { Name = GetTypeName(typeof(TClass), false), Namespaze = typeof(TClass).Namespace } };
+			s_typeInfo ??= client.Il2Cpp.GetTypeInfo(req, null, DateTime.MaxValue, default);
 			return s_typeInfo.TypeInfo;
+		}
+
+		private static string GetTypeName(Type type, bool includeFirst = true)
+		{
+			string typeName = includeFirst ? type.Namespace : "";
+			if (!string.IsNullOrEmpty(typeName))
+				typeName += ".";
+			typeName += type.Name;
+
+			if (type.IsConstructedGenericType)
+			{
+				typeName = typeName.Substring(0, typeName.Length - 2);
+				typeName += "<";
+				typeName += string.Join(",", type.GenericTypeArguments.Select(arg => GetTypeName(arg)));
+				typeName += ">";
+			}
+			Trace.TraceInformation(typeName);
+			return typeName;
 		}
 
 		public static TValue GetValue<TValue>(IRuntimeObject obj, string name, byte indirection = 1)

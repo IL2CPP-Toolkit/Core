@@ -14,6 +14,7 @@ public:
 	static void teardown() noexcept;
 
 	const Il2CppClassInfo* FindClass(const std::string& name) const noexcept;
+	const Il2CppClassInfo* FindClass(const std::string& namespaze, const std::string& name) noexcept;
 
 private:
 	void BuildTypeCache() noexcept;

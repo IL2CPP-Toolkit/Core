@@ -24,6 +24,35 @@ Il2CppContext::Il2CppContext() noexcept
 	BuildTypeCache();
 }
 
+const Il2CppClassInfo* Il2CppContext::FindClass(const std::string& namespaze, const std::string& name) noexcept
+{
+	std::string fullName{ namespaze };
+	fullName.append(".");
+	fullName.append(name);
+	const Il2CppClassInfo* pClassInfo{ FindClass(fullName) };
+	if (pClassInfo)
+	{
+		return pClassInfo;
+	}
+	const Il2CppDomain* pAppDomain{ il2cpp_domain_get() };
+	size_t casm{};
+	const Il2CppAssembly** ppAssemblies{ il2cpp_domain_get_assemblies(pAppDomain, &casm) };
+
+	for (size_t n{ 0 }; n < casm; ++n)
+	{
+		const Il2CppAssembly* pAssembly{ *(ppAssemblies++) };
+		const Il2CppImage* pImage{ il2cpp_assembly_get_image(pAssembly) };
+		const Il2CppClass* pClass{ il2cpp_class_from_name(pImage, namespaze.c_str(), name.c_str()) };
+		if (pClass)
+		{
+			CacheClass(pClass);
+			pClassInfo = FindClass(fullName);
+			return pClassInfo;
+		}
+	}
+	return nullptr;
+}
+
 const Il2CppClassInfo* Il2CppContext::FindClass(const std::string& name) const noexcept
 {
 	const auto findIter = m_typeCache.find(name);
