@@ -33,7 +33,6 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 		private readonly TypeReference IRuntimeObjectTypeRef;
 		private readonly TypeReference IMemorySourceTypeRef;
 		private readonly MethodReference ObjectCtorMethodRef;
-		private readonly MethodReference GetMemberValueMethodRef;
 		private ModuleDefinition Module => AssemblyDefinition.MainModule;
 
 		public ModuleBuilder(ICompileContext context, AssemblyDefinition assemblyDefinition)
@@ -53,7 +52,6 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 			IRuntimeObjectTypeRef = Module.ImportReference(typeof(IRuntimeObject));
 			IMemorySourceTypeRef = Module.ImportReference(typeof(IMemorySource));
 			ObjectCtorMethodRef = Module.ImportReference(typeof(object)).GetConstructor();
-			GetMemberValueMethodRef = Module.ImportReference(typeof(FieldMember<,>).GetMethod("GetValue"));
 		}
 
 		public void IncludeTypeDefinition(Il2CppTypeDefinition cppTypeDef)
@@ -316,7 +314,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 
 				if (isStatic)
 				{
-					//typeInfo.DefineStaticField(fieldName, fieldTypeRef, 1);
+					typeInfo.DefineStaticField(fieldName, fieldTypeRef, 1);
 				}
 				else
 				{

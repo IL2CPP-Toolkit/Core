@@ -11,7 +11,8 @@ namespace Il2CppToolkit.Runtime
 		private static GetTypeInfoResponse s_typeInfo;
 		public static Il2CppTypeInfo GetTypeInfo(InjectionClient client)
 		{
-			s_typeInfo ??= client.Il2Cpp.GetTypeInfo(new() { Klass = new() { Name = typeof(TClass).FullName } });
+			GetTypeInfoRequest req = new() { Klass = new() { Name = $"{typeof(TClass).Namespace}.{typeof(TClass).Name}".TrimStart('.') } };
+			s_typeInfo ??= client.Il2Cpp.GetTypeInfo(req);
 			return s_typeInfo.TypeInfo;
 		}
 
