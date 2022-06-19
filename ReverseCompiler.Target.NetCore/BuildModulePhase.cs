@@ -34,7 +34,13 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 			IReadOnlyList<TypeDescriptor> includedDescriptors = FilterTypes(m_typeSelectors).ToList();
 
 			AssemblyNameDefinition assemblyName = new(m_asmName, m_asmVersion);
-			using AssemblyDefinition assemblyDefinition = AssemblyDefinition.CreateAssembly(assemblyName, m_context.Model.ModuleName, ModuleKind.Dll);
+			using AssemblyDefinition assemblyDefinition = AssemblyDefinition.CreateAssembly(
+				assemblyName,
+				m_context.Model.ModuleName,
+				new ModuleParameters()
+				{
+					Kind = ModuleKind.Dll,
+				});
 			ModuleBuilder mb = new(m_context, assemblyDefinition);
 			foreach (TypeDescriptor td in includedDescriptors)
 				mb.IncludeTypeDefinition(td.TypeDef);
@@ -57,7 +63,15 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 			{
 				outputFile = Path.Combine(m_outputPath, $"{m_context.Model.ModuleName}.dll");
 			}
-			assemblyDefinition.Write(outputFile);
+
+#if NET5_0_OR_GREATER
+			var refsToRemove = assemblyDefinition.MainModule.AssemblyReferences
+				.Where(asmRef => asmRef.Name == "mscorlib" || asmRef.Name == "System.Private.CoreLib").ToArray();
+			foreach (var asmRef in refsToRemove)
+				assemblyDefinition.MainModule.AssemblyReferences.Remove(asmRef);
+#endif
+
+			assemblyDefinition.Write(outputFile, new WriterParameters() {  });
 			// set file version
 			VersionResource vi = new();
 			{
