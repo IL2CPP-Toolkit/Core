@@ -8,6 +8,7 @@
 #include "il2cpp.pb.cc"
 #include "il2cpp.grpc.pb.cc"
 #include "Il2CppService.h"
+#include <il2cpp/il2cpp-tabledefs.h>
 
 Il2CppServiceImpl::Il2CppServiceImpl(ExecutionQueue& queue) noexcept
 	: m_executionQueue{ queue }
@@ -151,7 +152,7 @@ struct numeric_value
 			::il2cppservice::Il2CppField* pFld{ response->mutable_typeinfo()->mutable_fields()->Add() };
 			pFld->set_name(pCls->fields[n].name);
 			pFld->set_offset(pCls->fields[n].offset);
-			pFld->set_offset(pCls->fields[n].type->attrs & 0x10);
+			pFld->set_static_(pCls->fields[n].type->attrs & FIELD_ATTRIBUTE_STATIC);
 		}
 		return ::grpc::Status::OK;
 	}) };

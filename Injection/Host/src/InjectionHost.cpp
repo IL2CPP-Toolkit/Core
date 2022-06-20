@@ -23,12 +23,7 @@ static std::shared_ptr<InjectionHost>& GetInstancePtr() noexcept
 
 static void FreeGlobalInstance() noexcept
 {
-	std::shared_ptr<InjectionHost>& ptr{ GetInstancePtr() };
-	{
-		InjectionHostHandle finalHandle{ ptr };
-		ptr.reset();
-		finalHandle->Shutdown();
-	}
+	GetInstancePtr().reset();
 }
 
 InjectionHostHandle::InjectionHostHandle(const std::shared_ptr<InjectionHost>& ptr) noexcept
@@ -78,10 +73,10 @@ void InjectionHost::ProcessMessages() noexcept
 	InjectionHostHandle self{ GetInstance() };
 	DWORD dwCurrentProcessId{ GetCurrentProcessId() };
 	HWND hwndMain{ GetMainWindowForProcessId(dwCurrentProcessId, L"UnityWndClass")};
-	while (std::chrono::system_clock::now() < self->m_tpKeepAliveExpiry) // || IsDebuggerPresent())
+	while (std::chrono::system_clock::now() < self->m_tpKeepAliveExpiry || IsDebuggerPresent())
 	{
+		std::this_thread::sleep_for(s_hookTTL / 10);
 		SendMessage(hwndMain, WM_NULL, 0, 0);
-		std::this_thread::sleep_for(s_hookTTL);
 	}
 	FreeGlobalInstance();
 }

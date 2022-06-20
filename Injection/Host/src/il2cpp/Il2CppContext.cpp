@@ -27,8 +27,11 @@ Il2CppContext::Il2CppContext() noexcept
 const Il2CppClassInfo* Il2CppContext::FindClass(const std::string& namespaze, const std::string& name) noexcept
 {
 	std::string fullName{ namespaze };
-	fullName.append(".");
-	fullName.append(name);
+	if (!fullName.empty())
+	{
+		fullName.append(".");
+		fullName.append(name);
+	}
 	const Il2CppClassInfo* pClassInfo{ FindClass(fullName) };
 	if (pClassInfo)
 	{
