@@ -73,7 +73,7 @@ void InjectionHost::ProcessMessages() noexcept
 	InjectionHostHandle self{ GetInstance() };
 	DWORD dwCurrentProcessId{ GetCurrentProcessId() };
 	HWND hwndMain{ GetMainWindowForProcessId(dwCurrentProcessId, L"UnityWndClass")};
-	while (std::chrono::system_clock::now() < self->m_tpKeepAliveExpiry || IsDebuggerPresent())
+	while (std::chrono::system_clock::now() < self->m_tpKeepAliveExpiry)
 	{
 		std::this_thread::sleep_for(s_hookTTL / 10);
 		SendMessage(hwndMain, WM_NULL, 0, 0);

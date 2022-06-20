@@ -65,7 +65,7 @@ namespace Il2CppToolkit.Runtime.Types
         public static readonly Dictionary<Type, int> TypeSizes = new()
         {
             { typeof(void), 0 },
-            { typeof(bool), sizeof(bool) },
+            { typeof(bool), sizeof(byte) },
             { typeof(char), sizeof(char) },
             { typeof(sbyte), sizeof(sbyte) },
             { typeof(byte), sizeof(byte) },
