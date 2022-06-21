@@ -17,10 +17,13 @@ namespace messageService
 {
 	class MessageServiceImpl;
 }
+
+class InjectionHostHandle;
+
 class InjectionHost
 {
 public:
-	static InjectionHost &GetInstance() noexcept;
+	static InjectionHostHandle GetInstance() noexcept;
 	InjectionHost() noexcept;
 	virtual ~InjectionHost() noexcept;
 
@@ -28,8 +31,9 @@ public:
 	void ProcessMessages() noexcept;
 	uint32_t Port() const noexcept { return m_iPort; }
 
+	void Shutdown() noexcept;
+
 private:
-	void Teardown() noexcept;
 	static void ServerThread() noexcept;
 	static void WatcherThread() noexcept;
 	static const std::chrono::milliseconds s_hookTTL;
@@ -43,4 +47,17 @@ private:
 	std::chrono::system_clock::time_point m_tpKeepAliveExpiry;
 	ExecutionQueue m_executionQueue;
 	uint32_t m_iPort;
+};
+
+class InjectionHostHandle
+{
+public:
+	InjectionHostHandle(const std::shared_ptr<InjectionHost>& ptr) noexcept;
+	~InjectionHostHandle() noexcept;
+
+	InjectionHost* operator->() const noexcept;
+	operator bool() const noexcept;
+
+private:
+	std::shared_ptr<InjectionHost> owned;
 };

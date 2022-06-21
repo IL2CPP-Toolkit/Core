@@ -12,14 +12,30 @@ BOOL WINAPI PeekMessage_Injected(
 	_In_ UINT wMsgFilterMax,
 	_In_ UINT wRemoveMsg)
 {
-	InjectionHost::GetInstance().ProcessMessages();
-	return pfnPeekMessage(lpMsg, hWnd, wMsgFilterMin, wMsgFilterMax, wRemoveMsg);
+	// must be first statement in method to avoid cleanup happening during execution
+	{
+		InjectionHostHandle spHost{ InjectionHost::GetInstance() };
+
+		if (spHost)
+		{
+			spHost->ProcessMessages();
+		}
+		return pfnPeekMessage(lpMsg, hWnd, wMsgFilterMin, wMsgFilterMax, wRemoveMsg);
+	}
 }
 
 extern "C"
 __declspec(dllexport) LRESULT HandleHookedMessage(int code, WPARAM wParam, LPARAM lParam)
 {
-	const CWPSTRUCT* pMsg{ reinterpret_cast<CWPSTRUCT*>(lParam) };
-	InjectionHost::GetInstance().KeepAlive();
-	return CallNextHookEx(NULL, code, wParam, lParam);
+	// must be first statement in method to avoid cleanup happening during execution
+	{
+		InjectionHostHandle spHost{ InjectionHost::GetInstance() };
+
+		const CWPSTRUCT* pMsg{ reinterpret_cast<CWPSTRUCT*>(lParam) };
+		if (spHost)
+		{
+			spHost->KeepAlive();
+		}
+		return CallNextHookEx(NULL, code, wParam, lParam);
+	}
 }

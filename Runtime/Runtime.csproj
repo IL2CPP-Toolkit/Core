@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFrameworks>net472;net5.0</TargetFrameworks>
-    <LangVersion>9.0</LangVersion>
+    <LangVersion>10.0</LangVersion>
     <OutputType>Library</OutputType>
     <AssemblyName>Il2CppToolkit.Runtime</AssemblyName>
     <RootNamespace>Il2CppToolkit.Runtime</RootNamespace>

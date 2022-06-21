@@ -9,19 +9,14 @@ namespace Il2CppToolkit.Injection.Client
 		private readonly uint Pid;
 		private bool IsDisposed;
 		private GrpcChannel Channel;
+		private ProcessHook Hook;
 		public Il2CppService.Il2CppServiceClient Il2Cpp { get; private set; }
 
 		public InjectionClient(Process process)
 		{
 			Pid = (uint)process.Id;
-			int result = NativeMethods.InjectHook(Pid);
-			if (result != 0)
-				throw new EntryPointNotFoundException("Could not inject process");
-			NativeMethods.PublicState state = new();
-			result = NativeMethods.GetState(Pid, ref state, 30000);
-			if (result != 0)
-				throw new EntryPointNotFoundException("Could not connect to process");
-			Channel = GrpcChannel.ForAddress($"http://localhost:{state.port}", new GrpcChannelOptions() { });
+			Hook = new(Pid);
+			Channel = GrpcChannel.ForAddress($"http://localhost:{Hook.State.port}", new GrpcChannelOptions());
 			Il2Cpp = new Il2CppService.Il2CppServiceClient(Channel);
 		}
 
@@ -32,9 +27,11 @@ namespace Il2CppToolkit.Injection.Client
 				if (disposing)
 				{
 					Channel.Dispose();
+					Hook.Dispose();
 				}
 				NativeMethods.ReleaseHook(Pid);
 				Channel = null;
+				Hook = null;
 				Il2Cpp = null;
 				IsDisposed = true;
 			}

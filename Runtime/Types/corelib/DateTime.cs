@@ -6,24 +6,31 @@ using System.Threading.Tasks;
 
 namespace Il2CppToolkit.Runtime.Types.corelib
 {
-	[TypeMapping(typeof(DateTime))]
-	public struct Native__DateTime
+	[TypeFactory(typeof(DateTime))]
+	public class DateTimeFactory : ITypeFactory
 	{
-		private static ulong NativeSize => sizeof(long);
-
-		[Offset(0)]
-#pragma warning disable 649
-		private long m_value;
-#pragma warning restore 649
-
-		public long BinaryValue => m_value;
-
-		public DateTime Value
+		public object ReadValue(IMemorySource source, ulong address)
 		{
-			get
-			{
-				return DateTime.FromBinary(m_value).ToLocalTime();
-			}
+			UnknownObject obj = new(source, address);
+			long dateData = Il2CppTypeInfoLookup<DateTime>.GetValue<long>(obj, "dateData");
+			return DateTime.FromBinary(dateData).ToLocalTime();
 		}
 	}
+
+	//[Obsolete]
+	//[TypeMapping(typeof(DateTime))]
+	//public struct Native__DateTime : IRuntimeObject
+	//{
+	//	public Native__DateTime() => (Source, Address) = (default, default);
+	//	public Native__DateTime(IMemorySource source, ulong address) => (Source, Address) = (source, address);
+	//	public IMemorySource Source { get; }
+	//	public ulong Address { get; }
+
+	//	// private fields
+	//	private long dateData => Il2CppTypeInfoLookup<DateTime>.GetValue<long>(this, nameof(dateData));
+		
+	//	// properties
+	//	public DateTime Value => DateTime.FromBinary(dateData).ToLocalTime();
+	//	public long BinaryValue => dateData;
+	//}
 }

@@ -6,6 +6,7 @@
 #include "PublicApi.h"
 #include "WindowHelpers.h"
 #include "../MessageHandler.h"
+#include "../InjectionHost.h"
 
 bool IsUnityProcess() noexcept
 {

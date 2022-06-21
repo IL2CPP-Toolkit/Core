@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Runtime.Versioning;
 using Il2CppToolkit.Model;
 using Il2CppToolkit.Runtime;
 using Mono.Cecil;
@@ -10,8 +11,8 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 {
 	public class ModuleBuilder
 	{
-		const MethodAttributes kRTObjGetterAttrs = MethodAttributes.Public | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.Virtual | MethodAttributes.RTSpecialName | MethodAttributes.SpecialName | MethodAttributes.NewSlot;
-		const MethodAttributes kGetterAttrs = MethodAttributes.Public | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.Virtual | MethodAttributes.RTSpecialName | MethodAttributes.SpecialName;
+		const MethodAttributes kRTObjGetterAttrs = MethodAttributes.Public | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.Virtual | MethodAttributes.SpecialName | MethodAttributes.NewSlot;
+		const MethodAttributes kGetterAttrs = MethodAttributes.Public | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.Virtual | MethodAttributes.SpecialName;
 		const MethodAttributes kCtorAttrs = MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName;
 		private readonly ICompileContext Context;
 		private readonly AssemblyDefinition AssemblyDefinition;
@@ -32,7 +33,6 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 		private readonly TypeReference IRuntimeObjectTypeRef;
 		private readonly TypeReference IMemorySourceTypeRef;
 		private readonly MethodReference ObjectCtorMethodRef;
-		private readonly MethodReference GetMemberValueMethodRef;
 		private ModuleDefinition Module => AssemblyDefinition.MainModule;
 
 		public ModuleBuilder(ICompileContext context, AssemblyDefinition assemblyDefinition)
@@ -40,11 +40,18 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 			Context = context;
 			AssemblyDefinition = assemblyDefinition;
 			AddBuiltInTypes(Module);
+			Module.AssemblyReferences.Add(new AssemblyNameReference("Il2CppToolkit.Runtime", new Version(1, 0, 0, 0)));
+#if NET5_0_OR_GREATER
+			Module.AssemblyReferences.Add(new AssemblyNameReference("System.Runtime", new Version(5, 0, 0, 0))
+			{
+				// b03f5f7f11d50a3a
+				PublicKeyToken = new byte[] { 0xb0, 0x3f, 0x5f, 0x7f, 0x11, 0xd5, 0x0a, 0x3a }
+			});
+#endif
 			RuntimeObjectTypeRef = Module.ImportReference(typeof(RuntimeObject));
 			IRuntimeObjectTypeRef = Module.ImportReference(typeof(IRuntimeObject));
 			IMemorySourceTypeRef = Module.ImportReference(typeof(IMemorySource));
-			ObjectCtorMethodRef = Module.ImportReference(typeof(object).GetConstructor(Type.EmptyTypes));
-			GetMemberValueMethodRef = Module.ImportReference(typeof(FieldMember<,>).GetMethod("GetValue"));
+			ObjectCtorMethodRef = Module.ImportReference(typeof(object)).GetConstructor();
 		}
 
 		public void IncludeTypeDefinition(Il2CppTypeDefinition cppTypeDef)
@@ -116,8 +123,6 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 					Context.Logger?.LogInfo($"[{typeRef.FullName}] Building");
 					if (typeRef is not TypeDefinition typeDef)
 						continue;
-					using TypeInfoBuilder typeInfo = new(typeDef, Module);
-					Context.Logger?.LogInfo($"[{typeRef.FullName}] Add Fields");
 
 					// declaring type
 					if (cppTypeDef.declaringTypeIndex >= 0)
@@ -129,6 +134,8 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 							UseTypeDefinition(declaringType);
 					}
 
+					Context.Logger?.LogInfo($"[{typeRef.FullName}] Add TypeInfo");
+					using TypeInfoBuilder typeInfo = new(typeDef, Module);
 					DefineFields(cppTypeDef, typeDef, typeInfo);
 				}
 			} while (TypeDefinitionQueue.Count > 0 || typesToBuild.Count > 0);
