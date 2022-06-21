@@ -25,6 +25,7 @@ namespace Il2CppToolkit.Runtime.Types
             }
             return false;
         }
+        private static readonly Dictionary<string, Type> NativeFactory = new();
         private static readonly Dictionary<string, Type> NativeMapping = new();
         private static readonly Dictionary<uint, Type> TokenMapping = new();
         static Types()
@@ -33,6 +34,10 @@ namespace Il2CppToolkit.Runtime.Types
             foreach (var (mapFrom, mapTo) in GetTypesWithMappingAttribute(typeof(Types).Assembly))
             {
                 NativeMapping.Add(mapFrom.FullName, mapTo);
+            }
+            foreach (var (mapFrom, mapTo) in GetTypesWithFactoryAttribute(typeof(Types).Assembly))
+            {
+                NativeFactory.Add(mapFrom.FullName, mapTo);
             }
             foreach (var (mapFrom, mapTo) in GetTypesWithTokenAttribute(typeof(Types).Assembly))
             {
@@ -44,6 +49,17 @@ namespace Il2CppToolkit.Runtime.Types
             foreach (Type type in assembly.GetTypes())
             {
                 TypeMappingAttribute tma = type.GetCustomAttribute<TypeMappingAttribute>(true);
+                if (tma != null)
+                {
+                    yield return (tma.Type, type);
+                }
+            }
+        }
+        static IEnumerable<(Type, Type)> GetTypesWithFactoryAttribute(Assembly assembly)
+        {
+            foreach (Type type in assembly.GetTypes())
+            {
+                TypeFactoryAttribute tma = type.GetCustomAttribute<TypeFactoryAttribute>(true);
                 if (tma != null)
                 {
                     yield return (tma.Type, type);
