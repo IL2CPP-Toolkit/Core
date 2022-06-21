@@ -25,7 +25,7 @@
 		<Protobuf Include="..\Protocol.proto" GrpcServices="Client">
 		  <Link>Protocol.proto</Link>
 		</Protobuf>
-		<Protobuf Include="D:\git\github\IL2Cpp-Toolkit\Core\Injection\il2cpp.proto" GrpcServices="Client">
+		<Protobuf Include="..\il2cpp.proto" GrpcServices="Client">
 			<Link>il2cpp.proto</Link>
 		</Protobuf>
 	</ItemGroup>
