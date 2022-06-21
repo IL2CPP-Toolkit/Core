@@ -1,23 +1,27 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace Il2CppToolkit.Runtime.Types.corelib
 {
-    public struct Native__LPSTR
+    public class Native__LPSTR : RuntimeObject
     {
-        public string Value;
-        private void ReadFields(IMemorySource source, ulong address)
+        private string m_value;
+        public string Value
         {
-            address = source.ReadPointer(address);
-            ReadOnlyMemory<byte> stringData = source.ReadMemory(address, 512);
+            get
+            {
+                if (m_value == null)
+                {
+                    ulong address = Source.ReadPointer(Address);
+                    ReadOnlyMemory<byte> stringData = Source.ReadMemory(Address, 512);
 #if NET472
-            Value = Encoding.UTF8.GetString(stringData.Span.ToArray()).Split(new char[] { '\0' }, 2)[0];
+                    m_value = Encoding.UTF8.GetString(stringData.Span.ToArray()).Split(new char[] { '\0' }, 2)[0];
 #else
-            Value = Encoding.UTF8.GetString(stringData.Span).Split(new char[] { '\0' }, 2)[0];
+                    m_value = Encoding.UTF8.GetString(stringData.Span).Split(new char[] { '\0' }, 2)[0];
 #endif
+                }
+                return m_value;
+            }
         }
     }
 }
