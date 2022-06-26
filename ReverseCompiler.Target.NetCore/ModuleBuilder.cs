@@ -17,6 +17,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 		private readonly Dictionary<Il2CppTypeDefinition, TypeDefinition> TypeDefinitions = new();
 		private readonly Dictionary<Il2CppGenericParameter, GenericParameter> GenericParameters = new();
 		private readonly Dictionary<Il2CppTypeEnum, TypeReference> BuiltInTypes = new();
+		private readonly Dictionary<Type, TypeReference> m_importedTypes = new();
 
 		private readonly HashSet<Il2CppTypeDefinition> EnqueuedTypes = new();
 		private Queue<Il2CppTypeDefinition> TypeDefinitionQueue = new();
@@ -51,7 +52,6 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 			ObjectCtorMethodRef = ImportReference(typeof(object)).GetConstructor();
 		}
 
-		private Dictionary<Type, TypeReference> m_importedTypes = new();
 		private TypeReference ImportReference(Type type)
 		{
 			if (type == null)

@@ -18,6 +18,10 @@
     "[csharp]": {
         "editor.defaultFormatter": "ms-dotnettools.csharp"
     },
+    "[proto3]": {
+        "editor.tabSize": 2,
+        "editor.insertSpaces": true,
+    },
     "cSpell.enabled": false,
     "omnisharp.enableEditorConfigSupport": false,
     "editor.formatOnType": true,

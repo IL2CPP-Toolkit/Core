@@ -1,8 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using Il2CppToolkit.Model;
 using Il2CppToolkit.Runtime;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
@@ -27,29 +23,6 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 		}
 
 		public void DefineField(string name, TypeReference fieldType, byte indirection)
-		{
-			DefineField_Original(name, fieldType, indirection);
-		}
-		public void DefineField_Mod(string name, TypeReference fieldType, byte indirection)
-		{
-			MethodDefinition method = new(
-				$"get_{name}",
-				MethodAttributes.Public | MethodAttributes.SpecialName,
-				ModuleDefinition.TypeSystem.String)
-			{
-				HasThis = true
-			};
-			method.Body.Instructions.Add(Instruction.Create(OpCodes.Ldstr, "OhFuck"));
-			method.Body.Instructions.Add(Instruction.Create(OpCodes.Ret));
-			ForType.Methods.Add(method);
-			PropertyDefinition instanceProperty = new(name, PropertyAttributes.None, ModuleDefinition.TypeSystem.String)
-			{
-				HasThis = true,
-				GetMethod = method
-			};
-			ForType.Properties.Add(instanceProperty);
-		}
-		public void DefineField_Original(string name, TypeReference fieldType, byte indirection)
 		{
 			GenericInstanceType typeLookupInst = ModuleDefinition.ImportReference(typeof(Il2CppTypeInfoLookup<>)).MakeGenericType(ForTypeRef);
 			MethodDefinition instanceGetMethod = new($"get_{name}", kGetterAttrs, fieldType) { HasThis = true, SemanticsAttributes = MethodSemanticsAttributes.Getter };
