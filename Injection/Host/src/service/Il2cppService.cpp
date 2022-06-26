@@ -154,7 +154,7 @@ struct numeric_value
 			const bool isStatic{(pCls->fields[n].type->attrs & FIELD_ATTRIBUTE_STATIC) == FIELD_ATTRIBUTE_STATIC};
 			int32_t offset{pCls->fields[n].offset};
 			if (!!pCls->valuetype && !isStatic)
-				offset -= 0x10; // valueType field metadata incorrectly considers object header in member field offsets
+				offset -= sizeof(Il2CppObject); // valueType field metadata incorrectly considers object header in member field offsets
 			
 			pFld->set_name(pCls->fields[n].name);
 			pFld->set_offset(offset);
