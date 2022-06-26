@@ -4,7 +4,6 @@
 #include <queue>
 #include "safe_queue.h"
 #include "ExecutionQueue.h"
-#include "service/MessageService.h"
 #include "service/Il2CppService.h"
 
 // fwd decls
@@ -12,10 +11,6 @@ namespace grpc
 {
 	class Server;
 	class ServerCompletionQueue;
-}
-namespace messageService
-{
-	class MessageServiceImpl;
 }
 
 class InjectionHostHandle;
@@ -39,7 +34,6 @@ private:
 	static const std::chrono::milliseconds s_hookTTL;
 
 	std::unique_ptr<grpc::Server> m_spServer;
-	std::unique_ptr<MessageServiceImpl> m_spMessageService;
 	std::unique_ptr<Il2CppServiceImpl> m_spIl2cppService;
 
 	std::thread m_thWatcher;
@@ -52,10 +46,10 @@ private:
 class InjectionHostHandle
 {
 public:
-	InjectionHostHandle(const std::shared_ptr<InjectionHost>& ptr) noexcept;
+	InjectionHostHandle(const std::shared_ptr<InjectionHost> &ptr) noexcept;
 	~InjectionHostHandle() noexcept;
 
-	InjectionHost* operator->() const noexcept;
+	InjectionHost *operator->() const noexcept;
 	operator bool() const noexcept;
 
 private:

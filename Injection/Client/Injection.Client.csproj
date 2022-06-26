@@ -25,9 +25,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<Protobuf Include="..\Protocol.proto" GrpcServices="Client">
-			<Link>Protocol.proto</Link>
-		</Protobuf>
 		<Protobuf Include="..\il2cpp.proto" GrpcServices="Client">
 			<Link>il2cpp.proto</Link>
 		</Protobuf>

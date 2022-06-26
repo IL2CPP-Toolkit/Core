@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Runtime.Versioning;
 using Il2CppToolkit.Model;
 using Il2CppToolkit.Runtime;
 using Mono.Cecil;
@@ -12,15 +11,11 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 	public class ModuleBuilder
 	{
 		const MethodAttributes kRTObjGetterAttrs = MethodAttributes.Public | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.Virtual | MethodAttributes.SpecialName | MethodAttributes.NewSlot;
-		const MethodAttributes kGetterAttrs = MethodAttributes.Public | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.Virtual | MethodAttributes.SpecialName;
 		const MethodAttributes kCtorAttrs = MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName;
 		private readonly ICompileContext Context;
 		private readonly AssemblyDefinition AssemblyDefinition;
 		private readonly Dictionary<Il2CppTypeDefinition, TypeDefinition> TypeDefinitions = new();
 		private readonly Dictionary<Il2CppGenericParameter, GenericParameter> GenericParameters = new();
-		private readonly Dictionary<Il2CppFieldDefinition, FieldDefinition> Fields = new();
-		private readonly Dictionary<Il2CppPropertyDefinition, PropertyDefinition> Properties = new();
-		private readonly Dictionary<Il2CppMethodDefinition, MethodDefinition> Methods = new();
 		private readonly Dictionary<Il2CppTypeEnum, TypeReference> BuiltInTypes = new();
 
 		private readonly HashSet<Il2CppTypeDefinition> EnqueuedTypes = new();

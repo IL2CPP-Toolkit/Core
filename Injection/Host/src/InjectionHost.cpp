@@ -5,7 +5,6 @@
 #include <chrono>
 #include <thread>
 #include <winapifamily.h>
-#include "service/MessageService.h"
 #include "win/WindowHelpers.h"
 #include "PublicApi.h"
 #include "InjectionHost.h"
@@ -84,11 +83,10 @@ void InjectionHost::ProcessMessages() noexcept
 }
 
 InjectionHost::InjectionHost() noexcept
-	: m_tpKeepAliveExpiry{std::chrono::system_clock::now() + s_hookTTL}, m_executionQueue{}, m_spMessageService{std::make_unique<MessageServiceImpl>(m_executionQueue)}, m_spIl2cppService{std::make_unique<Il2CppServiceImpl>(m_executionQueue)}
+	: m_tpKeepAliveExpiry{std::chrono::system_clock::now() + s_hookTTL}, m_executionQueue{}, m_spIl2cppService{std::make_unique<Il2CppServiceImpl>(m_executionQueue)}
 {
 	ServerBuilder builder;
 	builder.AddListeningPort("0.0.0.0:0", InsecureServerCredentials(), &PublicState::value.port);
-	builder.RegisterService(m_spMessageService.get());
 	builder.RegisterService(m_spIl2cppService.get());
 	m_spServer = builder.BuildAndStart();
 	m_thWatcher = std::thread{InjectionHost::WatcherThread};
@@ -119,7 +117,6 @@ void InjectionHost::Shutdown() noexcept
 
 		m_spServer.reset();
 
-		m_spMessageService.reset();
 		m_spIl2cppService.reset();
 	}
 }
