@@ -50,11 +50,10 @@ namespace Il2CppToolkit.Runtime.Types.corelib.Collections.Generic
 
 			m_isLoaded = true;
 
-			ulong typeSize = m_elementSize;
-			m_cache = Source.ParentContext.CacheMemory(Address, typeSize * m_length);
+			m_cache = Source.ParentContext.CacheMemory(Address, m_elementSize * m_length);
 			for (ulong index = 0; index < m_length; ++index)
 			{
-				T value = m_cache.ReadValue<T>(Address + index * typeSize);
+				T value = m_cache.ReadValue<T>(Address + index * m_elementSize);
 				m_items.Add(value);
 			}
 		}
@@ -69,14 +68,8 @@ namespace Il2CppToolkit.Runtime.Types.corelib.Collections.Generic
 			return Items.GetEnumerator();
 		}
 
-		public int Count
-		{
-			get { return Items.Count; }
-		}
+		public int Count => Items.Count;
 
-		public T this[int index]
-		{
-			get { return Items[index]; }
-		}
+		public T this[int index] => Items[index];
 	}
 }
