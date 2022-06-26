@@ -6,7 +6,7 @@
                 "${workspaceFolder}/Injection/Host/src/inc",
                 "${workspaceFolder}/Injection/Host/src/gen",
                 "${workspaceFolder}/Injection/Host/vcpkg_installed/x64-windows/include",
-                "D:/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/MSVC/14.30.30705/include",
+                "D:/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/MSVC/14.32.31326/include",
                 "C:/Program Files (x86)/Windows Kits/10/Include/10.0.22000.0/**",
                 "${vcpkgRoot}/x64-windows/include",
                 "${vcpkgRoot}/x86-windows/include"

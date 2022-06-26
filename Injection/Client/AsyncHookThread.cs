@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Threading;
 
 namespace Il2CppToolkit.Injection.Client
@@ -9,25 +10,8 @@ namespace Il2CppToolkit.Injection.Client
 		private readonly Thread m_thread;
 		private readonly AutoResetEvent m_signal;
 		private readonly ConcurrentQueue<Action> m_actionQueue = new();
+		private bool m_disposed;
 		private volatile bool m_disposing;
-		private volatile bool m_disposed;
-
-		private static AsyncHookThread s_current;
-		public static AsyncHookThread Current
-		{
-			get
-			{
-				if (s_current == null)
-					s_current = new();
-				return s_current;
-			}
-		}
-
-		public static void DisposeCurrent()
-		{
-			s_current?.Dispose();
-			s_current = null;
-		}
 
 		public AsyncHookThread()
 		{
@@ -56,7 +40,8 @@ namespace Il2CppToolkit.Injection.Client
 			AutoResetEvent signal = new(false);
 			Exception ex = null;
 			T result = default;
-			Post(() => {
+			Post(() =>
+			{
 				try
 				{
 					result = callback();
@@ -98,10 +83,10 @@ namespace Il2CppToolkit.Injection.Client
 			{
 				if (disposing)
 				{
-					// net472 compatible clear
 #if NET5_0_OR_GREATER
 					m_actionQueue.Clear();
 #else
+					// net472 compatible clear
 					while (m_actionQueue.TryDequeue(out _)) ;
 #endif
 					m_disposing = true;
@@ -119,6 +104,80 @@ namespace Il2CppToolkit.Injection.Client
 			// Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
 			Dispose(disposing: true);
 			GC.SuppressFinalize(this);
+		}
+	}
+
+	public class AsyncHookThreadDispatcher : IDisposable
+	{
+		private AsyncHookThread m_thread;
+		public AsyncHookThreadDispatcher()
+		{
+			m_thread = AsyncHookThreadManager.AddRef();
+		}
+		private bool m_disposed;
+
+		public void Post(Action callback) => m_thread.Post(callback);
+		public void WaitFor(Action callback) => m_thread.WaitFor(callback);
+		public void WaitFor<T>(Func<T> callback) => m_thread.WaitFor<T>(callback);
+
+		protected virtual void Dispose(bool disposing)
+		{
+			if (!m_disposed)
+			{
+				if (disposing)
+				{
+					AsyncHookThreadManager.Release();
+				}
+
+				m_disposed = true;
+			}
+		}
+
+		// // TODO: override finalizer only if 'Dispose(bool disposing)' has code to free unmanaged resources
+		// ~AsyncHookThreadDispatcher()
+		// {
+		//     // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+		//     Dispose(disposing: false);
+		// }
+
+		public void Dispose()
+		{
+			// Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+			Dispose(disposing: true);
+			GC.SuppressFinalize(this);
+		}
+	}
+
+	internal static class AsyncHookThreadManager
+	{
+		private static AsyncHookThread s_currentThread;
+		private static volatile int m_refCount;
+		private static object m_lock = new();
+
+		public static AsyncHookThread AddRef()
+		{
+			lock (m_lock)
+			{
+				if (m_refCount++ == 0)
+				{
+					Debug.Assert(s_currentThread == null);
+					s_currentThread = new();
+				}
+			}
+			return s_currentThread;
+		}
+
+		public static void Release()
+		{
+			lock (m_lock)
+			{
+				if (--m_refCount == 0)
+				{
+					Debug.Assert(s_currentThread != null);
+					s_currentThread.Dispose();
+					s_currentThread = null;
+				}
+			}
 		}
 	}
 }

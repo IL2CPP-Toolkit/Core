@@ -19,16 +19,6 @@ namespace Il2CppToolkit.Runtime
     }
 
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
-    public class TokenAttribute : Attribute
-    {
-        public uint Token { get; }
-        public TokenAttribute(uint token)
-        {
-            Token = token;
-        }
-    }
-
-    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
     public class TagAttribute : Attribute
     {
         public string Tag { get; }

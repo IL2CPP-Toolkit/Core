@@ -11,5 +11,7 @@ namespace Il2CppToolkit.Runtime
         [ErrorSeverity(ErrorSeverity.Error)] ReadProcessMemoryCacheRangeError,
         [ErrorSeverity(ErrorSeverity.Error)] StaticAddressMissing,
         [ErrorSeverity(ErrorSeverity.Error)] WriteProcessMemoryWriteFailed,
+        [ErrorSeverity(ErrorSeverity.Error)] GenericFactoryRequired,
+        [ErrorSeverity(ErrorSeverity.Error)] TypeFactoryImplementationMissing,
     }
 }

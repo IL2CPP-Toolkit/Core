@@ -6,7 +6,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using Il2CppToolkit.Common.Errors;
-using static Il2CppToolkit.Runtime.Types.Types;
+using static Il2CppToolkit.Runtime.Types.TypeSystem;
 using Il2CppToolkit.Runtime.Types.Reflection;
 using Il2CppToolkit.Injection.Client;
 

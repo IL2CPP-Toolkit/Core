@@ -361,7 +361,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 			string typeName = Metadata.GetStringFromIndex(cppTypeDef.nameIndex);
 
 			string fullTypeName = $"{namespaceName}.{typeName}";
-			if (Runtime.Types.Types.TryGetType(fullTypeName, out Type mappedType))
+			if (Runtime.Types.TypeSystem.TryGetSubstituteType(fullTypeName, out Type mappedType))
 			{
 				if (mappedType == null)
 					return null;

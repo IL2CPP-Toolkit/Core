@@ -19,11 +19,14 @@
 		<None Include="$(BinDir)\Il2CppToolkit.Injection.Host.dll" Link="Il2CppToolkit.Injection.Host.dll">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
+		<None Include="$(BinDir)\Il2CppToolkit.Injection.Host.pdb" Link="Il2CppToolkit.Injection.Host.pdb">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
 	</ItemGroup>
 
 	<ItemGroup>
 		<Protobuf Include="..\Protocol.proto" GrpcServices="Client">
-		  <Link>Protocol.proto</Link>
+			<Link>Protocol.proto</Link>
 		</Protobuf>
 		<Protobuf Include="..\il2cpp.proto" GrpcServices="Client">
 			<Link>il2cpp.proto</Link>
