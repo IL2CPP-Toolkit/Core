@@ -34,6 +34,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 		private readonly TypeReference IMemorySourceTypeRef;
 		private readonly MethodReference ObjectCtorMethodRef;
 		private ModuleDefinition Module => AssemblyDefinition.MainModule;
+		private readonly AssemblyNameReference SystemRuntimeRef;
 
 		public ModuleBuilder(ICompileContext context, AssemblyDefinition assemblyDefinition)
 		{
@@ -42,16 +43,39 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 			AddBuiltInTypes(Module);
 			Module.AssemblyReferences.Add(new AssemblyNameReference("Il2CppToolkit.Runtime", new Version(1, 0, 0, 0)));
 #if NET5_0_OR_GREATER
-			Module.AssemblyReferences.Add(new AssemblyNameReference("System.Runtime", new Version(5, 0, 0, 0))
+			SystemRuntimeRef = new AssemblyNameReference("System.Runtime", new Version(5, 0, 0, 0))
 			{
 				// b03f5f7f11d50a3a
 				PublicKeyToken = new byte[] { 0xb0, 0x3f, 0x5f, 0x7f, 0x11, 0xd5, 0x0a, 0x3a }
-			});
+			};
+			Module.AssemblyReferences.Add(SystemRuntimeRef);
 #endif
-			RuntimeObjectTypeRef = Module.ImportReference(typeof(RuntimeObject));
-			IRuntimeObjectTypeRef = Module.ImportReference(typeof(IRuntimeObject));
-			IMemorySourceTypeRef = Module.ImportReference(typeof(IMemorySource));
-			ObjectCtorMethodRef = Module.ImportReference(typeof(object)).GetConstructor();
+			RuntimeObjectTypeRef = ImportReference(typeof(RuntimeObject));
+			IRuntimeObjectTypeRef = ImportReference(typeof(IRuntimeObject));
+			IMemorySourceTypeRef = ImportReference(typeof(IMemorySource));
+			ObjectCtorMethodRef = ImportReference(typeof(object)).GetConstructor();
+		}
+
+		private Dictionary<Type, TypeReference> m_importedTypes = new();
+		private TypeReference ImportReference(Type type)
+		{
+			if (type == null)
+				return null;
+
+			if (m_importedTypes.TryGetValue(type, out TypeReference typeRef))
+				return typeRef;
+
+			if (SystemRuntimeRef != null && type.Assembly == typeof(string).Assembly)
+			{
+				typeRef = Module.ImportReference(new TypeReference(type.Namespace, type.Name, null, SystemRuntimeRef, type.IsValueType));
+			}
+			else
+			{
+				typeRef = Module.ImportReference(type);
+			}
+
+			m_importedTypes.Add(type, typeRef);
+			return typeRef;
 		}
 
 		public void IncludeTypeDefinition(Il2CppTypeDefinition cppTypeDef)
@@ -156,8 +180,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 			for (int n = cppTypeDef.interfacesStart, m = cppTypeDef.interfacesStart + cppTypeDef.interfaces_count; n < m; ++n)
 			{
 				Il2CppType cppInterfaceType = Il2Cpp.Types[Metadata.interfaceIndices[n]];
-				Il2CppTypeDefinition cppInterfaceTypeDef = Context.Model.GetTypeDefinitionFromIl2CppType(cppInterfaceType);
-				TypeReference interfaceRef = UseTypeDefinition(cppInterfaceTypeDef);
+				TypeReference interfaceRef = UseTypeReference(typeDef, cppInterfaceType);
 				if (interfaceRef != null)
 					typeDef.Interfaces.Add(new InterfaceImplementation(interfaceRef));
 			}
@@ -363,9 +386,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 			string fullTypeName = $"{namespaceName}.{typeName}";
 			if (Runtime.Types.TypeSystem.TryGetSubstituteType(fullTypeName, out Type mappedType))
 			{
-				if (mappedType == null)
-					return null;
-				return Module.ImportReference(mappedType);
+				return ImportReference(mappedType);
 			}
 
 			typeDef = new TypeDefinition(namespaceName, typeName, (TypeAttributes)cppTypeDef.flags);
@@ -490,10 +511,10 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 			BuiltInTypes.Add(Il2CppTypeEnum.IL2CPP_TYPE_U, moduleDef.TypeSystem.UIntPtr);
 			BuiltInTypes.Add(Il2CppTypeEnum.IL2CPP_TYPE_I8, moduleDef.TypeSystem.Int64);
 			BuiltInTypes.Add(Il2CppTypeEnum.IL2CPP_TYPE_U8, moduleDef.TypeSystem.UInt64);
-			BuiltInTypes.Add(Il2CppTypeEnum.IL2CPP_TYPE_R4, moduleDef.ImportReference(typeof(float)));
+			BuiltInTypes.Add(Il2CppTypeEnum.IL2CPP_TYPE_R4, moduleDef.TypeSystem.Single);
 			BuiltInTypes.Add(Il2CppTypeEnum.IL2CPP_TYPE_R8, moduleDef.TypeSystem.Double);
 			BuiltInTypes.Add(Il2CppTypeEnum.IL2CPP_TYPE_STRING, moduleDef.TypeSystem.String);
-			BuiltInTypes.Add(Il2CppTypeEnum.IL2CPP_TYPE_TYPEDBYREF, moduleDef.ImportReference(typeof(TypedReference)));
+			BuiltInTypes.Add(Il2CppTypeEnum.IL2CPP_TYPE_TYPEDBYREF, moduleDef.TypeSystem.TypedReference);
 		}
 	}
 }

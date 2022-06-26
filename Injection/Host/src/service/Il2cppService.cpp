@@ -150,9 +150,15 @@ struct numeric_value
 		for (int n{ 0 }, m{ pCls->field_count }; n < m; ++n)
 		{
 			::il2cppservice::Il2CppField* pFld{ response->mutable_typeinfo()->mutable_fields()->Add() };
+
+			const bool isStatic{(pCls->fields[n].type->attrs & FIELD_ATTRIBUTE_STATIC) == FIELD_ATTRIBUTE_STATIC};
+			int32_t offset{pCls->fields[n].offset};
+			if (!!pCls->valuetype && !isStatic)
+				offset -= 0x10; // valueType field metadata incorrectly considers object header in member field offsets
+			
 			pFld->set_name(pCls->fields[n].name);
-			pFld->set_offset(pCls->fields[n].offset);
-			pFld->set_static_(pCls->fields[n].type->attrs & FIELD_ATTRIBUTE_STATIC);
+			pFld->set_offset(offset);
+			pFld->set_static_(isStatic);
 		}
 		return ::grpc::Status::OK; })};
 	return result.value_or(::grpc::Status::CANCELLED);

@@ -71,7 +71,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 				assemblyDefinition.MainModule.AssemblyReferences.Remove(asmRef);
 #endif
 
-			assemblyDefinition.Write(outputFile, new WriterParameters() {  });
+			assemblyDefinition.Write(outputFile, new WriterParameters() { });
 			// set file version
 			VersionResource vi = new();
 			{
