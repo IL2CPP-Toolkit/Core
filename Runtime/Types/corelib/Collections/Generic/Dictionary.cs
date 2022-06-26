@@ -12,12 +12,19 @@ namespace Il2CppToolkit.Runtime.Types.corelib.Collections.Generic
 		{
 		}
 
-		public class Entry : RuntimeObject
+		public struct Entry : IRuntimeObject
 		{
 			static readonly bool IsNarrow = Il2CsRuntimeContext.GetTypeSize(typeof(TValue)) <= 4 && Il2CsRuntimeContext.GetTypeSize(typeof(TKey)) <= 4;
 			public static ulong ElementSize = IsNarrow ? 0x10ul : 0x18ul;
-			public Entry() : base() { }
-			public Entry(IMemorySource source, ulong address) : base(source, address) { }
+
+			public IMemorySource Source { get; }
+			public ulong Address { get; }
+
+			public Entry(IMemorySource source, ulong address)
+			{
+				Source = source;
+				Address = address;
+			}
 
 			public UInt32 HashCode => Source.ReadValue<UInt32>(Address, 1);
 			public UInt32 Next => Source.ReadValue<UInt32>(Address + 0x04, 1);
@@ -32,7 +39,7 @@ namespace Il2CppToolkit.Runtime.Types.corelib.Collections.Generic
 				return;
 
 			uint count = Source.ReadValue<uint>(Address + 0x20);
-			Native__Array<Entry> entries = new(Source, Source.ReadPointer(Address + 0x18ul), count);
+			Native__Array<Entry> entries = new(Source, Source.ReadPointer(Address + 0x18ul), count, Entry.ElementSize);
 			foreach (Entry entry in entries)
 			{
 				m_dict.Add(entry.Key, entry.Value);

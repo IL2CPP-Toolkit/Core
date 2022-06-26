@@ -153,6 +153,9 @@ namespace Il2CppToolkit.Runtime
 				return 8;
 			}
 
+			if (type.IsAssignableTo(typeof(RuntimeObject)))
+				return 8;
+
 			throw new NotSupportedException("Unexpected type === unknown size");
 		}
 	}

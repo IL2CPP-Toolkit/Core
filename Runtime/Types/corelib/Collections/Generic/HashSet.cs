@@ -12,11 +12,16 @@ namespace Il2CppToolkit.Runtime.Types.corelib.Collections.Generic
 		{
 		}
 
-		[Size(0x10)]
-		public class Entry : RuntimeObject
+		public struct Entry : IRuntimeObject
 		{
-			public Entry() : base() { }
-			public Entry(IMemorySource source, ulong address) : base(source, address) { }
+			public IMemorySource Source { get; }
+			public ulong Address { get; }
+
+			public Entry(IMemorySource source, ulong address)
+			{
+				Source = source;
+				Address = address;
+			}
 
 			public UInt32 HashCode => Source.ReadValue<UInt32>(Address, 1);
 			public UInt32 Next => Source.ReadValue<UInt32>(Address + 0x04, 1);
