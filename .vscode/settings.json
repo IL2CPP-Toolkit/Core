@@ -106,6 +106,7 @@
         "xtree": "cpp",
         "xutility": "cpp",
         "condition_variable": "cpp",
-        "*.inc": "cpp"
+        "*.inc": "cpp",
+        "codecvt": "cpp"
     }
 }

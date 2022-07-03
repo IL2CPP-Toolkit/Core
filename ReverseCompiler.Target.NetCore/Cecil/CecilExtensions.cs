@@ -80,5 +80,34 @@ namespace Mono.Cecil
 					throw new ArgumentOutOfRangeException(nameof(value));
 			}
 		}
+		public static void EmitI4(this ILProcessor self, int value)
+		{
+			switch (value)
+			{
+				case 0: self.Emit(OpCodes.Ldc_I4_0); break;
+				case 1: self.Emit(OpCodes.Ldc_I4_1); break;
+				case 2: self.Emit(OpCodes.Ldc_I4_2); break;
+				case 3: self.Emit(OpCodes.Ldc_I4_3); break;
+				case 4: self.Emit(OpCodes.Ldc_I4_4); break;
+				case 5: self.Emit(OpCodes.Ldc_I4_5); break;
+				case 6: self.Emit(OpCodes.Ldc_I4_6); break;
+				case 7: self.Emit(OpCodes.Ldc_I4_7); break;
+				case 8: self.Emit(OpCodes.Ldc_I4_8); break;
+				default:
+					self.Emit(OpCodes.Ldc_I4_S, (sbyte)value); break;
+			}
+		}
+		public static void EmitArg(this ILProcessor self, int value)
+		{
+			switch (value)
+			{
+				case 0: self.Emit(OpCodes.Ldarg_0); break;
+				case 1: self.Emit(OpCodes.Ldarg_1); break;
+				case 2: self.Emit(OpCodes.Ldarg_2); break;
+				case 3: self.Emit(OpCodes.Ldarg_3); break;
+				default:
+					self.Emit(OpCodes.Ldarg_S, (byte)value); break;
+			}
+		}
 	}
 }

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using Il2CppToolkit.Model;
 using Il2CppToolkit.Runtime;
 using Mono.Cecil;
@@ -52,7 +53,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 			ObjectCtorMethodRef = ImportReference(typeof(object)).GetConstructor();
 		}
 
-		private TypeReference ImportReference(Type type)
+		internal TypeReference ImportReference(Type type)
 		{
 			if (type == null)
 				return null;
@@ -154,7 +155,8 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 					}
 
 					Context.Logger?.LogInfo($"[{typeRef.FullName}] Add TypeInfo");
-					using TypeInfoBuilder typeInfo = new(typeDef, Module);
+					using TypeInfoBuilder typeInfo = new(typeDef, Module, this);
+					DefineMethods(cppTypeDef, typeDef);
 					DefineFields(cppTypeDef, typeDef, typeInfo);
 				}
 			} while (TypeDefinitionQueue.Count > 0 || typesToBuild.Count > 0);
@@ -301,9 +303,98 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 			typeDef.Methods.Add(ctorMethod);
 		}
 
+		private void DefineMethods(Il2CppTypeDefinition cppTypeDef, TypeDefinition typeDef)
+		{
+			int methodEnd = cppTypeDef.methodStart + cppTypeDef.method_count;
+			for (var i = cppTypeDef.methodStart; i < methodEnd; ++i)
+			{
+				Il2CppMethodDefinition cppMethodDef = Metadata.methodDefs[i];
+				DefineMethod(typeDef, cppMethodDef);
+			}
+		}
+
+		public void DefineMethod(TypeDefinition typeDef, Il2CppMethodDefinition cppMethodDef)
+		{
+			MethodAttributes methodAttributes = (MethodAttributes)cppMethodDef.flags;
+			if (methodAttributes.HasFlag(MethodAttributes.SpecialName))
+				return;
+
+			bool isStatic = methodAttributes.HasFlag(MethodAttributes.Static);
+			int argOffset = isStatic ? 0 : 1;
+
+			string name = Metadata.GetStringFromIndex(cppMethodDef.nameIndex);
+			Il2CppType cppReturnType = Il2Cpp.Types[cppMethodDef.returnType];
+			MethodDefinition methodDef = new(name, methodAttributes, Module.TypeSystem.Void)
+			{
+				DeclaringType = typeDef,
+			};
+
+			if (cppMethodDef.genericContainerIndex >= 0)
+			{
+				var genericContainer = Metadata.genericContainers[cppMethodDef.genericContainerIndex];
+				for (int j = 0; j < genericContainer.type_argc; j++)
+				{
+					var genericParameterIndex = genericContainer.genericParameterStart + j;
+					var param = Metadata.genericParameters[genericParameterIndex];
+					var genericParameter = CreateGenericParameter(param, methodDef);
+					methodDef.GenericParameters.Add(genericParameter);
+				}
+			}
+
+			methodDef.ReturnType = UseTypeReference(methodDef, cppReturnType);
+			if (methodDef.ReturnType == null)
+				return; // TODO: Add warning log
+
+			int paramEnd = cppMethodDef.parameterStart + cppMethodDef.parameterCount;
+			for (int p = cppMethodDef.parameterStart; p < paramEnd; ++p)
+			{
+				Il2CppParameterDefinition cppParamDef = Metadata.parameterDefs[p];
+				Il2CppType cppParamType = Il2Cpp.Types[cppParamDef.typeIndex];
+				string paramName = Metadata.GetStringFromIndex(cppParamDef.nameIndex);
+				TypeReference paramTypeRef = UseTypeReference(methodDef, cppParamType);
+				if (paramTypeRef == null)
+					return; // TODO: Add warning log
+				methodDef.Parameters.Add(new ParameterDefinition(paramName, ParameterAttributes.None, paramTypeRef));
+			}
+
+			if (!methodAttributes.HasFlag(MethodAttributes.Abstract))
+			{
+				GenericInstanceType typeLookupInst = Module.ImportReference(typeof(Il2CppTypeInfoLookup<>)).MakeGenericType(typeDef);
+				MethodReference callMethod = new("CallMethod", methodDef.ReturnType, typeLookupInst) { HasThis = false };
+				callMethod.GenericParameters.Add(new GenericParameter("TValue", callMethod));
+				callMethod.Parameters.Add(new ParameterDefinition(IRuntimeObjectTypeRef));
+				callMethod.Parameters.Add(new ParameterDefinition(Module.TypeSystem.String));
+				ParameterDefinition paramsParam = new(new ArrayType(Module.TypeSystem.Object));
+				paramsParam.CustomAttributes.Add(new CustomAttribute(Module.ImportReference(typeof(ParamArrayAttribute)).GetConstructor()));
+				callMethod.Parameters.Add(paramsParam);
+				GenericInstanceMethod callMethodInst = callMethod.MakeGeneric(methodDef.ReturnType);
+				ILProcessor methodIL = methodDef.Body.GetILProcessor();
+				if (!isStatic)
+					methodIL.Emit(OpCodes.Ldarg_0);
+
+				methodIL.Emit(OpCodes.Ldstr, name);
+				methodIL.EmitI4(cppMethodDef.parameterCount);
+				methodIL.Emit(OpCodes.Newarr, Module.TypeSystem.Object);
+				for (byte p = 0; p < cppMethodDef.parameterCount; ++p)
+				{
+					methodIL.Emit(OpCodes.Dup);
+					methodIL.EmitI4(p);
+					methodIL.EmitArg(argOffset + p);
+					if (methodDef.Parameters[p].ParameterType.IsPrimitive && methodDef.Parameters[p].ParameterType != Module.TypeSystem.Object)
+					{
+						methodIL.Emit(OpCodes.Box, methodDef.Parameters[p].ParameterType);
+					}
+					methodIL.Emit(OpCodes.Stelem_Ref);
+				}
+				methodIL.Emit(OpCodes.Call, callMethodInst);
+				methodIL.Emit(OpCodes.Ret);
+			}
+			typeDef.Methods.Add(methodDef);
+		}
+
 		private void DefineFields(Il2CppTypeDefinition cppTypeDef, TypeDefinition typeDef, TypeInfoBuilder typeInfo)
 		{
-			var fieldEnd = cppTypeDef.fieldStart + cppTypeDef.field_count;
+			int fieldEnd = cppTypeDef.fieldStart + cppTypeDef.field_count;
 			for (var i = cppTypeDef.fieldStart; i < fieldEnd; ++i)
 			{
 				Il2CppFieldDefinition cppFieldDef = Metadata.fieldDefs[i];
@@ -339,36 +430,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 					typeInfo.DefineField(fieldName, fieldTypeRef, 1);
 				}
 			}
-			// Il2CppTypeDefinition cppParentTypeDef = null;
-			// Il2CppType cppParentType = Il2Cpp.Types[cppTypeDef.parentIndex];
-			// if (cppParentType.type == Il2CppTypeEnum.IL2CPP_TYPE_GENERICINST)
-			// {
-			// 	Il2CppGenericClass cppGenericClass = Context.Model.Il2Cpp.MapVATR<Il2CppGenericClass>(cppParentType.data.generic_class);
-			// 	cppParentTypeDef = Context.Model.GetGenericClassTypeDefinition(cppGenericClass);
-			// }
-			// else if (cppParentType.type == Il2CppTypeEnum.IL2CPP_TYPE_CLASS)
-			// {
-			// 	cppParentTypeDef = Context.Model.GetTypeDefinitionFromIl2CppType(cppParentType);
-			// }
-			// // parent class missing typeInfo? try to include static fields from there.
-			// if (cppParentTypeDef != null && !Context.Model.TypeDefToAddress.TryGetValue(cppParentTypeDef, out _))
-			// {
-
-			// }
 		}
-
-		// private MethodDefinition GetMethodDefinition(Il2CppMethodDefinition cppMethodDef)
-		// {
-		// 	if (Methods.TryGetValue(cppMethodDef, out MethodDefinition methodDef))
-		// 		return methodDef;
-
-		// 	string methodName = Metadata.GetStringFromIndex(cppMethodDef.nameIndex);
-
-		// 	// TODO: Give it a real return type!
-		// 	methodDef = new MethodDefinition(methodName, (MethodAttributes)cppMethodDef.flags, AssemblyDefinition.MainModule.TypeSystem.Void);
-		// 	Methods.Add(cppMethodDef, methodDef);
-		// 	return methodDef;
-		// }
 
 		private TypeReference GetTypeDefinition(Il2CppTypeDefinition cppTypeDef)
 		{
@@ -389,7 +451,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 			return typeDef;
 		}
 
-		private TypeReference UseTypeReference(MemberReference memberReference, Il2CppType cppType)
+		internal TypeReference UseTypeReference(MemberReference memberReference, Il2CppType cppType)
 		{
 			if (BuiltInTypes.TryGetValue(cppType.type, out TypeReference typeRef))
 				return typeRef;

@@ -13,23 +13,15 @@ class Il2CppServiceImpl : public il2cppservice::Il2CppService::Service
 public:
 	Il2CppServiceImpl(ExecutionQueue& queue) noexcept;
 
-	::grpc::Status FindClass(
-		::grpc::ServerContext* context, 
-		const ::il2cppservice::FindClassRequest* request, 
-		::il2cppservice::FindClassResponse* response
-	) noexcept override;
-
 	::grpc::Status CallMethod(
 		::grpc::ServerContext* context,
 		const ::il2cppservice::CallMethodRequest* request,
-		::il2cppservice::CallMethodResponse* response
-	) noexcept override;
+		::il2cppservice::CallMethodResponse* response) noexcept override;
 
 	::grpc::Status GetTypeInfo(
 		::grpc::ServerContext* context,
 		const ::il2cppservice::GetTypeInfoRequest* request,
-		::il2cppservice::GetTypeInfoResponse* response
-	) noexcept override;
+		::il2cppservice::GetTypeInfoResponse* response) noexcept override;
 
 private:
 	ExecutionQueue& m_executionQueue;

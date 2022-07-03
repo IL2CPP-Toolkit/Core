@@ -1,4 +1,6 @@
 using System;
+using System.Linq;
+using Il2CppToolkit.Model;
 using Il2CppToolkit.Runtime;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
@@ -13,13 +15,58 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 		private readonly TypeDefinition ForType;
 		private readonly TypeReference ForTypeRef;
 		private readonly ModuleDefinition ModuleDefinition;
+		private readonly ModuleBuilder ModuleBuilder;
 		private ILProcessor CctorIL;
 
-		public TypeInfoBuilder(TypeDefinition forType, ModuleDefinition moduleDefinition)
+		public TypeInfoBuilder(TypeDefinition forType, ModuleDefinition moduleDefinition, ModuleBuilder moduleBuilder)
 		{
-			ModuleDefinition = moduleDefinition;
 			ForType = forType;
 			ForTypeRef = ForType.MakeGenericType(ForType.GenericParameters.ToArray());
+			ModuleDefinition = moduleDefinition;
+			ModuleBuilder = moduleBuilder;
+		}
+
+		public ILProcessor GetCCtor()
+		{
+			if (CctorIL != null)
+				return CctorIL;
+
+			MethodDefinition cctor = new(
+				".cctor",
+				MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName,
+				ModuleDefinition.TypeSystem.Void);
+			CctorIL = cctor.Body.GetILProcessor();
+			ForType.Methods.Add(cctor);
+			return CctorIL;
+		}
+
+		public void DefineMethod(string name, Il2CppType cppReturnType, Il2CppType[] parameters, MethodAttributes methodAttributes)
+		{
+			if (methodAttributes.HasFlag(MethodAttributes.SpecialName))
+				return;
+
+
+			MethodDefinition methodDef = new(name, methodAttributes, ModuleDefinition.TypeSystem.Void);
+
+			methodDef.ReturnType = ModuleBuilder.UseTypeReference(methodDef, cppReturnType);
+
+			if (methodDef.ReturnType == null)
+				return; // TODO: Add warning log
+
+			TypeReference[] paramTypeRefs = parameters.Select(cppParamType => ModuleBuilder.UseTypeReference(methodDef, cppParamType)).ToArray();
+			if (paramTypeRefs.Contains(null))
+				return; // TODO: Add warning log
+
+			foreach (TypeReference paramTypeRef in paramTypeRefs)
+				methodDef.Parameters.Add(new ParameterDefinition(paramTypeRef));
+
+			if (!methodAttributes.HasFlag(MethodAttributes.Abstract))
+			{
+				ILProcessor methodIL = methodDef.Body.GetILProcessor();
+				methodIL.Emit(OpCodes.Newobj, ModuleBuilder.ImportReference(typeof(NotImplementedException)).GetConstructor());
+				methodIL.Emit(OpCodes.Throw);
+			}
+			ForType.Methods.Add(methodDef);
 		}
 
 		public void DefineField(string name, TypeReference fieldType, byte indirection)
@@ -48,20 +95,6 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 				GetMethod = instanceGetMethod
 			};
 			ForType.Properties.Add(instanceProperty);
-		}
-
-		public ILProcessor GetCCtor()
-		{
-			if (CctorIL != null)
-				return CctorIL;
-
-			MethodDefinition cctor = new(
-				".cctor",
-				MethodAttributes.Private | MethodAttributes.HideBySig | MethodAttributes.Static | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName,
-				ModuleDefinition.TypeSystem.Void);
-			CctorIL = cctor.Body.GetILProcessor();
-			ForType.Methods.Add(cctor);
-			return CctorIL;
 		}
 
 		public FieldDefinition DefineStaticField(string name, TypeReference fieldType, byte indirection)
