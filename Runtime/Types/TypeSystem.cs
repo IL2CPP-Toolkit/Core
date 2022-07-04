@@ -14,10 +14,13 @@ namespace Il2CppToolkit.Runtime.Types
 				return true;
 			}
 			Type builtinType = Type.GetType(typeName, false);
-			if (builtinType != null && NativeFactoryMapping.TryGetValue(builtinType, out _))
+			if (builtinType != null)
 			{
-				mappedType = Type.GetType(typeName);
-				return true;
+				if (NativeFactoryMapping.TryGetValue(builtinType, out _) || builtinType.IsInterface)
+				{
+					mappedType = Type.GetType(typeName);
+					return true;
+				}
 			}
 			if (typeName.StartsWith("System."))
 			{
@@ -47,8 +50,8 @@ namespace Il2CppToolkit.Runtime.Types
 			if (type.IsGenericType)
 			{
 				ErrorHandler.VerifyElseThrow(
-					typeFactoryType.IsGenericTypeDefinition, 
-					RuntimeError.GenericFactoryRequired, 
+					typeFactoryType.IsGenericTypeDefinition,
+					RuntimeError.GenericFactoryRequired,
 					"A generic type must have a generic factory");
 				typeFactoryType = typeFactoryType.MakeGenericType(type.GenericTypeArguments);
 			}

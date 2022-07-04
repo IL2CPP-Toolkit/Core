@@ -76,10 +76,10 @@ Il2CppObject* Il2CppContext::GetCppObject(const std::string& namespaze, const st
 	if (!pObj)
 		return nullptr;
 
-	if (pObj->klass != pCls->klass())
-		return nullptr;
+	if (pObj->klass == pCls->klass() || il2cpp_class_is_subclass_of(pObj->klass, pCls->klass(), true))
+		return pObj;
 
-	return pObj;
+	return nullptr;
 }
 
 void Il2CppContext::BuildTypeCache() noexcept

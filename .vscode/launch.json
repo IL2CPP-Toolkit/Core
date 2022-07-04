@@ -17,9 +17,11 @@
             "processId": "${input:MatchRaidExe}",
             "symbolOptions": {
                 "searchPaths": [
-                    "D:\\git\\github\\IL2Cpp-Toolkit\\Core\\Test\\x64\\Debug"
+                    "D:\\git\\github\\IL2Cpp-Toolkit\\Core\\Test\\x64\\Debug",
+                    "http://symbolserver.unity3d.com"
                 ],
-                "searchMicrosoftSymbolServer": true
+                "searchMicrosoftSymbolServer": true,
+                "cachePath": "%TEMP%\\SymbolCache"
             }
         },
         {

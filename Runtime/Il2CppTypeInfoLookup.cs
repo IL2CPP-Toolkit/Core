@@ -1,40 +1,11 @@
 ﻿using Il2CppToolkit.Injection.Client;
 using System;
-using System.Diagnostics;
 using System.Linq;
-using System.Reflection;
+using System.Runtime.CompilerServices;
 using static Il2CppToolkit.Injection.Client.Value;
 
 namespace Il2CppToolkit.Runtime
 {
-	public static class Il2CppTypeName
-	{
-		public static ClassId GetKlass(Type type)
-		{
-			return new() { Name = Il2CppTypeName.GetTypeName(type, false), Namespaze = type.Namespace };
-		}
-		public static string GetTypeName(Type type, bool includeFirst = true)
-		{
-			string typeName = includeFirst ? type.Namespace : "";
-			if (!string.IsNullOrEmpty(typeName))
-				typeName += ".";
-			typeName += type.Name;
-
-			if (type.IsConstructedGenericType)
-			{
-				typeName = typeName.Substring(0, typeName.Length - 2);
-				typeName += "<";
-				typeName += string.Join(",", type.GenericTypeArguments.Select(arg => GetTypeName(arg)));
-				typeName += ">";
-			}
-			return typeName;
-		}
-	}
-	public static class Il2CppTypeName<TClass>
-	{
-		public static ClassId klass = Il2CppTypeName.GetKlass(typeof(TClass));
-	}
-
 	public class Il2CppTypeInfoLookup<TClass>
 	{
 		private static GetTypeInfoResponse s_typeInfo;
@@ -84,8 +55,16 @@ namespace Il2CppToolkit.Runtime
 			};
 		}
 
-		public static TValue CallMethod<TValue>(IRuntimeObject obj, string name, object[] arguments)
+		public static void CallMethod(IRuntimeObject obj, [CallerMemberName] string name = "", object[] arguments = null)
 		{
+			CallMethod<object>(obj, name, arguments);
+		}
+
+		public static TValue CallMethod<TValue>(IRuntimeObject obj, [CallerMemberName] string name = "", object[] arguments = null)
+		{
+			if (arguments == null)
+				throw new ArgumentNullException(nameof(arguments));
+
 			CallMethodRequest req = new()
 			{
 				Klass = klass,
@@ -94,6 +73,10 @@ namespace Il2CppToolkit.Runtime
 			};
 			req.Arguments.AddRange(arguments.Select(ValueFrom));
 			CallMethodResponse response = obj.Source.ParentContext.InjectionClient.Il2Cpp.CallMethod(req);
+
+			if (response.ReturnValue == null)
+				return default;
+
 			return response.ReturnValue.ValueCase switch
 			{
 				ValueOneofCase.Bit => (TValue)(object)response.ReturnValue.Bit,
@@ -129,25 +112,4 @@ namespace Il2CppToolkit.Runtime
 		}
 	}
 
-	public class NullableArg
-	{
-		internal bool HasValue = false;
-		internal object Value = null;
-	}
-	public class NullableArg<T> : NullableArg where T : struct
-	{
-		internal T TypedValue;
-		public NullableArg()
-		{
-			HasValue = false;
-			Value = null;
-			TypedValue = default;
-		}
-		public NullableArg(T? value)
-		{
-			HasValue = value.HasValue;
-			Value = HasValue ? value.Value : null;
-			TypedValue = HasValue ? value.Value : default;
-		}
-	}
 }
