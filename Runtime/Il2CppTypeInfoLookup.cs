@@ -1,4 +1,5 @@
-﻿using Il2CppToolkit.Injection.Client;
+﻿using Il2CppToolkit.Common.Errors;
+using Il2CppToolkit.Injection.Client;
 using System;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -55,13 +56,9 @@ namespace Il2CppToolkit.Runtime
 			};
 		}
 
-		public static void CallMethod(IRuntimeObject obj, [CallerMemberName] string name = "", object[] arguments = null)
+		public static Value CallMethodCore(IRuntimeObject obj, [CallerMemberName] string name = "", object[] arguments = null)
 		{
-			CallMethod<object>(obj, name, arguments);
-		}
 
-		public static TValue CallMethod<TValue>(IRuntimeObject obj, [CallerMemberName] string name = "", object[] arguments = null)
-		{
 			if (arguments == null)
 				throw new ArgumentNullException(nameof(arguments));
 
@@ -73,23 +70,47 @@ namespace Il2CppToolkit.Runtime
 			};
 			req.Arguments.AddRange(arguments.Select(ValueFrom));
 			CallMethodResponse response = obj.Source.ParentContext.InjectionClient.Il2Cpp.CallMethod(req);
+			return response.ReturnValue;
+		}
 
-			if (response.ReturnValue == null)
+		public static void CallMethod(IRuntimeObject obj, [CallerMemberName] string name = "", object[] arguments = null)
+		{
+			CallMethodCore(obj, name, arguments);
+		}
+
+		public static TValue CallMethod<TValue>(IRuntimeObject obj, [CallerMemberName] string name = "", object[] arguments = null)
+		{
+			Value returnValue = CallMethodCore(obj, name, arguments);
+
+			if (returnValue == null)
 				return default;
 
-			return response.ReturnValue.ValueCase switch
+			return returnValue.ValueCase switch
 			{
-				ValueOneofCase.Bit => (TValue)(object)response.ReturnValue.Bit,
-				ValueOneofCase.Double => (TValue)(object)response.ReturnValue.Double,
-				ValueOneofCase.Float => (TValue)(object)response.ReturnValue.Float,
-				ValueOneofCase.Int32 => (TValue)(object)response.ReturnValue.Int32,
-				ValueOneofCase.Int64 => (TValue)(object)response.ReturnValue.Int64,
-				ValueOneofCase.Obj => HydrateObject<TValue>(obj.Source.ParentContext, response.ReturnValue.Obj),
-				ValueOneofCase.Str => (TValue)(object)response.ReturnValue.Str,
-				ValueOneofCase.Uint32 => (TValue)(object)response.ReturnValue.Uint32,
-				ValueOneofCase.Uint64 => (TValue)(object)response.ReturnValue.Uint64,
+				ValueOneofCase.Bit => (TValue)(object)returnValue.Bit,
+				ValueOneofCase.Double => (TValue)(object)returnValue.Double,
+				ValueOneofCase.Float => (TValue)(object)returnValue.Float,
+				ValueOneofCase.Int32 => (TValue)(object)returnValue.Int32,
+				ValueOneofCase.Int64 => (TValue)(object)returnValue.Int64,
+				ValueOneofCase.Obj => throw new InvalidOperationException(),
+				ValueOneofCase.Str => (TValue)(object)returnValue.Str,
+				ValueOneofCase.Uint32 => (TValue)(object)returnValue.Uint32,
+				ValueOneofCase.Uint64 => (TValue)(object)returnValue.Uint64,
 				_ => default,
 			};
+		}
+
+		public static PinnedReference<TValue> CallMethodWithPinnedResult<TValue>(IRuntimeObject obj, [CallerMemberName] string name = "", object[] arguments = null)
+			where TValue : class, IRuntimeObject
+		{
+			Value returnValue = CallMethodCore(obj, name, arguments);
+
+			if (returnValue == null)
+				return default;
+
+			ErrorHandler.VerifyElseThrow(returnValue.ValueCase == ValueOneofCase.Obj, RuntimeError.InvalidValueCase, "Invalid value case");
+			TValue objValue = HydrateObject<TValue>(obj.Source.ParentContext, returnValue.Obj);
+			return new(objValue, returnValue.Obj.Handle);
 		}
 
 		private static TValue HydrateObject<TValue>(IMemorySource source, Il2CppObject obj)

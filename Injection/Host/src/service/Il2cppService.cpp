@@ -241,6 +241,18 @@ struct ArgumentValueHolder
 	return result.value_or(::grpc::Status::CANCELLED);
 }
 
+::grpc::Status Il2CppServiceImpl::FreeObject(
+	::grpc::ServerContext* context,
+	const ::il2cppservice::FreeObjectRequest* request,
+	::il2cppservice::FreeObjectResponse* response) noexcept
+{
+	std::optional<::grpc::Status> result{m_executionQueue.Invoke<::grpc::Status>([&]() mutable noexcept {
+		il2cpp_gchandle_free(request->handle());
+		return ::grpc::Status::OK;
+	})};
+	return result.value_or(::grpc::Status::CANCELLED);
+}
+
 ::grpc::Status Il2CppServiceImpl::GetTypeInfo(
 	::grpc::ServerContext* context,
 	const ::il2cppservice::GetTypeInfoRequest* request,

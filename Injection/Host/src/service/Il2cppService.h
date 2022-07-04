@@ -23,6 +23,11 @@ public:
 		const ::il2cppservice::GetTypeInfoRequest* request,
 		::il2cppservice::GetTypeInfoResponse* response) noexcept override;
 
+	::grpc::Status FreeObject(
+		::grpc::ServerContext* context,
+		const ::il2cppservice::FreeObjectRequest* request,
+		::il2cppservice::FreeObjectResponse* response) noexcept override;
+
 private:
 	ExecutionQueue& m_executionQueue;
 };

@@ -80,8 +80,16 @@ message CallMethodResponse
 	optional Value returnValue = 1;
 }
 
+message FreeObjectRequest
+{
+	uint32 handle = 1;
+}
+
+message FreeObjectResponse {}
+
 service Il2CppService
 {
 	rpc CallMethod(CallMethodRequest) returns (CallMethodResponse);
 	rpc GetTypeInfo(GetTypeInfoRequest) returns (GetTypeInfoResponse);
+	rpc FreeObject(FreeObjectRequest) returns (FreeObjectResponse);
 }

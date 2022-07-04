@@ -367,15 +367,13 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 				methodDef.Parameters.Add(new ParameterDefinition(paramName, ParameterAttributes.None, paramTypeRef));
 			}
 
+			TypeReference classTypeRef = typeDef;
+			if (typeDef.HasGenericParameters)
+				classTypeRef = typeDef.MakeGenericType(typeDef.GenericParameters);
+			GenericInstanceType typeLookupInst = Module.ImportReference(typeof(Il2CppTypeInfoLookup<>)).MakeGenericType(classTypeRef);
+			MethodReference callMethodInst = GetCallMethodRef(methodDef, cppReturnType, typeLookupInst);
 			if (!methodAttributes.HasFlag(MethodAttributes.Abstract))
 			{
-				TypeReference classTypeRef = typeDef;
-				if (typeDef.HasGenericParameters)
-				{
-					classTypeRef = typeDef.MakeGenericType(typeDef.GenericParameters);
-				}
-				GenericInstanceType typeLookupInst = Module.ImportReference(typeof(Il2CppTypeInfoLookup<>)).MakeGenericType(classTypeRef);
-				MethodReference callMethodInst = GetCallMethodRef(methodDef, cppReturnType, typeLookupInst);
 				ILProcessor methodIL = methodDef.Body.GetILProcessor();
 				if (!isStatic)
 					methodIL.Emit(OpCodes.Ldarg_0);
@@ -409,9 +407,11 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 
 		private MethodReference GetCallMethodRef(MethodDefinition methodDef, Il2CppType returnType, GenericInstanceType typeLookupInst)
 		{
-			MethodReference callMethod = new("CallMethod", methodDef.ReturnType, typeLookupInst) { HasThis = false };
+			TypeReference typeArg = methodDef.ReturnType;
+			TypeReference returnTypeRef = typeArg;
 			if (returnType.type == Il2CppTypeEnum.IL2CPP_TYPE_VOID)
 			{
+				MethodReference callMethod = new("CallMethod", methodDef.ReturnType, typeLookupInst) { HasThis = false };
 				callMethod.Parameters.Add(new ParameterDefinition(IRuntimeObjectTypeRef));
 				callMethod.Parameters.Add(new ParameterDefinition(ImportReference(typeof(string))));
 				callMethod.Parameters.Add(new ParameterDefinition(new ArrayType(ImportReference(typeof(object)))));
@@ -419,12 +419,24 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 			}
 			else
 			{
+				string methodName = "CallMethod";
+				if (returnType.type == Il2CppTypeEnum.IL2CPP_TYPE_CLASS)
+				{
+					methodName = "CallMethodWithPinnedResult";
+					returnTypeRef = ImportReference(typeof(PinnedReference<>)).MakeGenericType(returnTypeRef);
+				}
+				MethodReference callMethod = new(methodName, methodDef.ReturnType, typeLookupInst) { HasThis = false };
 				callMethod.GenericParameters.Add(new GenericParameter("TValue", callMethod));
 				callMethod.Parameters.Add(new ParameterDefinition(IRuntimeObjectTypeRef));
 				callMethod.Parameters.Add(new ParameterDefinition(ImportReference(typeof(string))));
 				callMethod.Parameters.Add(new ParameterDefinition(new ArrayType(ImportReference(typeof(object)))));
 				callMethod.ReturnType = callMethod.GenericParameters[0];
-				GenericInstanceMethod callMethodInst = callMethod.MakeGeneric(methodDef.ReturnType);
+				if (returnType.type == Il2CppTypeEnum.IL2CPP_TYPE_CLASS)
+				{
+					callMethod.ReturnType = ImportReference(typeof(PinnedReference<>)).MakeGenericType(callMethod.ReturnType);
+					methodDef.ReturnType = returnTypeRef;
+				}
+				GenericInstanceMethod callMethodInst = callMethod.MakeGeneric(typeArg);
 				return callMethodInst;
 			}
 		}
