@@ -101,7 +101,7 @@ namespace Il2CppToolkit.Runtime
 				ValueOneofCase.Float => (TValue)(object)response.ReturnValue.Float,
 				ValueOneofCase.Int32 => (TValue)(object)response.ReturnValue.Int32,
 				ValueOneofCase.Int64 => (TValue)(object)response.ReturnValue.Int64,
-				ValueOneofCase.Obj => (TValue)HydrateObject(obj.Source.ParentContext, response.ReturnValue.Obj),
+				ValueOneofCase.Obj => HydrateObject<TValue>(obj.Source.ParentContext, response.ReturnValue.Obj),
 				ValueOneofCase.Str => (TValue)(object)response.ReturnValue.Str,
 				ValueOneofCase.Uint32 => (TValue)(object)response.ReturnValue.Uint32,
 				ValueOneofCase.Uint64 => (TValue)(object)response.ReturnValue.Uint64,
@@ -109,18 +109,9 @@ namespace Il2CppToolkit.Runtime
 			};
 		}
 
-		private static object HydrateObject(IMemorySource source, Il2CppObject obj)
+		private static TValue HydrateObject<TValue>(IMemorySource source, Il2CppObject obj)
 		{
-			string className = obj.Klass.Namespaze;
-			if (className.Length > 0)
-				className += ".";
-			className += obj.Klass.Name;
-			Type objectType = Type.GetType(className, false, false);
-			if (objectType == null)
-				throw new EntryPointNotFoundException($"Class '{className}' could not be found");
-			object value = Activator.CreateInstance(objectType, source, obj.Address);
-			// TODO: store and handle 'handle' correctly
-			return value;
+			return (TValue)Activator.CreateInstance(typeof(TValue), source, obj.Address);
 		}
 
 		public static TValue GetValue<TValue>(IRuntimeObject obj, string name, byte indirection = 1)

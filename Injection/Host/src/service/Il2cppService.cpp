@@ -98,7 +98,7 @@ static void ObjectToValue(Il2CppObject* pObj, const Il2CppType& cppType, ::il2cp
 			value.set_double_(*pValue);
 			break;
 		}
-		case Il2CppTypeEnum::IL2CPP_TYPE_OBJECT: {
+		case Il2CppTypeEnum::IL2CPP_TYPE_CLASS: {
 			uint32_t handle{il2cpp_gchandle_new(pObj, /*pinned*/ true)};
 			const auto& pReturnObj = value.mutable_obj_();
 			pReturnObj->set_address(reinterpret_cast<uint64_t>(pObj));
@@ -217,6 +217,13 @@ struct ArgumentValueHolder
 			{
 				ArgumentValueHolder& argHolder{argHolders.emplace_back(il2cpp_string_new(arg.str_().c_str()), arg.nullstate())};
 				pArgs[n] = reinterpret_cast<void*>(&argHolder);
+			}
+			else if (arg.has_obj_())
+			{
+				Il2CppObject* pArg = Il2CppContext::instance().GetCppObject(
+					arg.obj_().klass().namespaze(), arg.obj_().klass().name(), reinterpret_cast<void*>(arg.obj_().address()));
+				// ArgumentValueHolder& argHolder{argHolders.emplace_back(pArg, arg.nullstate())};
+				pArgs[n] = reinterpret_cast<void*>(pArg);
 			}
 		}
 
