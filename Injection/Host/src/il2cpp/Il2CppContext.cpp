@@ -66,13 +66,13 @@ const Il2CppClassInfo* Il2CppContext::FindClass(const std::string& name) const n
 	return nullptr;
 }
 
-const Il2CppObject* Il2CppContext::GetCppObject(const std::string& namespaze, const std::string& name, const void* pInst) const noexcept
+Il2CppObject* Il2CppContext::GetCppObject(const std::string& namespaze, const std::string& name, void* pInst) const noexcept
 {
 	const Il2CppClassInfo* pCls{FindClass(namespaze, name)};
 	if (!pCls)
 		return nullptr;
 
-	const Il2CppObject* pObj{static_cast<const Il2CppObject*>(pInst)};
+	Il2CppObject* pObj{static_cast<Il2CppObject*>(pInst)};
 	if (!pObj)
 		return nullptr;
 

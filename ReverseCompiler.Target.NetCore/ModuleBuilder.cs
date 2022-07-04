@@ -37,7 +37,6 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 		{
 			Context = context;
 			AssemblyDefinition = assemblyDefinition;
-			AddBuiltInTypes(Module);
 			Module.AssemblyReferences.Add(new AssemblyNameReference("Il2CppToolkit.Runtime", new Version(1, 0, 0, 0)));
 #if NET5_0_OR_GREATER
 			SystemRuntimeRef = new AssemblyNameReference("System.Runtime", new Version(5, 0, 0, 0))
@@ -47,6 +46,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 			};
 			Module.AssemblyReferences.Add(SystemRuntimeRef);
 #endif
+			AddBuiltInTypes(Module);
 			RuntimeObjectTypeRef = ImportReference(typeof(RuntimeObject));
 			IRuntimeObjectTypeRef = ImportReference(typeof(IRuntimeObject));
 			IMemorySourceTypeRef = ImportReference(typeof(IMemorySource));
@@ -64,6 +64,10 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 			if (SystemRuntimeRef != null && type.Assembly == typeof(string).Assembly)
 			{
 				typeRef = Module.ImportReference(new TypeReference(type.Namespace, type.Name, null, SystemRuntimeRef, type.IsValueType));
+				if (type.ContainsGenericParameters)
+				{
+					typeRef.GenericParameters.AddRange(type.GetGenericArguments().Select(_ => new GenericParameter(typeRef)));
+				}
 			}
 			else
 			{
@@ -210,7 +214,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 			if (typeDef.IsValueType)
 				return;
 
-			MethodDefinition ctorMethod = new(".ctor", kCtorAttrs, Module.TypeSystem.Void);
+			MethodDefinition ctorMethod = new(".ctor", kCtorAttrs, ImportReference(typeof(void)));
 			ILProcessor ctorMethodIL = ctorMethod.Body.GetILProcessor();
 			ctorMethodIL.Emit(OpCodes.Ldarg_0);                       // this
 			if (typeDef.BaseType != null)
@@ -231,7 +235,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 			if (typeDef.IsInterface)
 				return;
 
-			if (typeDef.BaseType == null || typeDef.BaseType == Module.TypeSystem.Object)
+			if (typeDef.BaseType == null || typeDef.BaseType == ImportReference(typeof(object)))
 			{
 				// inherit from RuntimeObject
 				typeDef.BaseType = RuntimeObjectTypeRef;
@@ -244,9 +248,9 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 				ImplementIRuntimeObject(typeDef);
 				return;
 			}
-			MethodDefinition ctorMethod = new(".ctor", kCtorAttrs, Module.TypeSystem.Void);
+			MethodDefinition ctorMethod = new(".ctor", kCtorAttrs, ImportReference(typeof(void)));
 			ctorMethod.Parameters.Add(new ParameterDefinition(IMemorySourceTypeRef));
-			ctorMethod.Parameters.Add(new ParameterDefinition(Module.TypeSystem.UInt64));
+			ctorMethod.Parameters.Add(new ParameterDefinition(ImportReference(typeof(UInt64))));
 
 			MethodReference baseCtor = typeDef.BaseType.GetConstructor();
 			foreach (ParameterDefinition paramDef in ctorMethod.Parameters)
@@ -279,10 +283,10 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 				return fieldDef;
 			}
 			FieldDefinition sourceFieldDef = AddIRuntimeObjectProperty("Source", IMemorySourceTypeRef);
-			FieldDefinition addressFieldDef = AddIRuntimeObjectProperty("Address", Module.TypeSystem.UInt64);
-			MethodDefinition ctorMethod = new(".ctor", kCtorAttrs, Module.TypeSystem.Void);
+			FieldDefinition addressFieldDef = AddIRuntimeObjectProperty("Address", ImportReference(typeof(UInt64)));
+			MethodDefinition ctorMethod = new(".ctor", kCtorAttrs, ImportReference(typeof(void)));
 			ctorMethod.Parameters.Add(new ParameterDefinition(IMemorySourceTypeRef));
-			ctorMethod.Parameters.Add(new ParameterDefinition(Module.TypeSystem.UInt64));
+			ctorMethod.Parameters.Add(new ParameterDefinition(ImportReference(typeof(UInt64))));
 			ILProcessor ctorMethodIL = ctorMethod.Body.GetILProcessor();
 			// valuetype doesn't need to call base ctor
 			if (!typeDef.IsValueType)
@@ -324,7 +328,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 
 			string name = Metadata.GetStringFromIndex(cppMethodDef.nameIndex);
 			Il2CppType cppReturnType = Il2Cpp.Types[cppMethodDef.returnType];
-			MethodDefinition methodDef = new(name, methodAttributes, Module.TypeSystem.Void)
+			MethodDefinition methodDef = new(name, methodAttributes, ImportReference(typeof(void)))
 			{
 				DeclaringType = typeDef,
 			};
@@ -343,7 +347,10 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 
 			methodDef.ReturnType = UseTypeReference(methodDef, cppReturnType);
 			if (methodDef.ReturnType == null)
-				return; // TODO: Add warning log
+			{
+				Context.Logger?.LogWarning($"{typeDef.FullName}.{name}(...) Unsupported return type");
+				return;
+			}
 
 			int paramEnd = cppMethodDef.parameterStart + cppMethodDef.parameterCount;
 			for (int p = cppMethodDef.parameterStart; p < paramEnd; ++p)
@@ -353,7 +360,10 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 				string paramName = Metadata.GetStringFromIndex(cppParamDef.nameIndex);
 				TypeReference paramTypeRef = UseTypeReference(methodDef, cppParamType);
 				if (paramTypeRef == null)
-					return; // TODO: Add warning log
+				{
+					Context.Logger?.LogWarning($"{typeDef.FullName}.{name}(...) Unsupported parameter type");
+					return;
+				}
 				methodDef.Parameters.Add(new ParameterDefinition(paramName, ParameterAttributes.None, paramTypeRef));
 			}
 
@@ -363,10 +373,9 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 				MethodReference callMethod = new("CallMethod", methodDef.ReturnType, typeLookupInst) { HasThis = false };
 				callMethod.GenericParameters.Add(new GenericParameter("TValue", callMethod));
 				callMethod.Parameters.Add(new ParameterDefinition(IRuntimeObjectTypeRef));
-				callMethod.Parameters.Add(new ParameterDefinition(Module.TypeSystem.String));
-				ParameterDefinition paramsParam = new(new ArrayType(Module.TypeSystem.Object));
-				paramsParam.CustomAttributes.Add(new CustomAttribute(Module.ImportReference(typeof(ParamArrayAttribute)).GetConstructor()));
-				callMethod.Parameters.Add(paramsParam);
+				callMethod.Parameters.Add(new ParameterDefinition(ImportReference(typeof(string))));
+				callMethod.Parameters.Add(new ParameterDefinition(new ArrayType(ImportReference(typeof(object)))));
+				callMethod.ReturnType = callMethod.GenericParameters[0];
 				GenericInstanceMethod callMethodInst = callMethod.MakeGeneric(methodDef.ReturnType);
 				ILProcessor methodIL = methodDef.Body.GetILProcessor();
 				if (!isStatic)
@@ -374,15 +383,22 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 
 				methodIL.Emit(OpCodes.Ldstr, name);
 				methodIL.EmitI4(cppMethodDef.parameterCount);
-				methodIL.Emit(OpCodes.Newarr, Module.TypeSystem.Object);
+				methodIL.Emit(OpCodes.Newarr, ImportReference(typeof(object)));
 				for (byte p = 0; p < cppMethodDef.parameterCount; ++p)
 				{
 					methodIL.Emit(OpCodes.Dup);
 					methodIL.EmitI4(p);
 					methodIL.EmitArg(argOffset + p);
-					if (methodDef.Parameters[p].ParameterType.IsPrimitive && methodDef.Parameters[p].ParameterType != Module.TypeSystem.Object)
+					TypeReference paramType = methodDef.Parameters[p].ParameterType;
+					if (paramType.IsGenericInstance && paramType is GenericInstanceType genericInstance && genericInstance.Name == "Nullable`1")
 					{
-						methodIL.Emit(OpCodes.Box, methodDef.Parameters[p].ParameterType);
+						var nullableType = ImportReference(typeof(Nullable<>)).MakeGenericType(genericInstance.ElementType.GenericParameters);
+						var nullableArgCtor = ImportReference(typeof(NullableArg<>)).MakeGenericType(genericInstance.GenericArguments).GetConstructor(nullableType);
+						methodIL.Emit(OpCodes.Newobj, nullableArgCtor);
+					}
+					else if (paramType.IsValueType)
+					{
+						methodIL.Emit(OpCodes.Box, paramType);
 					}
 					methodIL.Emit(OpCodes.Stelem_Ref);
 				}
@@ -545,7 +561,10 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 					Il2CppType cppConstraintType = Context.Model.Il2Cpp.Types[Context.Model.Metadata.constraintIndices[param.constraintsStart + i]];
 					TypeReference typeRef = UseTypeReference((MemberReference)iGenericParameterProvider, cppConstraintType);
 					if (typeRef == null)
-						continue; // TODO: Add warning
+					{
+						Context.Logger?.LogWarning($"Unsupported constraint");
+						continue;
+					}
 					genericParameter.Constraints.Add(new GenericParameterConstraint(typeRef));
 				}
 			}
@@ -554,24 +573,24 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 
 		private void AddBuiltInTypes(ModuleDefinition moduleDef)
 		{
-			BuiltInTypes.Add(Il2CppTypeEnum.IL2CPP_TYPE_OBJECT, moduleDef.TypeSystem.Object);
-			BuiltInTypes.Add(Il2CppTypeEnum.IL2CPP_TYPE_VOID, moduleDef.TypeSystem.Void);
-			BuiltInTypes.Add(Il2CppTypeEnum.IL2CPP_TYPE_BOOLEAN, moduleDef.TypeSystem.Boolean);
-			BuiltInTypes.Add(Il2CppTypeEnum.IL2CPP_TYPE_CHAR, moduleDef.TypeSystem.Char);
-			BuiltInTypes.Add(Il2CppTypeEnum.IL2CPP_TYPE_I1, moduleDef.TypeSystem.SByte);
-			BuiltInTypes.Add(Il2CppTypeEnum.IL2CPP_TYPE_U1, moduleDef.TypeSystem.Byte);
-			BuiltInTypes.Add(Il2CppTypeEnum.IL2CPP_TYPE_I2, moduleDef.TypeSystem.Int16);
-			BuiltInTypes.Add(Il2CppTypeEnum.IL2CPP_TYPE_U2, moduleDef.TypeSystem.UInt16);
-			BuiltInTypes.Add(Il2CppTypeEnum.IL2CPP_TYPE_I4, moduleDef.TypeSystem.Int32);
-			BuiltInTypes.Add(Il2CppTypeEnum.IL2CPP_TYPE_U4, moduleDef.TypeSystem.UInt32);
-			BuiltInTypes.Add(Il2CppTypeEnum.IL2CPP_TYPE_I, moduleDef.TypeSystem.IntPtr);
-			BuiltInTypes.Add(Il2CppTypeEnum.IL2CPP_TYPE_U, moduleDef.TypeSystem.UIntPtr);
-			BuiltInTypes.Add(Il2CppTypeEnum.IL2CPP_TYPE_I8, moduleDef.TypeSystem.Int64);
-			BuiltInTypes.Add(Il2CppTypeEnum.IL2CPP_TYPE_U8, moduleDef.TypeSystem.UInt64);
-			BuiltInTypes.Add(Il2CppTypeEnum.IL2CPP_TYPE_R4, moduleDef.TypeSystem.Single);
-			BuiltInTypes.Add(Il2CppTypeEnum.IL2CPP_TYPE_R8, moduleDef.TypeSystem.Double);
-			BuiltInTypes.Add(Il2CppTypeEnum.IL2CPP_TYPE_STRING, moduleDef.TypeSystem.String);
-			BuiltInTypes.Add(Il2CppTypeEnum.IL2CPP_TYPE_TYPEDBYREF, moduleDef.TypeSystem.TypedReference);
+			BuiltInTypes.Add(Il2CppTypeEnum.IL2CPP_TYPE_OBJECT, ImportReference(typeof(Object)));
+			BuiltInTypes.Add(Il2CppTypeEnum.IL2CPP_TYPE_VOID, ImportReference(typeof(void)));
+			BuiltInTypes.Add(Il2CppTypeEnum.IL2CPP_TYPE_BOOLEAN, ImportReference(typeof(Boolean)));
+			BuiltInTypes.Add(Il2CppTypeEnum.IL2CPP_TYPE_CHAR, ImportReference(typeof(Char)));
+			BuiltInTypes.Add(Il2CppTypeEnum.IL2CPP_TYPE_I1, ImportReference(typeof(SByte)));
+			BuiltInTypes.Add(Il2CppTypeEnum.IL2CPP_TYPE_U1, ImportReference(typeof(Byte)));
+			BuiltInTypes.Add(Il2CppTypeEnum.IL2CPP_TYPE_I2, ImportReference(typeof(Int16)));
+			BuiltInTypes.Add(Il2CppTypeEnum.IL2CPP_TYPE_U2, ImportReference(typeof(UInt16)));
+			BuiltInTypes.Add(Il2CppTypeEnum.IL2CPP_TYPE_I4, ImportReference(typeof(Int32)));
+			BuiltInTypes.Add(Il2CppTypeEnum.IL2CPP_TYPE_U4, ImportReference(typeof(UInt32)));
+			BuiltInTypes.Add(Il2CppTypeEnum.IL2CPP_TYPE_I, ImportReference(typeof(IntPtr)));
+			BuiltInTypes.Add(Il2CppTypeEnum.IL2CPP_TYPE_U, ImportReference(typeof(UIntPtr)));
+			BuiltInTypes.Add(Il2CppTypeEnum.IL2CPP_TYPE_I8, ImportReference(typeof(Int64)));
+			BuiltInTypes.Add(Il2CppTypeEnum.IL2CPP_TYPE_U8, ImportReference(typeof(UInt64)));
+			BuiltInTypes.Add(Il2CppTypeEnum.IL2CPP_TYPE_R4, ImportReference(typeof(Single)));
+			BuiltInTypes.Add(Il2CppTypeEnum.IL2CPP_TYPE_R8, ImportReference(typeof(Double)));
+			BuiltInTypes.Add(Il2CppTypeEnum.IL2CPP_TYPE_STRING, ImportReference(typeof(String)));
+			BuiltInTypes.Add(Il2CppTypeEnum.IL2CPP_TYPE_TYPEDBYREF, ImportReference(typeof(TypedReference)));
 		}
 	}
 }

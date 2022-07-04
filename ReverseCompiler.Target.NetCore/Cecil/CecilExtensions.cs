@@ -44,7 +44,7 @@ namespace Mono.Cecil
 			return instance;
 		}
 
-		public static MethodReference GetConstructor(this TypeReference typeReference)
+		public static MethodReference GetConstructor(this TypeReference typeReference, params TypeReference[] arguments)
 		{
 			MethodReference methodRef = new(".ctor", typeReference.Module.TypeSystem.Void)
 			{
@@ -53,6 +53,7 @@ namespace Mono.Cecil
 				ExplicitThis = false,
 				CallingConvention = MethodCallingConvention.Default,
 			};
+			methodRef.Parameters.AddRange(arguments.Select(arg => new ParameterDefinition(arg)));
 			return methodRef;
 		}
 

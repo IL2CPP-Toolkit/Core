@@ -3,6 +3,13 @@ package il2cppservice;
 
 option csharp_namespace = "Il2CppToolkit.Injection.Client";
 
+enum NullableState
+{
+	None = 0;
+	HasValue = 1;
+	IsNull = 2;
+}
+
 message ClassId
 {
 	string namespaze = 1;
@@ -29,8 +36,9 @@ message Value
 		bool bit_ = 7;
 		string str_ = 8;
 		// bytes buffer_ = 9;
-		Il2CppObject obj_ = 15;
+		Il2CppObject obj_ = 14;
 	}
+	NullableState nullState = 15;
 }
 
 message Il2CppField

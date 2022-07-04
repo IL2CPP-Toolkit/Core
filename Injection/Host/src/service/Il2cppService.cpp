@@ -121,6 +121,27 @@ static void ObjectToValue(Il2CppObject* pObj, const Il2CppType& cppType, ::il2cp
 	}
 }
 
+template<typename T>
+struct ArgumentValue
+{
+	ArgumentValue(T objValue, bool hasValue) : value{objValue}, has_value{hasValue} {}
+	T value;
+	bool has_value;
+};
+
+struct ArgumentValueHolder
+{
+	char unused[512];
+
+	template<typename T>
+	ArgumentValueHolder(T value, ::il2cppservice::NullableState nullableState)
+	{
+		ArgumentValue<T> argValue{value, nullableState == ::il2cppservice::NullableState::IsNull};
+		memcpy_s(&unused[0], 512, &argValue, sizeof(ArgumentValue<T>));
+	}
+};
+
+
 ::grpc::Status Il2CppServiceImpl::CallMethod(
 	::grpc::ServerContext* context,
 	const ::il2cppservice::CallMethodRequest* request,
@@ -135,8 +156,8 @@ static void ObjectToValue(Il2CppObject* pObj, const Il2CppType& cppType, ::il2cp
 		if (request->has_instance())
 		{
 			const auto& instance{request->instance()};
-			Il2CppContext::instance().GetCppObject(
-				instance.klass().namespaze(), instance.klass().name(), reinterpret_cast<const void*>(instance.address()));
+			pObj = Il2CppContext::instance().GetCppObject(
+				instance.klass().namespaze(), instance.klass().name(), reinterpret_cast<void*>(instance.address()));
 
 			if (!pObj)
 			{
@@ -153,50 +174,49 @@ static void ObjectToValue(Il2CppObject* pObj, const Il2CppType& cppType, ::il2cp
 		if (!pArgs)
 			return ::grpc::Status{::grpc::StatusCode::RESOURCE_EXHAUSTED, "Out of memory"};
 
-		std::vector<numeric_value> numericArgs{};
-		std::vector<SystemString> stringArgs{};
+		std::vector<ArgumentValueHolder> argHolders{};
 		for (int n{0}, m{request->arguments_size()}; n < m; ++n)
 		{
 			const ::il2cppservice::Value& arg{request->arguments().at(n)};
 			if (arg.has_bit_())
 			{
-				numericArgs.emplace_back(arg.bit_());
-				pArgs[n] = reinterpret_cast<void*>(&numericArgs.back());
+				ArgumentValueHolder& argHolder{argHolders.emplace_back(arg.bit_(), arg.nullstate())};
+				pArgs[n] = reinterpret_cast<void*>(&argHolder);
 			}
 			else if (arg.has_double_())
 			{
-				numericArgs.emplace_back(arg.double_());
-				pArgs[n] = reinterpret_cast<void*>(&numericArgs.back());
+				ArgumentValueHolder& argHolder{argHolders.emplace_back(arg.double_(), arg.nullstate())};
+				pArgs[n] = reinterpret_cast<void*>(&argHolder);
 			}
 			else if (arg.has_float_())
 			{
-				numericArgs.emplace_back(static_cast<float>(arg.float_()));
-				pArgs[n] = reinterpret_cast<void*>(&numericArgs.back());
+				ArgumentValueHolder& argHolder{argHolders.emplace_back(static_cast<float>(arg.float_()), arg.nullstate())};
+				pArgs[n] = reinterpret_cast<void*>(&argHolder);
 			}
 			else if (arg.has_int32_())
 			{
-				numericArgs.emplace_back(arg.int32_());
-				pArgs[n] = reinterpret_cast<void*>(&numericArgs.back());
+				ArgumentValueHolder& argHolder{argHolders.emplace_back(arg.int32_(), arg.nullstate())};
+				pArgs[n] = reinterpret_cast<void*>(&argHolder);
 			}
 			else if (arg.has_uint32_())
 			{
-				numericArgs.emplace_back(arg.uint32_());
-				pArgs[n] = reinterpret_cast<void*>(&numericArgs.back());
+				ArgumentValueHolder& argHolder{argHolders.emplace_back(arg.uint32_(), arg.nullstate())};
+				pArgs[n] = reinterpret_cast<void*>(&argHolder);
 			}
 			else if (arg.has_int64_())
 			{
-				numericArgs.emplace_back(arg.int64_());
-				pArgs[n] = reinterpret_cast<void*>(&numericArgs.back());
+				ArgumentValueHolder& argHolder{argHolders.emplace_back(arg.int64_(), arg.nullstate())};
+				pArgs[n] = reinterpret_cast<void*>(&argHolder);
 			}
 			else if (arg.has_uint64_())
 			{
-				numericArgs.emplace_back(arg.uint64_());
-				pArgs[n] = reinterpret_cast<void*>(&numericArgs.back());
+				ArgumentValueHolder& argHolder{argHolders.emplace_back(arg.uint64_(), arg.nullstate())};
+				pArgs[n] = reinterpret_cast<void*>(&argHolder);
 			}
 			else if (arg.has_str_())
 			{
-				stringArgs.emplace_back(arg.str_());
-				pArgs[n] = reinterpret_cast<void*>(&stringArgs.back());
+				ArgumentValueHolder& argHolder{argHolders.emplace_back(il2cpp_string_new(arg.str_().c_str()), arg.nullstate())};
+				pArgs[n] = reinterpret_cast<void*>(&argHolder);
 			}
 		}
 
