@@ -40,8 +40,8 @@ jobs:
       # this time.
       - name: Restore artifacts, and setup vcpkg
         uses: lukka/run-vcpkg@v10
-        # with:
-        #   runVcpkgInstall: true
+        with:
+          runVcpkgInstall: true
 
       # Add  MSBuild to the PATH: https://github.com/microsoft/setup-msbuild
       - name: Setup MSBuild.exe
