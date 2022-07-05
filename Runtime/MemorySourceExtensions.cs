@@ -122,10 +122,10 @@ namespace Il2CppToolkit.Runtime
                 {
                     return default;
                 }
-                if (type == typeof(string))
-                {
-                    return ReadString(source, address);
-                }
+                if (TypeSystem.TryGetTypeFactory(type, out ITypeFactory factory))
+				{
+                    return factory.ReadValue(source, address);
+				}
                 if (type.IsEnum)
                 {
                     return ReadPrimitive(source, type.GetEnumUnderlyingType(), address);
@@ -166,6 +166,11 @@ namespace Il2CppToolkit.Runtime
                 {
                     return default;
                 }
+                if (TypeSystem.TryGetTypeFactory(type, out ITypeFactory factory))
+                {
+                    factory.WriteValue(source, address, value);
+                    return value;
+                }
                 // TODO: requires allocation >:O
                 // if (type == typeof(string))
                 // {
@@ -173,11 +178,13 @@ namespace Il2CppToolkit.Runtime
                 // }
                 if (type.IsEnum)
                 {
-                    return WritePrimitive(source, type.GetEnumUnderlyingType(), address, value);
+                    WritePrimitive(source, type.GetEnumUnderlyingType(), address, value);
+                    return value;
                 }
                 if (type.IsPrimitive)
                 {
-                    return WritePrimitive(source, type, address, value);
+                    WritePrimitive(source, type, address, value);
+                    return value;
                 }
                 throw new InvalidOperationException($"Type '{type.FullName}' does not support writing");
             }
@@ -226,6 +233,11 @@ namespace Il2CppToolkit.Runtime
                 }
             }
             if (type.IsAssignableTo(typeof(StructBase)))
+            {
+                object classObject = Activator.CreateInstance(type, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance, null, new object[] { (IMemorySource)source, address }, null);
+                return classObject;
+            }
+            if (type.IsAssignableTo(typeof(IRuntimeObject)))
             {
                 object classObject = Activator.CreateInstance(type, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance, null, new object[] { (IMemorySource)source, address }, null);
                 return classObject;
@@ -330,22 +342,18 @@ namespace Il2CppToolkit.Runtime
             throw new ArgumentException($"Type '{typeof(T).FullName}' is not a valid primitive type");
         }
 
-        private static object WritePrimitive(this IMemorySource context, Type type, ulong address, object value)
+        private static void WritePrimitive(this IMemorySource context, Type type, ulong address, object value)
         {
-            if (s_implMap.TryGetValue(type, out var impl))
-            {
-                impl.WriteFn(context, address, value);
-            }
-            throw new ArgumentException($"Type '{type.FullName}' is not a valid primitive type");
+            if (!s_implMap.TryGetValue(type, out var impl))
+                throw new ArgumentException($"Type '{type.FullName}' is not a valid primitive type");
+            impl.WriteFn(context, address, value);
         }
 
         private static void WritePrimitive<T>(this IMemorySource context, ulong address, T value)
         {
-            if (s_implMap.TryGetValue(typeof(T), out var impl))
-            {
-                impl.WriteFn(context, address, value);
-            }
-            throw new ArgumentException($"Type '{typeof(T).FullName}' is not a valid primitive type");
+            if (!s_implMap.TryGetValue(typeof(T), out var impl))
+                throw new ArgumentException($"Type '{typeof(T).FullName}' is not a valid primitive type");
+            impl.WriteFn(context, address, value);
         }
 
         private static object GetDefaultValue(Type type)
@@ -355,12 +363,5 @@ namespace Il2CppToolkit.Runtime
 
             return null;
         }
-
-        private static object ReadString(IMemorySource source, ulong address)
-        {
-            Native__String? str = source.ReadValue<Native__String>(address);
-            return str?.Value;
-        }
-
     }
 }

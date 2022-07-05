@@ -1,0 +1,163 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0"
+  xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="inc">
+      <UniqueIdentifier>{ba35d856-b3a7-4d68-b7fd-1297e8caa03b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="service">
+      <UniqueIdentifier>{dabd805d-4d26-4e77-9f73-056c2857a15d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="win">
+      <UniqueIdentifier>{fb3553bd-3370-460f-b499-b8ab793176a3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="il2cpp">
+      <UniqueIdentifier>{413aa560-8aba-4d0b-b267-36c3eb6158e9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="inc\il2cpp">
+      <UniqueIdentifier>{382502f3-401a-4b86-b658-41ba4bb5d5c5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="inc\il2cpp\utils">
+      <UniqueIdentifier>{b8539c55-22cc-4422-9b4d-3d60fe105d53}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\inc\pch.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="src\inc\PublicApi.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="src\inc\safe_queue.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="src\inc\SmartHandle.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="src\inc\ExecutionQueue.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="src\inc\framework.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="src\win\InjectionHook.h">
+      <Filter>win</Filter>
+    </ClInclude>
+    <ClInclude Include="src\win\Snapshot.h">
+      <Filter>win</Filter>
+    </ClInclude>
+    <ClInclude Include="src\win\WindowHelpers.h">
+      <Filter>win</Filter>
+    </ClInclude>
+    <ClInclude Include="src\InjectionHost.h" />
+    <ClInclude Include="src\MessageHandler.h" />
+    <ClInclude Include="src\il2cpp\Il2CppClassHolder.h">
+      <Filter>il2cpp</Filter>
+    </ClInclude>
+    <ClInclude Include="src\service\Il2CppService.h">
+      <Filter>service</Filter>
+    </ClInclude>
+    <ClInclude Include="src\inc\import-helpers.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="src\inc\il2cpp\il2cpp-api.h">
+      <Filter>inc\il2cpp</Filter>
+    </ClInclude>
+    <ClInclude Include="src\inc\il2cpp\il2cpp-api-functions.h">
+      <Filter>inc\il2cpp</Filter>
+    </ClInclude>
+    <ClInclude Include="src\inc\il2cpp\il2cpp-api-types.h">
+      <Filter>inc\il2cpp</Filter>
+    </ClInclude>
+    <ClInclude Include="src\inc\il2cpp\il2cpp-blob.h">
+      <Filter>inc\il2cpp</Filter>
+    </ClInclude>
+    <ClInclude Include="src\inc\il2cpp\il2cpp-class-internals.h">
+      <Filter>inc\il2cpp</Filter>
+    </ClInclude>
+    <ClInclude Include="src\inc\il2cpp\il2cpp-config.h">
+      <Filter>inc\il2cpp</Filter>
+    </ClInclude>
+    <ClInclude Include="src\inc\il2cpp\il2cpp-config-api.h">
+      <Filter>inc\il2cpp</Filter>
+    </ClInclude>
+    <ClInclude Include="src\inc\il2cpp\il2cpp-metadata.h">
+      <Filter>inc\il2cpp</Filter>
+    </ClInclude>
+    <ClInclude Include="src\inc\il2cpp\il2cpp-object-internals.h">
+      <Filter>inc\il2cpp</Filter>
+    </ClInclude>
+    <ClInclude Include="src\inc\il2cpp\il2cpp-runtime-metadata.h">
+      <Filter>inc\il2cpp</Filter>
+    </ClInclude>
+    <ClInclude Include="src\inc\il2cpp\il2cpp-string-types.h">
+      <Filter>inc\il2cpp</Filter>
+    </ClInclude>
+    <ClInclude Include="src\inc\il2cpp\il2cpp-tabledefs.h">
+      <Filter>inc\il2cpp</Filter>
+    </ClInclude>
+    <ClInclude Include="src\inc\il2cpp\il2cpp-tokentype.h">
+      <Filter>inc\il2cpp</Filter>
+    </ClInclude>
+    <ClInclude Include="src\inc\il2cpp\il2cpp-windowsruntime-types.h">
+      <Filter>inc\il2cpp</Filter>
+    </ClInclude>
+    <ClInclude Include="src\inc\il2cpp\il2cpp-config-api-platforms.h">
+      <Filter>inc\il2cpp</Filter>
+    </ClInclude>
+    <ClInclude Include="src\inc\il2cpp\il2cpp-config-platforms.h">
+      <Filter>inc\il2cpp</Filter>
+    </ClInclude>
+    <ClInclude Include="src\inc\il2cpp\il2cpp-pinvoke-support.h">
+      <Filter>inc\il2cpp</Filter>
+    </ClInclude>
+    <ClInclude Include="src\inc\il2cpp\utils\StringView.h">
+      <Filter>inc\il2cpp\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="src\il2cpp\Il2CppClassInfo.h">
+      <Filter>il2cpp</Filter>
+    </ClInclude>
+    <ClInclude Include="src\il2cpp\SystemString.h">
+      <Filter>il2cpp</Filter>
+    </ClInclude>
+    <ClInclude Include="src\il2cpp\Il2CppContext.h">
+      <Filter>il2cpp</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\win\InjectionHook.cpp">
+      <Filter>win</Filter>
+    </ClCompile>
+    <ClCompile Include="src\win\Snapshot.cpp">
+      <Filter>win</Filter>
+    </ClCompile>
+    <ClCompile Include="src\win\WindowHelpers.cpp">
+      <Filter>win</Filter>
+    </ClCompile>
+    <ClCompile Include="src\pch.cpp" />
+    <ClCompile Include="src\win\dllmain.cpp">
+      <Filter>win</Filter>
+    </ClCompile>
+    <ClCompile Include="src\PublicApi.cpp" />
+    <ClCompile Include="src\InjectionHost.cpp" />
+    <ClCompile Include="src\MessageHandler.cpp" />
+    <ClCompile Include="src\il2cpp\Il2CppClassHolder.cpp">
+      <Filter>il2cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="src\service\Il2CppService.cpp">
+      <Filter>service</Filter>
+    </ClCompile>
+    <ClCompile Include="src\il2cpp\Il2CppClassInfo.cpp">
+      <Filter>il2cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="src\il2cpp\SystemString.cpp">
+      <Filter>il2cpp</Filter>
+    </ClCompile>
+    <ClCompile Include="src\il2cpp\Il2CppContext.cpp">
+      <Filter>il2cpp</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="vcpkg.json" />
+  </ItemGroup>
+</Project>

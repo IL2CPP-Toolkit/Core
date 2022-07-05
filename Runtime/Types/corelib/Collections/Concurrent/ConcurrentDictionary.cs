@@ -6,113 +6,96 @@ using Il2CppToolkit.Runtime.Types.corelib.Collections.Generic;
 
 namespace Il2CppToolkit.Runtime.Types.corelib.Collections.Concurrent
 {
-    [TypeMapping(typeof(ConcurrentDictionary<,>))]
-    public class Native__ConcurrentDictionary<TKey, TValue> : StructBase, IReadOnlyDictionary<TKey, TValue>, INullConstructable
-    {
-        public Native__ConcurrentDictionary(IMemorySource source, ulong address)
-            : base(source, address)
-        {
-        }
+	[TypeMapping(typeof(ConcurrentDictionary<,>))]
+	public class Native__ConcurrentDictionary<TKey, TValue> : RuntimeObject, IReadOnlyDictionary<TKey, TValue>, INullConstructable
+	{
+		public Native__ConcurrentDictionary(IMemorySource source, ulong address)
+			: base(source, address)
+		{
+		}
 
-        [Size(0x18)]
-        public class Node : StructBase
-        {
-            public Node(IMemorySource source, ulong address) : base(source, address)
-            {
-                Load();
-            }
+		public class Node : RuntimeObject
+		{
+			public Node(IMemorySource source, ulong address) : base(source, address) { }
+			public TKey Key => Source.ReadValue<TKey>(Address + 0x10ul, 1);
+			public TValue Value => Source.ReadValue<TValue>(Address + 0x18ul, 1);
+			public Node Next => Source.ReadValue<Node>(Address + 0x20ul, 1);
+		}
 
-            [Offset(0x10)]
-            public TKey Key;
-            [Offset(0x18)]
-            public TValue Value;
-            [Offset(0x20)]
-            public Node Next;
-        }
+		public class Table : RuntimeObject
+		{
+			public Table(IMemorySource source, ulong address) : base(source, address) { }
+			public Native__Array<Node> Buckets => Source.ReadValue<Native__Array<Node>>(Address + 0x10ul, 1);
+		}
 
-        public class Table : StructBase
-        {
-            public Table(IMemorySource source, ulong address) : base(source, address)
-            {
-                Load();
-            }
+		private Table m_table => Source.ReadValue<Table>(Address + 0x10ul, 1);
 
-            [Offset(0x10)]
-            public Native__Array<Node> Buckets;
-        }
+		[Ignore]
+		private readonly Dictionary<TKey, TValue> m_dict = new();
 
-        [Offset(0x10)]
-#pragma warning disable 649
-        private Table m_table;
-#pragma warning restore 649
+		private void Load()
+		{
+			if (Address == 0)
+				return;
 
-        [Ignore]
-        private readonly Dictionary<TKey, TValue> m_dict = new();
+			foreach (Node head in m_table.Buckets)
+			{
+				Node node = head;
+				while (node != null)
+				{
+					m_dict.Add(node.Key, node.Value);
+					node = node.Next;
+				}
+			}
+		}
 
-        protected internal override void Load()
-        {
-            if (Address == 0)
-                return;
+		private Dictionary<TKey, TValue> Dict
+		{
+			get
+			{
+				Load();
+				return m_dict;
+			}
+		}
 
-            base.Load();
-            foreach (Node head in m_table.Buckets)
-            {
-                Node node = head;
-                while (node != null)
-                {
-                    m_dict.Add(node.Key, node.Value);
-                    node = node.Next;
-                }
-            }
-        }
+		public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
+		{
+			return Dict.GetEnumerator();
+		}
 
-        private Dictionary<TKey, TValue> Dict
-        {
-            get
-            {
-                Load();
-                return m_dict;
-            }
-        }
+		IEnumerator IEnumerable.GetEnumerator()
+		{
+			return Dict.GetEnumerator();
+		}
 
-        public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
-        {
-            return Dict.GetEnumerator();
-        }
+		public int Count
+		{
+			get { return Dict.Count; }
+		}
 
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return Dict.GetEnumerator();
-        }
+		public bool ContainsKey(TKey key)
+		{
+			return Dict.ContainsKey(key);
+		}
 
-        public int Count
-        {
-            get { return Dict.Count; }
-        }
+		public bool TryGetValue(TKey key, out TValue value)
+		{
+			return Dict.TryGetValue(key, out value);
+		}
 
-        public bool ContainsKey(TKey key)
-        {
-            return Dict.ContainsKey(key);
-        }
+		public TValue this[TKey key]
+		{
+			get { return Dict[key]; }
+		}
 
-        public bool TryGetValue(TKey key, out TValue value)
-        {
-            return Dict.TryGetValue(key, out value);
-        }
+		public IEnumerable<TKey> Keys
+		{
+			get { return Dict.Keys; }
+		}
 
-        public TValue this[TKey key]
-        {
-            get { return Dict[key]; }
-        }
-
-        public IEnumerable<TKey> Keys
-        {
-            get { return Dict.Keys; }
-        }
-
-        public IEnumerable<TValue> Values
-        {
-            get { return Dict.Values; }
-        }
-    }
+		public IEnumerable<TValue> Values
+		{
+			get { return Dict.Values; }
+		}
+	}
 }

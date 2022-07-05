@@ -4,63 +4,67 @@ using System.Collections.Generic;
 
 namespace Il2CppToolkit.Runtime.Types.corelib.Collections.Generic
 {
-    [TypeMapping(typeof(HashSet<>))]
-    public class Native__HashSet<T> : StructBase, IReadOnlyCollection<T>, INullConstructable
-    {
-        public Native__HashSet(IMemorySource source, ulong address)
-            : base(source, address)
-        {
-        }
+	[TypeMapping(typeof(HashSet<>))]
+	public class Native__HashSet<T> : RuntimeObject, IReadOnlyCollection<T>, INullConstructable
+	{
+		public Native__HashSet(IMemorySource source, ulong address)
+			: base(source, address)
+		{
+		}
 
-        [Size(0x10)]
-        public struct Entry
-        {
-            [Offset(0x00)]
-            public UInt32 HashCode;
-            [Offset(0x04)]
-            public UInt32 Next;
-            [Offset(0x08)]
-            public T Value;
-        }
+		public struct Entry : IRuntimeObject
+		{
+			public IMemorySource Source { get; }
+			public ulong Address { get; }
 
-        private readonly HashSet<T> m_set = new();
+			public Entry(IMemorySource source, ulong address)
+			{
+				Source = source;
+				Address = address;
+			}
 
-        private void ReadFields(IMemorySource source, ulong address)
-        {
-            if (Address == 0)
-                return;
+			public UInt32 HashCode => Source.ReadValue<UInt32>(Address, 1);
+			public UInt32 Next => Source.ReadValue<UInt32>(Address + 0x04, 1);
+			public T Value => Source.ReadValue<T>(Address + 0x08, 1);
+		}
 
-            uint count = source.ReadValue<uint>(address + 0x20);
-            Native__Array<Entry> entries = new(source, source.ReadPointer(address + 0x18), count);
-            entries.Load();
-            foreach (Entry entry in entries)
-            {
-                m_set.Add(entry.Value);
-            }
-        }
+		private readonly HashSet<T> m_set = new();
 
-        public HashSet<T> UnderlyingHashSet
-        {
-            get
-            {
-                Load();
-                return m_set;
-            }
-        }
+		private void Load()
+		{
+			if (Address == 0)
+				return;
 
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return UnderlyingHashSet.GetEnumerator();
-        }
+			uint count = Source.ReadValue<uint>(Address + 0x20);
+			Native__Array<Entry> entries = new(Source, Source.ReadPointer(Address + 0x18), count);
+			foreach (Entry entry in entries)
+			{
+				m_set.Add(entry.Value);
+			}
+		}
 
-        public IEnumerator<T> GetEnumerator()
-        {
-            return UnderlyingHashSet.GetEnumerator();
-        }
+		public HashSet<T> UnderlyingHashSet
+		{
+			get
+			{
+				Load();
+				return m_set;
+			}
+		}
 
-        public int Count
-        {
-            get { return UnderlyingHashSet.Count; }
-        }
-    }
+		IEnumerator IEnumerable.GetEnumerator()
+		{
+			return UnderlyingHashSet.GetEnumerator();
+		}
+
+		public IEnumerator<T> GetEnumerator()
+		{
+			return UnderlyingHashSet.GetEnumerator();
+		}
+
+		public int Count
+		{
+			get { return UnderlyingHashSet.Count; }
+		}
+	}
 }

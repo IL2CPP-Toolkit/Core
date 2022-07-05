@@ -2,41 +2,20 @@
 
 namespace Il2CppToolkit.Runtime.Types.corelib
 {
-    [TypeMapping(typeof(Nullable<>))]
-    public struct Native__Nullable<T>
+    [TypeFactory(typeof(Nullable<>))]
+    public class NullableFactory<T> : ITypeFactory where T : struct
     {
-        public T Value { get; private set; }
-        public bool HasValue { get; private set; }
-
-        private void ReadFields(IMemorySource source, ulong address)
+        public object ReadValue(IMemorySource source, ulong address)
         {
-            ReadOnlyMemory<byte> hasValue = source.ReadMemory(address + Il2CsRuntimeContext.GetTypeSize(typeof(T)), 1);
-            HasValue = hasValue.ToBoolean();
-            if (!HasValue)
-            {
-                return;
-            }
-
-            Value = source.ReadValue<T>(address);
+            UnknownObject obj = new(source, address);
+            bool hasValue = Il2CppTypeInfoLookup<Nullable<T>>.GetValue<bool>(obj, "has_value");
+            T value = hasValue ? Il2CppTypeInfoLookup<Nullable<T>>.GetValue<T>(obj, "value") : default;
+            return hasValue ? new Nullable<T>() : new Nullable<T>(value);
         }
 
-#nullable enable
-        public T? ToNullable()
+        public void WriteValue(IMemorySource source, ulong address, object value)
         {
-            if (HasValue)
-            {
-                return Value;
-            }
-            return default(T?);
-        }
-#nullable restore
-        public override string ToString()
-        {
-            if (HasValue)
-            {
-                return Value.ToString();
-            }
-            return null;
+            throw new NotImplementedException();
         }
     }
 }

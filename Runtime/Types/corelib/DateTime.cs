@@ -1,29 +1,20 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Il2CppToolkit.Runtime.Types.corelib
 {
-	[TypeMapping(typeof(DateTime))]
-	public struct Native__DateTime
+	[TypeFactory(typeof(DateTime))]
+	public class DateTimeFactory : ITypeFactory
 	{
-		private static ulong NativeSize => sizeof(long);
-
-		[Offset(0)]
-#pragma warning disable 649
-		private long m_value;
-#pragma warning restore 649
-
-		public long BinaryValue => m_value;
-
-		public DateTime Value
+		public object ReadValue(IMemorySource source, ulong address)
 		{
-			get
-			{
-				return DateTime.FromBinary(m_value).ToLocalTime();
-			}
+			UnknownObject obj = new(source, address);
+			long dateData = Il2CppTypeInfoLookup<DateTime>.GetValue<long>(obj, "dateData");
+			return DateTime.FromBinary(dateData).ToLocalTime();
+		}
+
+		public void WriteValue(IMemorySource source, ulong address, object value)
+		{
+			throw new NotImplementedException();
 		}
 	}
 }

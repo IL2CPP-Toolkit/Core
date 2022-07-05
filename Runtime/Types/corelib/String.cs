@@ -1,27 +1,39 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using Il2CppToolkit.Common.Errors;
 
 namespace Il2CppToolkit.Runtime.Types.corelib
 {
-    public struct Native__String
+    [TypeFactory(typeof(string))]
+    public class StringFactory : ITypeFactory
     {
-        public string Value;
-        private void ReadFields(IMemorySource source, ulong address)
+        public object ReadValue(IMemorySource source, ulong address)
         {
-            int strlen = source.ReadValue<int>(address + 16);
-            if (strlen <= 0)
+            UnknownObject obj = new(source, address);
+            int len = Il2CppTypeInfoLookup<string>.GetValue<int>(obj, "m_stringLength");
+
+            if (len <= 0)
             {
-                Value = string.Empty;
-                ErrorHandler.Assert(strlen == 0, "Invalid string length");
-                return;
+                ErrorHandler.Assert(len == 0, "Invalid string length");
+                return string.Empty;
             }
 
-            ReadOnlyMemory<byte> stringData = source.ReadMemory(address + 20, (ulong)strlen * 2);
-            Value = Encoding.Unicode.GetString(stringData.Span);
+            var typeInfo = Il2CppTypeInfoLookup<string>.GetTypeInfo(source.ParentContext.InjectionClient);
+            ReadOnlyMemory<byte> stringData = source.ReadMemory(
+                address + typeInfo.Fields.First(fld => fld.Name == "m_firstChar").Offset,
+                (ulong)len * 2);
+
+#if NET472
+            return Encoding.Unicode.GetString(stringData.Span.ToArray());
+#else
+            return Encoding.Unicode.GetString(stringData.Span);
+#endif
         }
-    }
+
+		public void WriteValue(IMemorySource source, ulong address, object value)
+		{
+			throw new NotSupportedException("Cannot write directly to string buffer");
+		}
+	}
 }

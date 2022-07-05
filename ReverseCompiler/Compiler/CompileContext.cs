@@ -8,58 +8,60 @@ using Il2CppToolkit.Model;
 
 namespace Il2CppToolkit.ReverseCompiler
 {
-    public class CompileContext
-    {
-        private HashSet<CompilePhase> m_phases = new();
-        private ArtifactContainer m_artifacts = new();
+	public class CompileContext : ICompileContext
+	{
+		private readonly HashSet<CompilePhase> m_phases = new();
+		private readonly ArtifactContainer m_artifacts = new();
 
-        public TypeModel Model { get; }
-        public ArtifactContainer Artifacts => m_artifacts;
+		public ITypeModelMetadata Model { get; }
+		public ArtifactContainer Artifacts => m_artifacts;
+		public ICompilerLogger Logger { get; }
 
-        public CompileContext(TypeModel model)
-        {
-            Model = model;
-        }
+		public CompileContext(ITypeModelMetadata model, ICompilerLogger logger)
+		{
+			Model = model;
+			Logger = logger;
+		}
 
-        public void AddPhase<T>(T compilePhase) where T : CompilePhase
-        {
-            m_phases.Add(compilePhase);
-        }
+		public void AddPhase<T>(T compilePhase) where T : CompilePhase
+		{
+			m_phases.Add(compilePhase);
+		}
 
-        public Task WaitForPhase<T>() where T : CompilePhase
-        {
-            BuildArtifactSpecification<object> GetPhaseSpec()
-            {
-                return m_phases.Single(phase => phase.GetType() == typeof(T)).PhaseSpec;
-            }
-            return Artifacts.GetAsync(GetPhaseSpec());
-        }
+		public Task WaitForPhase<T>() where T : CompilePhase
+		{
+			BuildArtifactSpecification<object> GetPhaseSpec()
+			{
+				return m_phases.Single(phase => phase.GetType() == typeof(T)).PhaseSpec;
+			}
+			return Artifacts.GetAsync(GetPhaseSpec());
+		}
 
-        public IEnumerable<CompilePhase> GetPhases()
-        {
-            foreach (CompilePhase phase in m_phases)
-            {
-                yield return phase;
-            }
-        }
+		public IEnumerable<CompilePhase> GetPhases()
+		{
+			foreach (CompilePhase phase in m_phases)
+			{
+				yield return phase;
+			}
+		}
 
-        public async Task Execute()
-        {
-            await Task.WhenAll(m_phases.Select(async phase =>
-            {
-                Trace.WriteLine($"[{phase.Name}]:Initialize");
-                await phase.Initialize(this);
+		public async Task Execute()
+		{
+			await Task.WhenAll(m_phases.Select(async phase =>
+			{
+				Trace.WriteLine($"[{phase.Name}]:Initialize");
+				await phase.Initialize(this);
 
-                Trace.WriteLine($"[{phase.Name}]:Execute");
-                await phase.Execute();
+				Trace.WriteLine($"[{phase.Name}]:Execute");
+				await phase.Execute();
 
-                Trace.WriteLine($"[{phase.Name}]:Finalize");
-                await phase.Finalize();
+				Trace.WriteLine($"[{phase.Name}]:Finalize");
+				await phase.Finalize();
 
-                Artifacts.Set(phase.PhaseSpec, new object());
+				Artifacts.Set(phase.PhaseSpec, new object());
 
-                Trace.WriteLine($"[{phase.Name}]:Completed");
-            }).ToArray());
-        }
-    }
+				Trace.WriteLine($"[{phase.Name}]:Completed");
+			}).ToArray());
+		}
+	}
 }

@@ -1,0 +1,90 @@
+# clang format configuration for Comments.
+#
+# clang-format version : 7.0.1
+# clang-format style reference : http://releases.llvm.org/7.0.0/tools/clang/docs/ClangFormatStyleOptions.html
+#
+BasedOnStyle: LLVM
+IndentWidth: 4
+ColumnLimit: 140
+PenaltyReturnTypeOnItsOwnLine: 400
+
+# comments
+ReflowComments: true
+
+# single-line
+AllowShortBlocksOnASingleLine: false
+AllowShortIfStatementsOnASingleLine: false
+AllowShortLoopsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: Inline
+
+# switch blocks
+AllowShortCaseLabelsOnASingleLine: false
+IndentCaseLabels: true
+
+# parameters
+BinPackParameters: false
+BinPackArguments: false
+AllowAllParametersOfDeclarationOnNextLine: false
+
+# namespaces
+NamespaceIndentation: None
+CompactNamespaces: true
+FixNamespaceComments: true
+
+# indentation
+TabWidth: 4
+ConstructorInitializerIndentWidth: 4
+ContinuationIndentWidth: 4
+UseTab: ForContinuationAndIndentation
+AccessModifierOffset: -4
+IndentWrappedFunctionNames: false
+
+# alignments
+AlignAfterOpenBracket: AlwaysBreak
+AlignConsecutiveAssignments: false
+PointerAlignment: Left
+AlignOperands: true
+
+# breaking & braces
+Cpp11BracedListStyle: true
+BreakBeforeBinaryOperators: All
+BreakBeforeInheritanceComma: true
+BreakBeforeTernaryOperators: true
+AlwaysBreakAfterReturnType: None
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterClass: true
+  AfterControlStatement: true
+  AfterEnum: true
+  AfterFunction: true
+  AfterNamespace: false
+  AfterStruct: true
+  AfterUnion: true
+  AfterExternBlock: true
+  BeforeCatch: true
+  BeforeElse: true
+  IndentBraces: false
+  SplitEmptyRecord: true
+  SplitEmptyFunction: false
+  SplitEmptyNamespace: false
+MaxEmptyLinesToKeep: 2
+
+# ctor initializers
+ConstructorInitializerAllOnOneLineOrOnePerLine: true
+BreakConstructorInitializers: BeforeComma
+
+# templates
+SpaceAfterTemplateKeyword: false
+AlwaysBreakTemplateDeclarations: true
+
+SpaceBeforeAssignmentOperators: true
+SpacesInAngles: false
+SpacesInSquareBrackets: false
+SpacesInContainerLiterals: false
+SpaceBeforeParens: ControlStatements
+SortIncludes: false
+
+ForEachMacros: ["TESTCLASSEX", "TEST_METHOD"]
+---
+Language: Java
+AccessModifierOffset: 0

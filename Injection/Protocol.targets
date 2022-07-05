@@ -1,0 +1,20 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" InitialTargets="protoc">
+	<PropertyGroup>
+		<MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+		<GrpcToolsDir>$(ProjectDir)$(VCPkgInstalledDir)\x64-windows\tools\grpc</GrpcToolsDir>
+		<ProtobuffToolsDir>$(ProjectDir)$(VCPkgInstalledDir)\x64-windows\tools\protobuf</ProtobuffToolsDir>
+		<ProtocTool>$(ProtobuffToolsDir)\protoc.exe</ProtocTool>
+	</PropertyGroup>
+	<Target Name="protoc">
+		<PropertyGroup>
+			<BuildGenerateSourcesDependsOn>
+				$(BuildGenerateSourcesDependsOn);
+				prococpp
+			</BuildGenerateSourcesDependsOn>
+		</PropertyGroup>
+	</Target>
+	<Target Name="protocpp" BeforeTargets="BuildGenerateSources" Condition=" Exists('$(ProtocTool)') ">
+		<Exec Command="$(ProtocTool) -I=$(MSBuildThisFileDirectory) --cpp_out=$(ProjectDir)src\gen il2cpp.proto" />
+		<Exec Command="$(ProtocTool) -I=$(MSBuildThisFileDirectory) --grpc_out=$(ProjectDir)src\gen --plugin=protoc-gen-grpc=$(GrpcToolsDir)\grpc_cpp_plugin.exe il2cpp.proto" />
+	</Target>
+</Project>

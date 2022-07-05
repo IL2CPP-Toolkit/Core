@@ -17,6 +17,7 @@
     <AssemblyName>Il2CppToolkit.ReverseCompiler</AssemblyName>
     <RootNamespace>Il2CppToolkit.ReverseCompiler</RootNamespace>
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
+    <Platforms>x64</Platforms>
   </PropertyGroup>
 
 </Project>

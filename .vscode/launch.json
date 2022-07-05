@@ -1,17 +1,42 @@
 {
     "version": "0.2.0",
+    "compounds": [
+        {
+            "name": "Test + Raid.exe",
+            "configurations": [
+                "Launch:Test",
+                "Attach to Raid.exe"
+            ]
+        }
+    ],
     "configurations": [
+        {
+            "name": "Attach to Raid.exe",
+            "type": "cppvsdbg",
+            "request": "attach",
+            "processId": "${input:MatchRaidExe}",
+            "symbolOptions": {
+                "searchPaths": [
+                    "D:\\git\\github\\IL2Cpp-Toolkit\\Core\\Test\\x64\\Debug",
+                    "http://symbolserver.unity3d.com"
+                ],
+                "searchMicrosoftSymbolServer": true,
+                "cachePath": "%TEMP%\\SymbolCache"
+            }
+        },
         {
             // Use IntelliSense to find out which attributes exist for C# debugging
             // Use hover for the description of the existing attributes
             // For further information visit https://github.com/OmniSharp/omnisharp-vscode/blob/master/debugger-launchjson.md
-            "name": ".NET Core Launch (console)",
+            "name": "Run Cli w/ test.config",
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
             // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/ReverseCompiler.Cli/bin/Debug/net5.0/Il2CppToolkit.ReverseCompiler.Cli.dll",
+            "program": "${workspaceFolder}/ReverseCompiler.Cli/bin/x64/Debug/net5.0/Il2CppToolkit.ReverseCompiler.Cli.dll",
             "args": [],
+            "justMyCode": false,
+            "suppressJITOptimizations": true,
             "cwd": "${workspaceFolder}/ReverseCompiler.Cli",
             // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
             "console": "internalConsole",
@@ -26,8 +51,10 @@
             "request": "launch",
             "preLaunchTask": "build:test",
             // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/Test/bin/Debug/net5.0/Il2CppToolkit.Test.dll",
+            "program": "${workspaceFolder}/Test/bin/x64/Debug/net5.0/Il2CppToolkit.Test.dll",
             "args": [],
+            "justMyCode": false,
+            "suppressJITOptimizations": true,
             "cwd": "${workspaceFolder}/Test",
             // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
             "console": "internalConsole",
@@ -37,6 +64,17 @@
             "name": ".NET Core Attach",
             "type": "coreclr",
             "request": "attach"
+        }
+    ],
+    "inputs": [
+        {
+            "id": "MatchRaidExe",
+            "type": "command",
+            "command": "pick-process-ex.match",
+            "args": {
+                "program": "Raid.exe",
+                "select": "auto"
+            }
         }
     ]
 }

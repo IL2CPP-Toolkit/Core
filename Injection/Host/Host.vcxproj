@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build"
+  xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\il2cpp\Il2CppClassHolder.h" />
+    <ClInclude Include="src\il2cpp\Il2CppClassInfo.h" />
+    <ClInclude Include="src\il2cpp\Il2CppContext.h" />
+    <ClInclude Include="src\il2cpp\SystemString.h" />
+    <ClInclude Include="src\inc\ExecutionQueue.h" />
+    <ClInclude Include="src\inc\framework.h" />
+    <ClInclude Include="src\inc\il2cpp\il2cpp-api-functions.h" />
+    <ClInclude Include="src\inc\il2cpp\il2cpp-api-types.h" />
+    <ClInclude Include="src\inc\il2cpp\il2cpp-api.h" />
+    <ClInclude Include="src\inc\il2cpp\il2cpp-blob.h" />
+    <ClInclude Include="src\inc\il2cpp\il2cpp-class-internals.h" />
+    <ClInclude Include="src\inc\il2cpp\il2cpp-config-api-platforms.h" />
+    <ClInclude Include="src\inc\il2cpp\il2cpp-config-api.h" />
+    <ClInclude Include="src\inc\il2cpp\il2cpp-config-platforms.h" />
+    <ClInclude Include="src\inc\il2cpp\il2cpp-config.h" />
+    <ClInclude Include="src\inc\il2cpp\il2cpp-metadata.h" />
+    <ClInclude Include="src\inc\il2cpp\il2cpp-object-internals.h" />
+    <ClInclude Include="src\inc\il2cpp\il2cpp-pinvoke-support.h" />
+    <ClInclude Include="src\inc\il2cpp\il2cpp-runtime-metadata.h" />
+    <ClInclude Include="src\inc\il2cpp\il2cpp-string-types.h" />
+    <ClInclude Include="src\inc\il2cpp\il2cpp-tabledefs.h" />
+    <ClInclude Include="src\inc\il2cpp\il2cpp-tokentype.h" />
+    <ClInclude Include="src\inc\il2cpp\il2cpp-windowsruntime-types.h" />
+    <ClInclude Include="src\inc\il2cpp\utils\StringView.h" />
+    <ClInclude Include="src\inc\import-helpers.h" />
+    <ClInclude Include="src\inc\pch.h" />
+    <ClInclude Include="src\inc\PublicApi.h" />
+    <ClInclude Include="src\inc\safe_queue.h" />
+    <ClInclude Include="src\inc\SmartHandle.h" />
+    <ClInclude Include="src\InjectionHost.h" />
+    <ClInclude Include="src\MessageHandler.h" />
+    <ClInclude Include="src\service\Il2CppService.h" />
+    <ClInclude Include="src\win\InjectionHook.h" />
+    <ClInclude Include="src\win\Snapshot.h" />
+    <ClInclude Include="src\win\WindowHelpers.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\il2cpp\Il2CppClassHolder.cpp" />
+    <ClCompile Include="src\il2cpp\Il2CppClassInfo.cpp" />
+    <ClCompile Include="src\il2cpp\Il2CppContext.cpp" />
+    <ClCompile Include="src\il2cpp\SystemString.cpp" />
+    <ClCompile Include="src\InjectionHost.cpp" />
+    <ClCompile Include="src\MessageHandler.cpp" />
+    <ClCompile Include="src\pch.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="src\PublicApi.cpp" />
+    <ClCompile Include="src\service\Il2CppService.cpp" />
+    <ClCompile Include="src\win\dllmain.cpp" />
+    <ClCompile Include="src\win\InjectionHook.cpp" />
+    <ClCompile Include="src\win\Snapshot.cpp" />
+    <ClCompile Include="src\win\WindowHelpers.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="vcpkg.json" />
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>16.0</VCProjectVersion>
+    <Keyword>Win32Proj</Keyword>
+    <ProjectGuid>{4f4c8f25-82ba-4787-b3b3-8483c1ee5efe}</ProjectGuid>
+    <RootNamespace>Host</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>Injection.Host</ProjectName>
+    <ResolveNuGetPackages>false</ResolveNuGetPackages>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+    <TargetName>Il2CppToolkit.Injection.Host</TargetName>
+    <IncludePath>$(ProjectDir)src\inc;$(ProjectDir)src\gen;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+    <TargetName>Il2CppToolkit.Injection.Host</TargetName>
+    <IncludePath>$(ProjectDir)src\inc;$(ProjectDir)src\gen;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Label="Vcpkg">
+    <VcpkgEnableManifest>true</VcpkgEnableManifest>
+    <VcpkgUseStatic>true</VcpkgUseStatic>
+    <VcpkgEnabled>true</VcpkgEnabled>
+    <VcpkgInstalledDir>vcpkg_installed</VcpkgInstalledDir>
+    <VcpkgTriplet>x64-windows-static</VcpkgTriplet>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING;_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING;_DEBUG;HOST_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableUAC>false</EnableUAC>
+      <AdditionalDependencies>Iphlpapi.lib;CRYPT32.LIB;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <PreBuildEvent>
+      <Command>
+      </Command>
+      <Message>
+      </Message>
+    </PreBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING;_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING;NDEBUG;HOST_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableUAC>false</EnableUAC>
+      <AdditionalDependencies>Iphlpapi.lib;CRYPT32.LIB;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <Import Project="..\Protocol.targets" />
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets" />
+</Project>

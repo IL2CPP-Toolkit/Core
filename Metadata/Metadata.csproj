@@ -11,6 +11,7 @@
     <AssemblyName>Il2CppToolkit.Metadata</AssemblyName>
     <RootNamespace>Il2CppToolkit.Metadata</RootNamespace>
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
+    <Platforms>x64</Platforms>
   </PropertyGroup>
 
 </Project>

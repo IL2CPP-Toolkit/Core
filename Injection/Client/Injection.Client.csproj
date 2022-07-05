@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFrameworks>net472;net5.0</TargetFrameworks>
+		<LangVersion>9.0</LangVersion>
+		<OutputType>Library</OutputType>
+		<Platforms>x64</Platforms>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Google.Protobuf" Version="3.21.1" />
+		<PackageReference Include="Grpc.Net.Client" Version="2.46.0" />
+		<PackageReference Include="Grpc.Tools" Version="2.46.3">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="$(BinDir)\Il2CppToolkit.Injection.Host.dll" Link="Il2CppToolkit.Injection.Host.dll">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+		<None Include="$(BinDir)\Il2CppToolkit.Injection.Host.pdb" Link="Il2CppToolkit.Injection.Host.pdb">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
+
+	<ItemGroup>
+		<Protobuf Include="..\il2cpp.proto" GrpcServices="Client">
+			<Link>il2cpp.proto</Link>
+		</Protobuf>
+	</ItemGroup>
+
+</Project>

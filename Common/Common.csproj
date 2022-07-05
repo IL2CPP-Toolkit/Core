@@ -7,6 +7,11 @@
     <AssemblyName>Il2CppToolkit.Common</AssemblyName>
     <RootNamespace>Il2CppToolkit.Common</RootNamespace>
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
+    <Platforms>x64</Platforms>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Memory" Version="4.5.5" />
+  </ItemGroup>
 
 </Project>

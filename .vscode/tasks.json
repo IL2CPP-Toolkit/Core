@@ -5,13 +5,12 @@
     "tasks": [
         {
             "label": "build",
-            "command": "dotnet",
+            "command": "${env:VSInstallDir}/MSBuild/Current/Bin/amd64/MSBuild.exe",
             "type": "process",
             "args": [
-                "build",
-                "${workspaceFolder}/ReverseCompiler.Cli/ReverseCompiler.Cli.csproj",
-                "/property:GenerateFullPaths=true",
-                "/consoleloggerparameters:NoSummary"
+                "${workspaceFolder}/Core.sln",
+                "-m:8",
+                "-verbosity:m"
             ],
             "problemMatcher": "$msCompile",
             "group": {
@@ -21,16 +20,46 @@
         },
         {
             "label": "build:test",
-            "command": "dotnet",
+            "command": "${env:VSInstallDir}/MSBuild/Current/Bin/amd64/MSBuild.exe",
             "type": "process",
             "args": [
-                "build",
-                "${workspaceFolder}/Test/Test.csproj",
-                "/property:GenerateFullPaths=true",
-                "/consoleloggerparameters:NoSummary"
+                "${workspaceFolder}\\Test.sln",
+                "-m:8",
+                "-verbosity:m"
             ],
             "problemMatcher": "$msCompile",
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            }
         },
+        {
+            "label": "build:cpp",
+            "command": "${env:VSInstallDir}/MSBuild/Current/Bin/amd64/MSBuild.exe",
+            "type": "process",
+            "args": [
+                "${workspaceFolder}/Injection/Host/Host.vcxproj",
+                "-m:8",
+                "-verbosity:d"
+            ],
+            "problemMatcher": "$msCompile",
+            "group": {
+                "kind": "build",
+                "isDefault": false
+            }
+        },
+        // {
+        //     "label": "build:test",
+        //     "command": "dotnet",
+        //     "type": "process",
+        //     "args": [
+        //         "build",
+        //         "${workspaceFolder}\\Test\\Test.csproj",
+        //         "/property:GenerateFullPaths=true",
+        //         "/consoleloggerparameters:NoSummary"
+        //     ],
+        //     "problemMatcher": "$msCompile",
+        // },
         {
             "label": "publish",
             "command": "dotnet",

@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Injection.Client": {
+      "commandName": "Project",
+      "nativeDebugging": true
+    }
+  }
+}

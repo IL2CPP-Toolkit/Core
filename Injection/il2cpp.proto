@@ -1,0 +1,101 @@
+syntax = "proto3";
+package il2cppservice;
+
+option csharp_namespace = "Il2CppToolkit.Injection.Client";
+
+enum NullableState
+{
+	None = 0;
+	HasValue = 1;
+	IsNull = 2;
+}
+
+message ClassId
+{
+	string namespaze = 1;
+	string name = 2;
+}
+
+message Il2CppObject
+{
+	uint32 handle = 1;
+	uint64 address = 2;
+	ClassId klass = 3;
+}
+
+message Value
+{
+	oneof value
+	{
+		double double_ = 1;
+		double float_ = 2;
+		int32 int32_ = 3;
+		uint32 uint32_ = 4;
+		int64 int64_ = 5;
+		uint64 uint64_ = 6;
+		bool bit_ = 7;
+		string str_ = 8;
+		// bytes buffer_ = 9;
+		Il2CppObject obj_ = 14;
+	}
+	NullableState nullState = 15;
+}
+
+message Il2CppField
+{
+	string name = 1;
+	uint32 offset = 2;
+
+	bool static = 15;
+}
+
+message Il2CppTypeInfo
+{
+	ClassId klassId = 1;
+	uint64 address = 2;
+	uint64 staticFieldsAddress = 3;
+	repeated Il2CppField fields = 4;
+}
+
+message GetTypeInfoRequest
+{
+	ClassId klass = 1;
+}
+
+message GetTypeInfoResponse
+{
+	Il2CppTypeInfo typeInfo = 1;
+}
+
+message CallMethodRequest
+{
+	ClassId klass = 1;
+	string methodName = 2;
+	optional Il2CppObject instance = 3;
+	repeated Value arguments = 4;
+}
+
+message CallMethodResponse
+{
+	optional Value returnValue = 1;
+}
+
+message PinObjectMessage
+{
+	Il2CppObject obj = 1;
+}
+
+message FreeObjectRequest
+{
+	uint32 handle = 1;
+}
+
+message FreeObjectResponse {}
+
+service Il2CppService
+{
+	rpc CallMethod(CallMethodRequest) returns (CallMethodResponse);
+	rpc GetTypeInfo(GetTypeInfoRequest) returns (GetTypeInfoResponse);
+	rpc PinObject(PinObjectMessage) returns (PinObjectMessage);
+	rpc FreeObject(FreeObjectRequest) returns (FreeObjectResponse);
+}

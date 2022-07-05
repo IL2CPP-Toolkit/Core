@@ -1,6 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <PackageReference Include="Mono.Cecil" Version="0.11.4" />
     <PackageReference Include="TypeLitePlus.Core" Version="2.1.0" />
   </ItemGroup>
 
@@ -18,6 +19,7 @@
     <OutputType>Library</OutputType>
     <AssemblyName>Il2CppToolkit.Target.TSDef</AssemblyName>
     <RootNamespace>Il2CppToolkit.Target.TSDef</RootNamespace>
+    <Platforms>x64</Platforms>
   </PropertyGroup>
 
 </Project>

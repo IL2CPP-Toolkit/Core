@@ -4,114 +4,95 @@ using System.Collections.Generic;
 
 namespace Il2CppToolkit.Runtime.Types.corelib.Collections.Generic
 {
-    [TypeMapping(typeof(Dictionary<,>))]
-    public class Native__Dictionary<TKey, TValue> : StructBase, IReadOnlyDictionary<TKey, TValue>, INullConstructable
-    {
-        public Native__Dictionary(IMemorySource source, ulong address)
-            : base(source, address)
-        {
-        }
+	[TypeMapping(typeof(Dictionary<,>))]
+	public class Native__Dictionary<TKey, TValue> : RuntimeObject, IReadOnlyDictionary<TKey, TValue>, INullConstructable
+	{
+		public Native__Dictionary(IMemorySource source, ulong address)
+			: base(source, address)
+		{
+		}
 
-        [Size(0x18)]
-        public struct Entry
-        {
-            [Offset(0x00)]
-            public UInt32 HashCode;
-            [Offset(0x04)]
-            public UInt32 Next;
-            [Offset(0x08)]
-            public TKey Key;
-            [Offset(0x10)]
-            public TValue Value;
-        }
-        [Size(0x10)]
-        public struct EntryNarrow
-        {
-            [Offset(0x00)]
-            public UInt32 HashCode;
-            [Offset(0x04)]
-            public UInt32 Next;
-            [Offset(0x08)]
-            public TKey Key;
-            [Offset(0x0C)]
-            public TValue Value;
-        }
-        private readonly Dictionary<TKey, TValue> m_dict = new();
+		public struct Entry : IRuntimeObject
+		{
+			static readonly bool IsNarrow = Il2CsRuntimeContext.GetTypeSize(typeof(TValue)) <= 4 && Il2CsRuntimeContext.GetTypeSize(typeof(TKey)) <= 4;
+			public static ulong ElementSize = IsNarrow ? 0x10ul : 0x18ul;
 
-        private void ReadFields(IMemorySource source, ulong address)
-        {
-            if (Address == 0)
-                return;
+			public IMemorySource Source { get; }
+			public ulong Address { get; }
 
-            uint count = source.ReadValue<uint>(address + 0x20);
-            if (Il2CsRuntimeContext.GetTypeSize(typeof(TValue)) <= 4 && Il2CsRuntimeContext.GetTypeSize(typeof(TKey)) <= 4)
-            {
-                Native__Array<EntryNarrow> entries = new(source, source.ReadPointer(address + 0x18), count);
-                entries.Load();
-                foreach (EntryNarrow entry in entries)
-                {
-                    m_dict.Add(entry.Key, entry.Value);
-                }
-            }
-            else
-            {
-                Native__Array<Entry> entries = new(source, source.ReadPointer(address + 0x18), count);
-                entries.Load();
-                foreach (Entry entry in entries)
-                {
-                    //TODO: Log something?
-                    m_dict.TryAdd(entry.Key, entry.Value);
-                }
-            }
-        }
+			public Entry(IMemorySource source, ulong address)
+			{
+				Source = source;
+				Address = address;
+			}
 
-        public Dictionary<TKey, TValue> UnderlyingDictionary
-        {
-            get
-            {
-                Load();
-                return m_dict;
-            }
-        }
+			public UInt32 HashCode => Source.ReadValue<UInt32>(Address, 1);
+			public UInt32 Next => Source.ReadValue<UInt32>(Address + 0x04, 1);
+			public TKey Key => Source.ReadValue<TKey>(Address + 0x08, 1);
+			public TValue Value => Source.ReadValue<TValue>(Address + (IsNarrow ? 0x0Cul : 0x10ul), 1);
+		}
+		private readonly Dictionary<TKey, TValue> m_dict = new();
 
-        public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
-        {
-            return UnderlyingDictionary.GetEnumerator();
-        }
+		private void Load()
+		{
+			if (Address == 0)
+				return;
 
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return UnderlyingDictionary.GetEnumerator();
-        }
+			uint count = Source.ReadValue<uint>(Address + 0x20);
+			Native__Array<Entry> entries = new(Source, Source.ReadPointer(Address + 0x18ul), count, Entry.ElementSize);
+			foreach (Entry entry in entries)
+			{
+				m_dict.Add(entry.Key, entry.Value);
+			}
+		}
 
-        public int Count
-        {
-            get { return UnderlyingDictionary.Count; }
-        }
+		public Dictionary<TKey, TValue> UnderlyingDictionary
+		{
+			get
+			{
+				Load();
+				return m_dict;
+			}
+		}
 
-        public bool ContainsKey(TKey key)
-        {
-            return UnderlyingDictionary.ContainsKey(key);
-        }
+		public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
+		{
+			return UnderlyingDictionary.GetEnumerator();
+		}
 
-        public bool TryGetValue(TKey key, out TValue value)
-        {
-            return UnderlyingDictionary.TryGetValue(key, out value);
-        }
+		IEnumerator IEnumerable.GetEnumerator()
+		{
+			return UnderlyingDictionary.GetEnumerator();
+		}
 
-        public TValue this[TKey key]
-        {
-            get { return UnderlyingDictionary[key]; }
-        }
+		public int Count
+		{
+			get { return UnderlyingDictionary.Count; }
+		}
 
-        public IEnumerable<TKey> Keys
-        {
-            get { return UnderlyingDictionary.Keys; }
-        }
+		public bool ContainsKey(TKey key)
+		{
+			return UnderlyingDictionary.ContainsKey(key);
+		}
 
-        public IEnumerable<TValue> Values
-        {
-            get { return UnderlyingDictionary.Values; }
-        }
-    }
+		public bool TryGetValue(TKey key, out TValue value)
+		{
+			return UnderlyingDictionary.TryGetValue(key, out value);
+		}
+
+		public TValue this[TKey key]
+		{
+			get { return UnderlyingDictionary[key]; }
+		}
+
+		public IEnumerable<TKey> Keys
+		{
+			get { return UnderlyingDictionary.Keys; }
+		}
+
+		public IEnumerable<TValue> Values
+		{
+			get { return UnderlyingDictionary.Values; }
+		}
+	}
 }

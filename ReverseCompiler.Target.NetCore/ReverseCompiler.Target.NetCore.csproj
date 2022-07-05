@@ -8,7 +8,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Lokad.ILPack" Version="0.1.7" />
+    <PackageReference Include="Mono.Cecil" Version="0.11.4" />
     <PackageReference Include="Vestris.ResourceLib" Version="2.1.0" />
   </ItemGroup>
 
@@ -19,6 +19,7 @@
     <AssemblyName>Il2CppToolkit.Target.NetCore</AssemblyName>
     <RootNamespace>Il2CppToolkit.Target.NetCore</RootNamespace>
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
+    <Platforms>x64</Platforms>
   </PropertyGroup>
 
 </Project>
