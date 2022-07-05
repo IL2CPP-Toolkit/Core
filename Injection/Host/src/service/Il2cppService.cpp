@@ -99,10 +99,8 @@ static void ObjectToValue(Il2CppObject* pObj, const Il2CppType& cppType, ::il2cp
 			break;
 		}
 		case Il2CppTypeEnum::IL2CPP_TYPE_CLASS: {
-			uint32_t handle{il2cpp_gchandle_new(pObj, /*pinned*/ true)};
 			const auto& pReturnObj = value.mutable_obj_();
 			pReturnObj->set_address(reinterpret_cast<uint64_t>(pObj));
-			pReturnObj->set_handle(handle);
 			pReturnObj->mutable_klass()->set_name(pObj->klass->name);
 			pReturnObj->mutable_klass()->set_namespaze(pObj->klass->namespaze);
 			break;
