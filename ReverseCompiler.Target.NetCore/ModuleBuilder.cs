@@ -371,7 +371,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 			if (typeDef.HasGenericParameters)
 				classTypeRef = typeDef.MakeGenericType(typeDef.GenericParameters);
 			GenericInstanceType typeLookupInst = Module.ImportReference(typeof(Il2CppTypeInfoLookup<>)).MakeGenericType(classTypeRef);
-			MethodReference callMethodInst = GetCallMethodRef(methodDef, cppReturnType, typeLookupInst);
+			MethodReference callMethodInst = PrepareMethodRefAndGetImplementationToCall(methodDef, cppReturnType, typeLookupInst);
 			if (!methodAttributes.HasFlag(MethodAttributes.Abstract))
 			{
 				ILProcessor methodIL = methodDef.Body.GetILProcessor();
@@ -405,7 +405,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 			typeDef.Methods.Add(methodDef);
 		}
 
-		private MethodReference GetCallMethodRef(MethodDefinition methodDef, Il2CppType returnType, GenericInstanceType typeLookupInst)
+		private MethodReference PrepareMethodRefAndGetImplementationToCall(MethodDefinition methodDef, Il2CppType returnType, GenericInstanceType typeLookupInst)
 		{
 			TypeReference typeArg = methodDef.ReturnType;
 			TypeReference returnTypeRef = typeArg;
