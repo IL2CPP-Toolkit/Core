@@ -1,25 +1,16 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
 using Il2CppToolkit.Model;
 using Il2CppToolkit.Runtime;
 using Mono.Cecil;
-using Mono.Cecil.Cil;
 
 namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 {
 	public partial class ModuleBuilder
 	{
-		const MethodAttributes kRTObjGetterAttrs = MethodAttributes.Public | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.Virtual | MethodAttributes.SpecialName | MethodAttributes.NewSlot;
-		const MethodAttributes kCtorAttrs = MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName;
 		private readonly ICompileContext Context;
 		private readonly AssemblyDefinition AssemblyDefinition;
-		private readonly Dictionary<Il2CppTypeDefinition, TypeDefinition> TypeDefinitions = new();
-		private readonly Dictionary<Il2CppGenericParameter, GenericParameter> GenericParameters = new();
-		private readonly Dictionary<Il2CppTypeEnum, TypeReference> BuiltInTypes = new();
-		private readonly Dictionary<Type, TypeReference> m_importedTypes = new();
-		private readonly Dictionary<int, MethodDefinition> m_methodDefs = new();
+		private readonly Dictionary<int, MethodDefinition> MethodDefs = new();
 
 		private Il2Cpp Il2Cpp => Context.Model.Il2Cpp;
 		private Metadata Metadata => Context.Model.Metadata;

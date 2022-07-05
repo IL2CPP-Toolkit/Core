@@ -1,9 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using Il2CppToolkit.Model;
-using Il2CppToolkit.Runtime;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 
@@ -11,6 +6,9 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 {
 	public partial class ModuleBuilder
 	{
+		const MethodAttributes kRTObjGetterAttrs = MethodAttributes.Public | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.Virtual | MethodAttributes.SpecialName | MethodAttributes.NewSlot;
+		const MethodAttributes kCtorAttrs = MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName;
+
 		private void CreateDefaultConstructor(TypeDefinition typeDef)
 		{
 			if (typeDef.IsValueType)

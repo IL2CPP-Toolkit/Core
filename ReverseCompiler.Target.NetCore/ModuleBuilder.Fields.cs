@@ -1,11 +1,5 @@
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
 using Il2CppToolkit.Model;
-using Il2CppToolkit.Runtime;
 using Mono.Cecil;
-using Mono.Cecil.Cil;
 
 namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 {

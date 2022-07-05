@@ -1,22 +1,24 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using Il2CppToolkit.Model;
-using Il2CppToolkit.Runtime;
 using Mono.Cecil;
-using Mono.Cecil.Cil;
 
 namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 {
 	public partial class ModuleBuilder
 	{
+		private readonly Dictionary<Type, TypeReference> ImportedTypes = new();
+		private readonly Dictionary<Il2CppTypeEnum, TypeReference> BuiltInTypes = new();
+		private readonly Dictionary<Il2CppGenericParameter, GenericParameter> GenericParameters = new();
+		private readonly Dictionary<Il2CppTypeDefinition, TypeDefinition> TypeDefinitions = new();
+
 		internal TypeReference ImportReference(Type type)
 		{
 			if (type == null)
 				return null;
 
-			if (m_importedTypes.TryGetValue(type, out TypeReference typeRef))
+			if (ImportedTypes.TryGetValue(type, out TypeReference typeRef))
 				return typeRef;
 
 			if (SystemRuntimeRef != null && type.Assembly == typeof(string).Assembly)
@@ -32,7 +34,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 				typeRef = Module.ImportReference(type);
 			}
 
-			m_importedTypes.Add(type, typeRef);
+			ImportedTypes.Add(type, typeRef);
 			return typeRef;
 		}
 
