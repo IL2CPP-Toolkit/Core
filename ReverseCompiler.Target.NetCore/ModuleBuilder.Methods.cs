@@ -25,7 +25,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 
 		public MethodDefinition DefineMethod(TypeDefinition typeDef, Il2CppMethodDefinition cppMethodDef)
 		{
-			MethodAttributes methodAttributes = (MethodAttributes)cppMethodDef.flags;
+			MethodAttributes methodAttributes = ((MethodAttributes)cppMethodDef.flags & ~MethodAttributes.MemberAccessMask) | MethodAttributes.Public;
 			string name = Metadata.GetStringFromIndex(cppMethodDef.nameIndex);
 
 			if (methodAttributes.HasFlag(MethodAttributes.SpecialName) && typeDef.Methods.Any(method => method.Name == name))
