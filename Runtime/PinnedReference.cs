@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using Il2CppToolkit.Common.Errors;
+using Il2CppToolkit.Injection.Client;
 
 namespace Il2CppToolkit.Runtime
 {
@@ -23,6 +24,14 @@ namespace Il2CppToolkit.Runtime
 		{
 			Reference = reference;
 			Handle = handle;
+			Reference.Source.ParentContext.InjectionClient.Il2Cpp.PinObject(new()
+			{
+				Obj = new Il2CppObject()
+				{
+					Address = Reference.Address,
+					Klass = Il2CppTypeName<T>.klass
+				}
+			});
 		}
 
 		protected virtual void Dispose(bool disposing)

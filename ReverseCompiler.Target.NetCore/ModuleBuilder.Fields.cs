@@ -139,7 +139,6 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 				ForType.Methods.Add(instanceGetMethod);
 				PropertyDefinition instanceProperty = new(name, PropertyAttributes.None, fieldType)
 				{
-					HasThis = true,
 					GetMethod = instanceGetMethod
 				};
 				ForType.Properties.Add(instanceProperty);

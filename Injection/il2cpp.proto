@@ -80,6 +80,11 @@ message CallMethodResponse
 	optional Value returnValue = 1;
 }
 
+message PinObjectMessage
+{
+	Il2CppObject obj = 1;
+}
+
 message FreeObjectRequest
 {
 	uint32 handle = 1;
@@ -91,5 +96,6 @@ service Il2CppService
 {
 	rpc CallMethod(CallMethodRequest) returns (CallMethodResponse);
 	rpc GetTypeInfo(GetTypeInfoRequest) returns (GetTypeInfoResponse);
+	rpc PinObject(PinObjectMessage) returns (PinObjectMessage);
 	rpc FreeObject(FreeObjectRequest) returns (FreeObjectResponse);
 }

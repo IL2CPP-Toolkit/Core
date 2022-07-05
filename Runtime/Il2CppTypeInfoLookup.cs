@@ -92,25 +92,12 @@ namespace Il2CppToolkit.Runtime
 				ValueOneofCase.Float => (TValue)(object)returnValue.Float,
 				ValueOneofCase.Int32 => (TValue)(object)returnValue.Int32,
 				ValueOneofCase.Int64 => (TValue)(object)returnValue.Int64,
-				ValueOneofCase.Obj => throw new InvalidOperationException(),
+				ValueOneofCase.Obj => HydrateObject<TValue>(obj.Source.ParentContext, returnValue.Obj),
 				ValueOneofCase.Str => (TValue)(object)returnValue.Str,
 				ValueOneofCase.Uint32 => (TValue)(object)returnValue.Uint32,
 				ValueOneofCase.Uint64 => (TValue)(object)returnValue.Uint64,
 				_ => default,
 			};
-		}
-
-		public static PinnedReference<TValue> CallMethodWithPinnedResult<TValue>(IRuntimeObject obj, [CallerMemberName] string name = "", object[] arguments = null)
-			where TValue : class, IRuntimeObject
-		{
-			Value returnValue = CallMethodCore(obj, name, arguments);
-
-			if (returnValue == null)
-				return default;
-
-			ErrorHandler.VerifyElseThrow(returnValue.ValueCase == ValueOneofCase.Obj, RuntimeError.InvalidValueCase, "Invalid value case");
-			TValue objValue = HydrateObject<TValue>(obj.Source.ParentContext, returnValue.Obj);
-			return new(objValue, returnValue.Obj.Handle);
 		}
 
 		private static TValue HydrateObject<TValue>(IMemorySource source, Il2CppObject obj)

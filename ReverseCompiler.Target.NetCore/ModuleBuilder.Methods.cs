@@ -130,22 +130,12 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 			else
 			{
 				string methodName = "CallMethod";
-				if (returnType.type == Il2CppTypeEnum.IL2CPP_TYPE_CLASS)
-				{
-					methodName = "CallMethodWithPinnedResult";
-					returnTypeRef = ImportReference(typeof(PinnedReference<>)).MakeGenericType(returnTypeRef);
-				}
 				MethodReference callMethod = new(methodName, methodDef.ReturnType, typeLookupInst) { HasThis = false };
 				callMethod.GenericParameters.Add(new GenericParameter("TValue", callMethod));
 				callMethod.Parameters.Add(new ParameterDefinition(IRuntimeObjectTypeRef));
 				callMethod.Parameters.Add(new ParameterDefinition(ImportReference(typeof(string))));
 				callMethod.Parameters.Add(new ParameterDefinition(new ArrayType(ImportReference(typeof(object)))));
 				callMethod.ReturnType = callMethod.GenericParameters[0];
-				if (returnType.type == Il2CppTypeEnum.IL2CPP_TYPE_CLASS)
-				{
-					callMethod.ReturnType = ImportReference(typeof(PinnedReference<>)).MakeGenericType(callMethod.ReturnType);
-					methodDef.ReturnType = returnTypeRef;
-				}
 				GenericInstanceMethod callMethodInst = callMethod.MakeGeneric(typeArg);
 				return callMethodInst;
 			}

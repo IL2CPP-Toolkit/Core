@@ -23,6 +23,11 @@ public:
 		const ::il2cppservice::GetTypeInfoRequest* request,
 		::il2cppservice::GetTypeInfoResponse* response) noexcept override;
 
+	::grpc::Status PinObject(
+		::grpc::ServerContext* context,
+		const ::il2cppservice::PinObjectMessage* request,
+		::il2cppservice::PinObjectMessage* response) noexcept override;
+
 	::grpc::Status FreeObject(
 		::grpc::ServerContext* context,
 		const ::il2cppservice::FreeObjectRequest* request,

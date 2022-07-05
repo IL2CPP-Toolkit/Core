@@ -241,18 +241,6 @@ struct ArgumentValueHolder
 	return result.value_or(::grpc::Status::CANCELLED);
 }
 
-::grpc::Status Il2CppServiceImpl::FreeObject(
-	::grpc::ServerContext* context,
-	const ::il2cppservice::FreeObjectRequest* request,
-	::il2cppservice::FreeObjectResponse* response) noexcept
-{
-	std::optional<::grpc::Status> result{m_executionQueue.Invoke<::grpc::Status>([&]() mutable noexcept {
-		il2cpp_gchandle_free(request->handle());
-		return ::grpc::Status::OK;
-	})};
-	return result.value_or(::grpc::Status::CANCELLED);
-}
-
 ::grpc::Status Il2CppServiceImpl::GetTypeInfo(
 	::grpc::ServerContext* context,
 	const ::il2cppservice::GetTypeInfoRequest* request,
@@ -281,6 +269,39 @@ struct ArgumentValueHolder
 			pFld->set_offset(offset);
 			pFld->set_static_(isStatic);
 		}
+		return ::grpc::Status::OK;
+	})};
+	return result.value_or(::grpc::Status::CANCELLED);
+}
+
+::grpc::Status Il2CppServiceImpl::PinObject(
+	::grpc::ServerContext* context,
+	const ::il2cppservice::PinObjectMessage* request,
+	::il2cppservice::PinObjectMessage* response) noexcept
+{
+	std::optional<::grpc::Status> result{m_executionQueue.Invoke<::grpc::Status>([&]() mutable noexcept {
+		Il2CppObject* pObj{Il2CppContext::instance().GetCppObject(
+			request->obj().klass().namespaze(), request->obj().klass().name(), reinterpret_cast<void*>(request->obj().address()))};
+
+		if (!pObj)
+			return ::grpc::Status{::grpc::StatusCode::FAILED_PRECONDITION, "Object not found"};
+
+		uint32_t handle{il2cpp_gchandle_new(pObj, true)};
+
+		response->CopyFrom(*request);
+		response->mutable_obj()->set_handle(handle);
+		return ::grpc::Status::OK;
+	})};
+	return result.value_or(::grpc::Status::CANCELLED);
+}
+
+::grpc::Status Il2CppServiceImpl::FreeObject(
+	::grpc::ServerContext* context,
+	const ::il2cppservice::FreeObjectRequest* request,
+	::il2cppservice::FreeObjectResponse* response) noexcept
+{
+	std::optional<::grpc::Status> result{m_executionQueue.Invoke<::grpc::Status>([&]() mutable noexcept {
+		il2cpp_gchandle_free(request->handle());
 		return ::grpc::Status::OK;
 	})};
 	return result.value_or(::grpc::Status::CANCELLED);
