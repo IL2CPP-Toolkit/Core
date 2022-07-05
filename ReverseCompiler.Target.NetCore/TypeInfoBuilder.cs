@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Text.RegularExpressions;
 using Il2CppToolkit.Model;
 using Il2CppToolkit.Runtime;
 using Mono.Cecil;
@@ -9,6 +10,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 {
 	public sealed class TypeInfoBuilder : IDisposable
 	{
+		private static readonly Regex BackingFieldRegex = new("<(.+)>k__BackingField", RegexOptions.Compiled);
 		const MethodAttributes kGetterAttrs = MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.ReuseSlot | MethodAttributes.SpecialName;
 		private static readonly Type StaticFieldMemberType = typeof(StaticFieldMember<,>);
 		private static readonly System.Reflection.ConstructorInfo StaticFieldMemberTypeCtor = typeof(StaticFieldMember<,>).GetConstructors()[0];
