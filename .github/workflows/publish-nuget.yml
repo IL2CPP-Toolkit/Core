@@ -31,13 +31,31 @@ jobs:
       - name: Setup MSBuild.exe
         uses: microsoft/setup-msbuild@v1.0.2
 
+      # Install latest CMake.
+      - uses: lukka/get-cmake@latest
+
+      # Restore from cache the previously built ports. If a "cache miss" occurs,
+      # then vcpkg is bootstrapped. Since a the vcpkg.json is being used later on
+      # to install the packages when `run-cmake` runs, no packages are installed at
+      # this time.
+      - name: Restore artifacts, and setup vcpkg
+        uses: lukka/run-vcpkg@v10
+        # with:
+        #   runVcpkgInstall: true
+
+      # Add  MSBuild to the PATH: https://github.com/microsoft/setup-msbuild
+      - name: Setup MSBuild.exe
+        uses: microsoft/setup-msbuild@v1.0.2
+
       # Restore the application to populate the obj folder with RuntimeIdentifiers
       - name: Restore the application
         run: msbuild $env:Solution_Name /t:Restore /p:Configuration=Release
 
       # Build + Pack
       - name: Build
-        run: dotnet pack $env:Solution_Name --output publish /p:Configuration=Release -p:DeployOnBuild=true /p:IncludeSymbols=true /p:SymbolPackageFormat=snupkg /p:PublicRelease=true
+        run: |
+          msbuild $env:Solution_Name -m -t:Build -p:Configuration=Release -p:Platform=x64
+          msbuild $env:Solution_Name -m "-t:Publish;Pack"  -p:TargetFramework=net5.0-windows -p:Configuration=Release -p:Platform=x64  -p:PublishDir="$(Get-Location)\publish" -p:PackageOutputPath="$(Get-Location)\publish"
 
       # NuGet Push
       - name: Push package to nuget.org
