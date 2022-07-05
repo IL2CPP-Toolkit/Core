@@ -13,6 +13,7 @@ jobs:
     env:
       IS_CI: true
       Solution_Name: Core.sln
+      VCPKG_DEFAULT_TRIPLET: x64-windows-static
 
     steps:
       - name: Checkout
