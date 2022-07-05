@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using Il2CppToolkit.Model;
 using Il2CppToolkit.Runtime;
 using Mono.Cecil;
@@ -14,20 +15,28 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 			for (var i = cppTypeDef.methodStart; i < methodEnd; ++i)
 			{
 				Il2CppMethodDefinition cppMethodDef = Metadata.methodDefs[i];
-				DefineMethod(typeDef, cppMethodDef);
+				MethodDefinition methodDef = DefineMethod(typeDef, cppMethodDef);
+				if (methodDef == null)
+					continue;
+				typeDef.Methods.Add(methodDef);
+				MethodDefs.Add(i, methodDef);
 			}
 		}
 
-		public void DefineMethod(TypeDefinition typeDef, Il2CppMethodDefinition cppMethodDef)
+		public MethodDefinition DefineMethod(TypeDefinition typeDef, Il2CppMethodDefinition cppMethodDef)
 		{
 			MethodAttributes methodAttributes = (MethodAttributes)cppMethodDef.flags;
-			if (methodAttributes.HasFlag(MethodAttributes.SpecialName))
-				return;
+			string name = Metadata.GetStringFromIndex(cppMethodDef.nameIndex);
+
+			if (methodAttributes.HasFlag(MethodAttributes.SpecialName) && typeDef.Methods.Any(method => method.Name == name))
+			{
+				// already have this method? assume we generated it for a passthrough field
+				return null;
+			}
 
 			bool isStatic = methodAttributes.HasFlag(MethodAttributes.Static);
 			int argOffset = isStatic ? 0 : 1;
 
-			string name = Metadata.GetStringFromIndex(cppMethodDef.nameIndex);
 			Il2CppType cppReturnType = Il2Cpp.Types[cppMethodDef.returnType];
 			MethodDefinition methodDef = new(name, methodAttributes, ImportReference(typeof(void)))
 			{
@@ -50,7 +59,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 			if (methodDef.ReturnType == null)
 			{
 				Context.Logger?.LogWarning($"{typeDef.FullName}.{name}(...) Unsupported return type");
-				return;
+				return null;
 			}
 
 			int paramEnd = cppMethodDef.parameterStart + cppMethodDef.parameterCount;
@@ -63,7 +72,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 				if (paramTypeRef == null)
 				{
 					Context.Logger?.LogWarning($"{typeDef.FullName}.{name}(...) Unsupported parameter type");
-					return;
+					return null;
 				}
 				methodDef.Parameters.Add(new ParameterDefinition(paramName, ParameterAttributes.None, paramTypeRef));
 			}
@@ -103,7 +112,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 				methodIL.Emit(OpCodes.Call, callMethodInst);
 				methodIL.Emit(OpCodes.Ret);
 			}
-			typeDef.Methods.Add(methodDef);
+			return methodDef;
 		}
 
 		private MethodReference PrepareMethodRefAndGetImplementationToCall(MethodDefinition methodDef, Il2CppType returnType, GenericInstanceType typeLookupInst)

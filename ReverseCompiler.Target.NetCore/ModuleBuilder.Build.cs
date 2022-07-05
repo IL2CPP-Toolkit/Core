@@ -70,10 +70,12 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 							UseTypeDefinition(declaringType);
 					}
 
-					Context.Logger?.LogInfo($"[{typeRef.FullName}] Add TypeInfo");
-					using TypeInfoBuilder typeInfo = new(typeDef, Module, this);
+					Context.Logger?.LogInfo($"[{typeRef.FullName}] Fields");
+					DefineFields(cppTypeDef, typeDef);
+					Context.Logger?.LogInfo($"[{typeRef.FullName}] Methods");
 					DefineMethods(cppTypeDef, typeDef);
-					DefineFields(cppTypeDef, typeDef, typeInfo);
+					Context.Logger?.LogInfo($"[{typeRef.FullName}] Properties");
+					DefineProperties(cppTypeDef, typeDef);
 				}
 			} while (TypeDefinitionQueue.Count > 0 || typesToBuild.Count > 0);
 		}
