@@ -17,5 +17,6 @@
             "version>=": "1.3.3#3",
             "platform": "windows & static & x64"
         }
-    ]
+    ],
+    "builtin-baseline": "314018fef43c7e3a52a3e46599313b70ace3977a"
 }
