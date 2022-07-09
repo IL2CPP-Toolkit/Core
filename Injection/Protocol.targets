@@ -1,8 +1,8 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" InitialTargets="protoc">
 	<PropertyGroup>
 		<MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
-		<GrpcToolsDir>$(ProjectDir)$(VCPkgInstalledDir)\x64-windows\tools\grpc</GrpcToolsDir>
-		<ProtobuffToolsDir>$(ProjectDir)$(VCPkgInstalledDir)\x64-windows\tools\protobuf</ProtobuffToolsDir>
+		<GrpcToolsDir>$(VCPkgInstalledDir)\x64-windows\tools\grpc</GrpcToolsDir>
+		<ProtobuffToolsDir>$(VCPkgInstalledDir)\x64-windows\tools\protobuf</ProtobuffToolsDir>
 		<ProtocTool>$(ProtobuffToolsDir)\protoc.exe</ProtocTool>
 	</PropertyGroup>
 	<Target Name="protoc">

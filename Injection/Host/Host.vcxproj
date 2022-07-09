@@ -118,7 +118,8 @@
     <VcpkgEnableManifest>true</VcpkgEnableManifest>
     <VcpkgUseStatic>true</VcpkgUseStatic>
     <VcpkgEnabled>true</VcpkgEnabled>
-    <VcpkgInstalledDir>vcpkg_installed</VcpkgInstalledDir>
+    <VcpkgInstalledDir Condition="'$(VcpkgInstalledDir)'==''">$(VCPKG_INSTALLED_DIR)</VcpkgInstalledDir>
+    <VcpkgInstalledDir Condition="'$(VcpkgInstalledDir)'==''">$(ProjectDir)vcpkg_installed</VcpkgInstalledDir>
     <VcpkgTriplet>x64-windows-static</VcpkgTriplet>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
