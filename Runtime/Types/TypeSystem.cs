@@ -7,18 +7,18 @@ namespace Il2CppToolkit.Runtime.Types
 {
 	public static class TypeSystem
 	{
-		public static bool TryGetSubstituteType(string typeName, out Type mappedType)
+		public static bool TryGetSubstituteType(string typeName, out Type mappedType, Type declaringType = null)
 		{
 			if (NativeMapping.TryGetValue(typeName, out mappedType))
 			{
 				return true;
 			}
-			Type builtinType = Type.GetType(typeName, false);
+			Type builtinType = declaringType != null ? declaringType.GetNestedType(typeName) : Type.GetType(typeName, false);
 			if (builtinType != null)
 			{
 				if (NativeFactoryMapping.TryGetValue(builtinType, out _) || builtinType.IsInterface)
 				{
-					mappedType = Type.GetType(typeName);
+					mappedType = builtinType;
 					return true;
 				}
 			}

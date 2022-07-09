@@ -67,16 +67,33 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 			if (TypeDefinitions.TryGetValue(cppTypeDef, out TypeDefinition typeDef))
 				return typeDef;
 
-			string namespaceName = Metadata.GetStringFromIndex(cppTypeDef.namespaceIndex);
 			string typeName = Metadata.GetStringFromIndex(cppTypeDef.nameIndex);
+			string fullTypeName = string.Empty;
+			// nested type
+			if (cppTypeDef.declaringTypeIndex != -1)
+			{
+				Il2CppTypeDefinition cppDeclaringTypeDef = Context.Model.GetTypeDefinitionFromIl2CppType(Il2Cpp.Types[cppTypeDef.declaringTypeIndex]);
+				// System. nested-types cannot be returned
+				if (Metadata.GetStringFromIndex(cppDeclaringTypeDef.namespaceIndex).StartsWith("System"))
+					return null;
 
-			string fullTypeName = $"{namespaceName}.{typeName}";
+				TypeReference parentRef = GetTypeDefinition(cppDeclaringTypeDef);
+				if (parentRef == null || parentRef.Namespace.StartsWith("System"))
+					return null;
+				fullTypeName = @$"{parentRef.FullName}\";
+			}
+
+			string namespaceName = Metadata.GetStringFromIndex(cppTypeDef.namespaceIndex);
+			if (!string.IsNullOrEmpty(namespaceName))
+				fullTypeName += $"{namespaceName}.";
+
+			fullTypeName += typeName;
 			if (Runtime.Types.TypeSystem.TryGetSubstituteType(fullTypeName, out Type mappedType))
 			{
 				return ImportReference(mappedType);
 			}
 
-			typeDef = new TypeDefinition(namespaceName, typeName, (TypeAttributes)cppTypeDef.flags);
+			typeDef = new TypeDefinition(namespaceName, fullTypeName, (TypeAttributes)cppTypeDef.flags);
 			TypeDefinitions.Add(cppTypeDef, typeDef);
 			return typeDef;
 		}
