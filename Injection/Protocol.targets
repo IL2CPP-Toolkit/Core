@@ -13,7 +13,8 @@
 			</BuildGenerateSourcesDependsOn>
 		</PropertyGroup>
 	</Target>
-	<Target Name="protocpp" BeforeTargets="BuildGenerateSources" Condition=" Exists('$(ProtocTool)') ">
+	<Target Name="protocpp" BeforeTargets="BuildGenerateSources">
+		<Error Text="Could not locate protoc tool at $(ProtocTool)" Condition=" !Exists('$(ProtocTool)') " />
 		<Exec Command="$(ProtocTool) -I=$(MSBuildThisFileDirectory) --cpp_out=$(ProjectDir)src\gen il2cpp.proto" />
 		<Exec Command="$(ProtocTool) -I=$(MSBuildThisFileDirectory) --grpc_out=$(ProjectDir)src\gen --plugin=protoc-gen-grpc=$(GrpcToolsDir)\grpc_cpp_plugin.exe il2cpp.proto" />
 	</Target>
