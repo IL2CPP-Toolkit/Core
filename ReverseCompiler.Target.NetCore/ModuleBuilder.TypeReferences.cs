@@ -93,7 +93,13 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 				return ImportReference(mappedType);
 			}
 
-			typeDef = new TypeDefinition(namespaceName, typeName, (TypeAttributes)cppTypeDef.flags);
+			TypeAttributes typeFlags = ((TypeAttributes)cppTypeDef.flags & ~TypeAttributes.VisibilityMask);
+			if (cppTypeDef.declaringTypeIndex != 1)
+				typeFlags |= TypeAttributes.NestedPublic;
+			else
+				typeFlags |= TypeAttributes.Public;
+
+			typeDef = new TypeDefinition(namespaceName, typeName, typeFlags);
 			TypeDefinitions.Add(cppTypeDef, typeDef);
 			return typeDef;
 		}
