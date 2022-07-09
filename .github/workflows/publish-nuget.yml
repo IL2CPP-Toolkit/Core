@@ -14,7 +14,7 @@ jobs:
       IS_CI: true
       Solution_Name: Core.sln
       VCPKG_DEFAULT_TRIPLET: x64-windows-static
-      VCPKG_INSTALLED_DIR: '${{ github.workspace }}\vcpkg_installed'
+      VCPKG_INSTALLED_DIR: vcpkg_installed
 
     steps:
       - name: Checkout
