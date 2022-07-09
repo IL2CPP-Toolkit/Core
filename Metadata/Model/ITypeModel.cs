@@ -23,7 +23,7 @@ namespace Il2CppToolkit.Model
 		Il2CppTypeDefinition GetTypeDefinitionFromIl2CppType(Il2CppType il2CppType, bool resolveGeneric = true);
 		long GetGenericClassTypeDefinitionIndex(Il2CppGenericClass genericClass);
 		Il2CppTypeDefinition GetGenericClassTypeDefinition(Il2CppGenericClass genericClass);
-		bool TryGetDefaultValue(int typeIndex, int dataIndex, out object value);
-		bool TryGetDefaultValueBytes(int typeIndex, int dataIndex, out byte[] value);
+		bool TryGetDefaultValue(Il2CppFieldDefaultValue defaultValue, out object value);
+		bool TryGetDefaultValueBytes(Il2CppFieldDefaultValue defaultValue, out byte[] value);
 	}
 }

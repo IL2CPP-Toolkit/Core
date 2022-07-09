@@ -30,17 +30,21 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 				FieldAttributes fieldAttrs = (FieldAttributes)cppFieldType.attrs;
 				bool isStatic = fieldAttrs.HasFlag(FieldAttributes.Static);
 
-				if (fieldAttrs.HasFlag(FieldAttributes.Literal) || cppTypeDef.IsEnum)
+				if (fieldAttrs.HasFlag(FieldAttributes.Literal) || fieldAttrs.HasFlag(FieldAttributes.HasDefault) || cppTypeDef.IsEnum)
 				{
-					FieldDefinition fld = new(fieldName, fieldAttrs, fieldTypeRef);
-					if (fieldAttrs.HasFlag(FieldAttributes.Literal)
+					FieldDefinition fld = new(fieldName, fieldAttrs, fieldTypeRef)
+					{
+						DeclaringType = typeDef
+					};
+					typeDef.Fields.Add(fld);
+					if ((fieldAttrs.HasFlag(FieldAttributes.Literal) || fieldAttrs.HasFlag(FieldAttributes.HasDefault))
 						&& Metadata.GetFieldDefaultValueFromIndex(i, out Il2CppFieldDefaultValue cppDefaultValue)
 						&& cppDefaultValue.dataIndex != -1
-						&& Context.Model.TryGetDefaultValueBytes(cppFieldDef.typeIndex, cppDefaultValue.dataIndex, out byte[] defaultValueBytes))
+						&& Context.Model.TryGetDefaultValue(cppDefaultValue, out object defaultValue)
+						)
 					{
-						fld.InitialValue = defaultValueBytes;
+						fld.Constant = defaultValue;
 					}
-					typeDef.Fields.Add(fld);
 					continue;
 				}
 

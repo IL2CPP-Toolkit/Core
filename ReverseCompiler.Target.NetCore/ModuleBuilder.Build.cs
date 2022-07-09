@@ -44,6 +44,10 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 							InitializeTypeDefinition(cppTypeDef, typeDef);
 							DefineConstructors(typeDef);
 						}
+						else
+						{
+							typeDef.BaseType = ImportReference(typeof(Enum));
+						}
 						Context.Logger?.LogInfo($"[{typeRef.FullName}] Marked->Build");
 						typesToBuild.Enqueue(cppTypeDef);
 					}

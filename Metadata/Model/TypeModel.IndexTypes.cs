@@ -137,7 +137,7 @@ namespace Il2CppToolkit.Model
 						FieldDescriptor fieldDescriptor = new(fieldName, fieldType, attrs, offset);
 						if (m_loader.Metadata.GetFieldDefaultValueFromIndex(fieldIndex, out Il2CppFieldDefaultValue fieldDefaultValue) && fieldDefaultValue.dataIndex != -1)
 						{
-							if (TryGetDefaultValue(fieldDefaultValue.typeIndex, fieldDefaultValue.dataIndex, out object value))
+							if (TryGetDefaultValue(fieldDefaultValue, out object value))
 							{
 								fieldDescriptor.DefaultValue = value;
 							}
@@ -382,10 +382,10 @@ namespace Il2CppToolkit.Model
 			return typeName;
 		}
 
-		public bool TryGetDefaultValueBytes(int typeIndex, int dataIndex, out byte[] value)
+		public bool TryGetDefaultValueBytes(Il2CppFieldDefaultValue cppDefaultValue, out byte[] value)
 		{
-			uint pointer = m_loader.Metadata.GetDefaultValueFromIndex(dataIndex);
-			Il2CppType defaultValueType = m_loader.Il2Cpp.Types[typeIndex];
+			uint pointer = m_loader.Metadata.GetDefaultValueFromIndex(cppDefaultValue.dataIndex);
+			Il2CppType defaultValueType = m_loader.Il2Cpp.Types[cppDefaultValue.typeIndex];
 			m_loader.Metadata.Position = pointer;
 			switch (defaultValueType.type)
 			{
@@ -406,10 +406,10 @@ namespace Il2CppToolkit.Model
 			}
 		}
 
-		public bool TryGetDefaultValue(int typeIndex, int dataIndex, out object value)
+		public bool TryGetDefaultValue(Il2CppFieldDefaultValue cppDefaultValue, out object value)
 		{
-			uint pointer = m_loader.Metadata.GetDefaultValueFromIndex(dataIndex);
-			Il2CppType defaultValueType = m_loader.Il2Cpp.Types[typeIndex];
+			uint pointer = m_loader.Metadata.GetDefaultValueFromIndex(cppDefaultValue.dataIndex);
+			Il2CppType defaultValueType = m_loader.Il2Cpp.Types[cppDefaultValue.typeIndex];
 			m_loader.Metadata.Position = pointer;
 			switch (defaultValueType.type)
 			{

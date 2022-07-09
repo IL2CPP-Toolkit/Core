@@ -94,7 +94,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 			}
 
 			TypeAttributes typeFlags = ((TypeAttributes)cppTypeDef.flags & ~TypeAttributes.VisibilityMask);
-			if (cppTypeDef.declaringTypeIndex != 1)
+			if (cppTypeDef.declaringTypeIndex != -1)
 				typeFlags |= TypeAttributes.NestedPublic;
 			else
 				typeFlags |= TypeAttributes.Public;
