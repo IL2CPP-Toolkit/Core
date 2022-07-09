@@ -1,7 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFrameworks>net472;net5.0</TargetFrameworks>
+		<TargetFrameworks>net472;net5.0;net6.0</TargetFrameworks>
 		<LangVersion>9.0</LangVersion>
+		<AssemblyName>Il2CppToolkit.Injection.Client</AssemblyName>
 		<OutputType>Library</OutputType>
 		<Platforms>x64</Platforms>
 	</PropertyGroup>
@@ -19,6 +20,10 @@
 		<None Include="$(BinDir)\Il2CppToolkit.Injection.Host.dll" Link="Il2CppToolkit.Injection.Host.dll">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
+		<TfmSpecificPackageFile Include="$(BinDir)\Il2CppToolkit.Injection.Host.dll" Link="Il2CppToolkit.Injection.Host.dll">
+			<Pack>true</Pack>
+			<PackagePath>lib/$(TargetFramework)</PackagePath>
+		</TfmSpecificPackageFile>
 		<None Include="$(BinDir)\Il2CppToolkit.Injection.Host.pdb" Link="Il2CppToolkit.Injection.Host.pdb">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>

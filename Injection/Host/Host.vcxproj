@@ -173,4 +173,5 @@
   <ImportGroup>
     <Import Project="$(RootDirectory)/vcpkg/scripts/buildsystems/msbuild/vcpkg.targets" />
   </ImportGroup>
+  <Target Name="Pack" />
 </Project>
