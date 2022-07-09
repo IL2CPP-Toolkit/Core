@@ -45,6 +45,7 @@ jobs:
         uses: lukka/run-vcpkg@v10
         with:
           runVcpkgInstall: true
+          vcpkgDirectory: "${{ github.workspace }}/vcpkg"
 
       # Add  MSBuild to the PATH: https://github.com/microsoft/setup-msbuild
       - name: Setup MSBuild.exe
