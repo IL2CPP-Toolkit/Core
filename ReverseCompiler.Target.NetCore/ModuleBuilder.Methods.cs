@@ -31,13 +31,13 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 			if (methodAttributes.HasFlag(MethodAttributes.SpecialName) && typeDef.Methods.Any(method => method.Name == name))
 			{
 				// already have this method? assume we generated it for a passthrough field
-				Context.Logger.LogInfo($"Skipping existing method: {typeDef.FullName}.{name} ");
+				Context.Logger?.LogInfo($"Skipping existing method: {typeDef.FullName}.{name} ");
 				return null;
 			}
 
 			if (name.StartsWith("op_") && methodAttributes.HasFlag(MethodAttributes.SpecialName))
 			{
-				Context.Logger.LogInfo($"Skipping operator (unsupported): {typeDef.FullName}.{name} ");
+				Context.Logger?.LogInfo($"Skipping operator (unsupported): {typeDef.FullName}.{name} ");
 				return null;
 			}
 
