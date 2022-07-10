@@ -10,6 +10,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 		{
 			{new CompilerTargetParameter { Specification = ArtifactSpecs.AssemblyName, Required = true}},
 			{new CompilerTargetParameter { Specification = ArtifactSpecs.OutputPath, Required = true}},
+			{new CompilerTargetParameter { Specification = ArtifactSpecs.IncludeCompilerGeneratedTypes, Required = false}},
 			{new CompilerTargetParameter { Specification = ArtifactSpecs.TypeSelectors, Required = true}}
 		};
 

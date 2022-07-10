@@ -11,5 +11,6 @@ namespace Il2CppToolkit.ReverseCompiler
         public static SynchronousVariableSpecification<string> AssemblyName = new("AssemblyName");
         public static SynchronousVariableSpecification<Version> AssemblyVersion = new("AssemblyVersion");
         public static SynchronousVariableSpecification<string> OutputPath = new("OutputPath");
+        public static SynchronousVariableSpecification<bool> IncludeCompilerGeneratedTypes = new("IncludeCompilerGeneratedTypes", false);
     }
 }

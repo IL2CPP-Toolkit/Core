@@ -76,7 +76,11 @@ namespace Il2CppToolkit.ReverseCompiler
 				m_artifacts.Add(spec, state);
 			}
 
-			return (T)state.Value;
+			if (state.Value != ArtifactState.EmptyValue)
+			{
+				return (T)state.Value;
+			}
+			return (T)spec.DefaultValue;
 		}
 
 		public bool Has(IStateSpecification spec)

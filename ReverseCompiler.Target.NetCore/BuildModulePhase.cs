@@ -18,6 +18,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 		private Version m_asmVersion;
 		private ICompileContext m_context;
 		private string m_outputPath;
+		private bool m_includeCompilerGeneratedTypes;
 
 		public override Task Initialize(ICompileContext context)
 		{
@@ -26,6 +27,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 			m_typeSelectors = m_context.Artifacts.Get(ArtifactSpecs.TypeSelectors);
 			m_asmName = context.Artifacts.Get(ArtifactSpecs.AssemblyName);
 			m_asmVersion = context.Artifacts.Get(ArtifactSpecs.AssemblyVersion);
+			m_includeCompilerGeneratedTypes = context.Artifacts.Get(ArtifactSpecs.IncludeCompilerGeneratedTypes);
 			return Task.CompletedTask;
 		}
 
@@ -41,7 +43,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 				{
 					Kind = ModuleKind.Dll,
 				});
-			ModuleBuilder mb = new(m_context, assemblyDefinition);
+			ModuleBuilder mb = new(m_context, assemblyDefinition, m_includeCompilerGeneratedTypes);
 			foreach (TypeDescriptor td in includedDescriptors)
 				mb.IncludeTypeDefinition(td.TypeDef);
 

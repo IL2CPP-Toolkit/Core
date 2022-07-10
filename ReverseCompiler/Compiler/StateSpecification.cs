@@ -3,6 +3,7 @@ namespace Il2CppToolkit.ReverseCompiler
     public interface IStateSpecification
     {
         string Name { get; }
+        object DefaultValue { get; }
     }
 
     public interface IStateSpecificationValue
@@ -19,6 +20,7 @@ namespace Il2CppToolkit.ReverseCompiler
     {
         public IStateSpecification Specification { get; }
         public object Value { get; }
+        public object DefaultValue => Specification.DefaultValue;
         public SynchronousVariableSpecificationValue(SynchronousVariableSpecification<T> specification, T value)
         {
             Specification = specification;
@@ -29,13 +31,16 @@ namespace Il2CppToolkit.ReverseCompiler
     public class BuildArtifactSpecification<T> : ITypedSpecification<T>
     {
         public string Name { get; }
+        public object DefaultValue { get; } = null;
         public BuildArtifactSpecification(string name) => Name = name;
-    }
+	}
 
     public class SynchronousVariableSpecification<T> : ITypedSpecification<T>, ITypedSynchronousState<T>
     {
         public string Name { get; }
+        public object DefaultValue { get; }
         public SynchronousVariableSpecification(string name) => Name = name;
+        public SynchronousVariableSpecification(string name, object defaultValue) : this(name) => DefaultValue = defaultValue;
 
         public SynchronousVariableSpecificationValue<T> MakeValue(T value)
         {

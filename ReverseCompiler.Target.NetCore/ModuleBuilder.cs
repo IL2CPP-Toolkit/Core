@@ -21,8 +21,9 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 		private readonly MethodReference ObjectCtorMethodRef;
 		private ModuleDefinition Module => AssemblyDefinition.MainModule;
 		private readonly AssemblyNameReference SystemRuntimeRef;
+		private readonly bool IncludeCompilerGeneratedTypes;
 
-		public ModuleBuilder(ICompileContext context, AssemblyDefinition assemblyDefinition)
+		public ModuleBuilder(ICompileContext context, AssemblyDefinition assemblyDefinition, bool includeCompilerGeneratedTypes)
 		{
 			Context = context;
 			AssemblyDefinition = assemblyDefinition;
@@ -40,6 +41,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 			IRuntimeObjectTypeRef = ImportReference(typeof(IRuntimeObject));
 			IMemorySourceTypeRef = ImportReference(typeof(IMemorySource));
 			ObjectCtorMethodRef = ImportReference(typeof(object)).GetConstructor();
+			IncludeCompilerGeneratedTypes = includeCompilerGeneratedTypes;
 		}
 
 	}

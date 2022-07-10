@@ -69,6 +69,12 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 
 			string typeName = Metadata.GetStringFromIndex(cppTypeDef.nameIndex);
 			string fullTypeName = string.Empty;
+
+			if (typeName.Contains("<") && !IncludeCompilerGeneratedTypes)
+			{
+				return null;
+			}
+
 			// nested type
 			if (cppTypeDef.declaringTypeIndex != -1)
 			{
