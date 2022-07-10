@@ -31,6 +31,13 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 			if (methodAttributes.HasFlag(MethodAttributes.SpecialName) && typeDef.Methods.Any(method => method.Name == name))
 			{
 				// already have this method? assume we generated it for a passthrough field
+				Context.Logger.LogInfo($"Skipping existing method: {typeDef.FullName}.{name} ");
+				return null;
+			}
+
+			if (name.StartsWith("op_") && methodAttributes.HasFlag(MethodAttributes.SpecialName))
+			{
+				Context.Logger.LogInfo($"Skipping operator (unsupported): {typeDef.FullName}.{name} ");
 				return null;
 			}
 
@@ -53,6 +60,12 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 					var genericParameter = CreateGenericParameter(param, methodDef);
 					methodDef.GenericParameters.Add(genericParameter);
 				}
+			}
+
+			if (isStatic)
+			{
+				ParameterDefinition runtimeParam = new("runtime", ParameterAttributes.None, IRuntimeObjectTypeRef);
+				methodDef.Parameters.Add(runtimeParam);
 			}
 
 			methodDef.ReturnType = UseTypeReference(methodDef, cppReturnType);
@@ -85,9 +98,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 			if (!methodAttributes.HasFlag(MethodAttributes.Abstract))
 			{
 				ILProcessor methodIL = methodDef.Body.GetILProcessor();
-				if (!isStatic)
-					methodIL.Emit(OpCodes.Ldarg_0);
-
+				methodIL.Emit(OpCodes.Ldarg_0);
 				methodIL.Emit(OpCodes.Ldstr, name);
 				methodIL.EmitI4(cppMethodDef.parameterCount);
 				methodIL.Emit(OpCodes.Newarr, ImportReference(typeof(object)));

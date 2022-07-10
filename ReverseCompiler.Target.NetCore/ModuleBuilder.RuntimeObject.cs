@@ -6,7 +6,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 {
 	public partial class ModuleBuilder
 	{
-		const MethodAttributes kRTObjGetterAttrs = MethodAttributes.Public | MethodAttributes.Final | MethodAttributes.HideBySig | MethodAttributes.Virtual | MethodAttributes.SpecialName | MethodAttributes.NewSlot;
+		const MethodAttributes kRTObjGetterAttrs = MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.Virtual | MethodAttributes.HideBySig | MethodAttributes.NewSlot | MethodAttributes.SpecialName;
 		const MethodAttributes kCtorAttrs = MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName;
 
 		private void CreateDefaultConstructor(TypeDefinition typeDef)
@@ -71,12 +71,14 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 			FieldDefinition AddIRuntimeObjectProperty(string name, TypeReference typeReference)
 			{
 				FieldDefinition fieldDef = new($"<IRuntimeObject.{name}>k__BackingField", FieldAttributes.Private | FieldAttributes.InitOnly, typeReference);
-				MethodDefinition getMethodDef = new($"IRuntimeObject.get_{name}", kRTObjGetterAttrs, typeReference);
+				MethodDefinition getMethodDef = new($"Il2CppToolkit.Runtime.IRuntimeObject.get_{name}", kRTObjGetterAttrs, typeReference);
+				getMethodDef.SemanticsAttributes = MethodSemanticsAttributes.Getter;
 				ILProcessor getMethodIL = getMethodDef.Body.GetILProcessor();
 				getMethodIL.Emit(OpCodes.Ldarg_0);
 				getMethodIL.Emit(OpCodes.Ldfld, fieldDef);
 				getMethodIL.Emit(OpCodes.Ret);
-				PropertyDefinition propertyDef = new($"IRuntimeObject.{name}", PropertyAttributes.None, typeReference);
+				PropertyDefinition propertyDef = new($"Il2CppToolkit.Runtime.IRuntimeObject.{name}", PropertyAttributes.None, typeReference);
+				propertyDef.GetMethod = getMethodDef;
 				typeDef.Fields.Add(fieldDef);
 				typeDef.Methods.Add(getMethodDef);
 				typeDef.Properties.Add(propertyDef);
