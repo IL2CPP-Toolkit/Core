@@ -34,6 +34,9 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 				typeRef = Module.ImportReference(type);
 			}
 
+			if (typeRef == null)
+				return null;
+
 			ImportedTypes.Add(type, typeRef);
 			return typeRef;
 		}
