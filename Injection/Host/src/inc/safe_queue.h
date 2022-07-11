@@ -11,7 +11,6 @@ public:
     safe_queue(void)
         : q{}
         , m{}
-        , c{}
     {}
 
     ~safe_queue(void)
@@ -19,23 +18,21 @@ public:
 
     void clear()
     {
-        std::lock_guard<std::mutex> lock{ m };
+        std::unique_lock<std::mutex> lock{ m };
         std::queue<T> u;
         std::swap(q, u);
-        c.notify_one();
     }
 
     // Add an element to the queue.
     void enqueue(T t)
     {
-        std::lock_guard<std::mutex> lock{ m };
+        std::unique_lock<std::mutex> lock{ m };
         q.push(t);
-        c.notify_one();
     }
 
     bool try_dequeue(T& value)
     {
-        std::lock_guard<std::mutex> lock{ m };
+        std::unique_lock<std::mutex> lock{ m };
         if (q.empty())
             return false;
         value = std::move(q.front());
@@ -46,5 +43,4 @@ public:
 private:
     std::queue<T> q;
     mutable std::mutex m;
-    std::condition_variable c;
 };
