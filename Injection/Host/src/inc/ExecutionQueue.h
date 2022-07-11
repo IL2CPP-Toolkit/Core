@@ -2,6 +2,7 @@
 #include <functional>
 #include <optional>
 #include <atomic>
+#include <thread>
 #include "safe_queue.h"
 
 class ExecutionQueue
@@ -29,7 +30,7 @@ public:
 		});
 
 		while (!finished.load() && !isShutdown.load())
-			this_thread::yield();
+			std::this_thread::yield();
 
 		return result;
 	}
