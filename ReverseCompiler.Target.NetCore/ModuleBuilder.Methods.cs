@@ -134,7 +134,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 			}
 			else
 			{
-				methodDef.Attributes &= MethodAttributes.MemberAccessMask;
+				methodDef.Attributes &= ~MethodAttributes.MemberAccessMask;
 				methodDef.Attributes |= MethodAttributes.Public;
 			}
 
