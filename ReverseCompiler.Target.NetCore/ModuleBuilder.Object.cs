@@ -12,8 +12,8 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 			{
 				var nestedIndex = Metadata.nestedTypeIndices[cppTypeDef.nestedTypesStart + i];
 				var nestedTypeDef = Metadata.typeDefs[nestedIndex];
-				var nestedTypeDefinition = UseTypeDefinition(nestedTypeDef) as TypeDefinition; // any nested type must also be a TypeDefinition
-				if (nestedTypeDefinition == null)
+				// any nested type must also be a TypeDefinition
+				if (UseTypeDefinition(nestedTypeDef) is not TypeDefinition nestedTypeDefinition)
 					continue;
 				typeDef.NestedTypes.Add(nestedTypeDefinition);
 			}

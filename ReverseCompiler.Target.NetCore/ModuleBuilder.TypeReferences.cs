@@ -102,7 +102,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 				return ImportReference(mappedType);
 			}
 
-			TypeAttributes typeFlags = ((TypeAttributes)cppTypeDef.flags & ~TypeAttributes.VisibilityMask);
+			TypeAttributes typeFlags = (TypeAttributes)cppTypeDef.flags & ~(TypeAttributes.VisibilityMask | TypeAttributes.LayoutMask);
 			if (cppTypeDef.declaringTypeIndex != -1)
 				typeFlags |= TypeAttributes.NestedPublic;
 			else
