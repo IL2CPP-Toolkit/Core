@@ -92,9 +92,9 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 			}
 
 			// explicit interface impl?
-			if (methodDef.IsPrivate && methodDef.IsFinal && methodDef.IsVirtual)
+			int lastDot = name.LastIndexOf('.');
+			if (methodDef.IsPrivate && methodDef.IsFinal && methodDef.IsVirtual && lastDot >= 0)
 			{
-				int lastDot = name.LastIndexOf('.');
 				ErrorHandler.Assert(lastDot != -1, "explicit impl without interface in name");
 				string interfaceName = name.Substring(0, lastDot);
 				string methodName = name.Substring(lastDot + 1);
