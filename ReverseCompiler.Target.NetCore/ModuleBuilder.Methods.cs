@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using Il2CppToolkit.Common.Errors;
 using Il2CppToolkit.Model;
 using Il2CppToolkit.Runtime;
 using Mono.Cecil;
@@ -25,7 +27,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 
 		public MethodDefinition DefineMethod(TypeDefinition typeDef, Il2CppMethodDefinition cppMethodDef)
 		{
-			MethodAttributes methodAttributes = ((MethodAttributes)cppMethodDef.flags & ~MethodAttributes.MemberAccessMask) | MethodAttributes.Public;
+			MethodAttributes methodAttributes = (MethodAttributes)cppMethodDef.flags;
 			string name = Metadata.GetStringFromIndex(cppMethodDef.nameIndex);
 
 			if (methodAttributes.HasFlag(MethodAttributes.SpecialName) && typeDef.Methods.Any(method => method.Name == name))
@@ -87,6 +89,53 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 					return null;
 				}
 				methodDef.Parameters.Add(new ParameterDefinition(paramName, ParameterAttributes.None, paramTypeRef));
+			}
+
+			// explicit interface impl?
+			if (methodDef.IsPrivate && methodDef.IsFinal && methodDef.IsVirtual)
+			{
+				int lastDot = name.LastIndexOf('.');
+				ErrorHandler.Assert(lastDot != -1, "explicit impl without interface in name");
+				string interfaceName = name.Substring(0, lastDot);
+				string methodName = name.Substring(lastDot + 1);
+				Queue<TypeReference> openRefs = new();
+				openRefs.Enqueue(typeDef);
+				while (openRefs.TryDequeue(out TypeReference typeRef))
+				{
+					if (typeRef.FullName == interfaceName)
+					{
+						// if (typeRef is TypeDefinition overrideMethodOwner)
+						// {
+						// 	methodDef.Overrides.Add(overrideMethodOwner.Methods
+						// 		.Single(method => method.Name == methodName && method.Parameters.Count == methodDef.Parameters.Count)
+						// 		);
+						// }
+						// else
+						// {
+						// 	ErrorHandler.Assert(false, "Cannot override non-generated members");
+						// }
+
+						MethodReference overrideMethod;
+						methodDef.Overrides.Add(overrideMethod = new MethodReference(methodName, methodDef.ReturnType, typeRef)
+						{
+							HasThis = methodDef.HasThis,
+						});
+						overrideMethod.Parameters.AddRange(methodDef.Parameters);
+						break;
+					}
+					if (typeRef is TypeDefinition typeRefDef)
+					{
+						if (typeRefDef.BaseType != null)
+							openRefs.Enqueue(typeRefDef.BaseType);
+						foreach (var iface in typeRefDef.Interfaces)
+							openRefs.Enqueue(iface.InterfaceType);
+					}
+				}
+			}
+			else
+			{
+				methodDef.Attributes &= MethodAttributes.MemberAccessMask;
+				methodDef.Attributes |= MethodAttributes.Public;
 			}
 
 			TypeReference classTypeRef = typeDef;
