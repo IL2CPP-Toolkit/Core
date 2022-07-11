@@ -27,7 +27,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 		{
 			Context = context;
 			AssemblyDefinition = assemblyDefinition;
-			Module.AssemblyReferences.Add(new AssemblyNameReference("Il2CppToolkit.Runtime", new Version(1, 0, 0, 0)));
+			Module.AssemblyReferences.Add(new AssemblyNameReference("Il2CppToolkit.Runtime", new Version(2, 0, 0, 0)));
 #if NET5_0_OR_GREATER
 			SystemRuntimeRef = new AssemblyNameReference("System.Runtime", new Version(5, 0, 0, 0))
 			{
