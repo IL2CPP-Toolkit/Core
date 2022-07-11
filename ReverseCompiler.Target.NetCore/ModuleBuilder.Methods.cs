@@ -42,7 +42,6 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 			}
 
 			bool isStatic = methodAttributes.HasFlag(MethodAttributes.Static);
-			int argOffset = isStatic ? 0 : 1;
 
 			Il2CppType cppReturnType = Il2Cpp.Types[cppMethodDef.returnType];
 			MethodDefinition methodDef = new(name, methodAttributes, ImportReference(typeof(void)))
@@ -106,7 +105,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 				{
 					methodIL.Emit(OpCodes.Dup);
 					methodIL.EmitI4(p);
-					methodIL.EmitArg(argOffset + p);
+					methodIL.EmitArg(p + 1);
 					TypeReference paramType = methodDef.Parameters[p].ParameterType;
 					if (paramType.IsGenericInstance && paramType is GenericInstanceType genericInstance && genericInstance.Name == "Nullable`1")
 					{
