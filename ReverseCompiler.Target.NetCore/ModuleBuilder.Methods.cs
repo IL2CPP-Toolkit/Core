@@ -31,11 +31,14 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 			string name = Metadata.GetStringFromIndex(cppMethodDef.nameIndex);
 
 			MethodDefinition existingMethod = typeDef.Methods.FirstOrDefault(method => method.Name == name);
-			if (existingMethod != null && methodAttributes.HasFlag(MethodAttributes.SpecialName) && (name.StartsWith("get_") || name.StartsWith("set_")))
+			if (methodAttributes.HasFlag(MethodAttributes.SpecialName) && existingMethod != null)
 			{
-				// already have this method? assume we generated it for a passthrough field
-				existingMethod.Attributes |= methodAttributes & ~MethodAttributes.MemberAccessMask;
 				Context.Logger?.LogInfo($"Skipping existing method: {typeDef.FullName}.{name} ");
+				if (methodAttributes.HasFlag(MethodAttributes.SpecialName) && (name.StartsWith("get_") || name.StartsWith("set_")))
+				{
+					// copy property accessor attributes so they satisfy things like virtual interface implementations.
+					existingMethod.Attributes |= methodAttributes & ~MethodAttributes.MemberAccessMask;
+				}
 				return null;
 			}
 
