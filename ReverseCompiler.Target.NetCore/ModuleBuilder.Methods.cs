@@ -30,6 +30,10 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 			MethodAttributes methodAttributes = (MethodAttributes)cppMethodDef.flags;
 			string name = Metadata.GetStringFromIndex(cppMethodDef.nameIndex);
 
+			// ignore ctors
+			if (name == ".ctor" || name == ".cctor")
+				return null;
+
 			MethodDefinition existingMethod = typeDef.Methods.FirstOrDefault(method => method.Name == name);
 			if (methodAttributes.HasFlag(MethodAttributes.SpecialName) && existingMethod != null)
 			{
