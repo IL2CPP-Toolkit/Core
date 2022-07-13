@@ -30,9 +30,14 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 			MethodAttributes methodAttributes = (MethodAttributes)cppMethodDef.flags;
 			string name = Metadata.GetStringFromIndex(cppMethodDef.nameIndex);
 
-			if (methodAttributes.HasFlag(MethodAttributes.SpecialName) && typeDef.Methods.Any(method => method.Name == name))
+			MethodDefinition existingMethod = typeDef.Methods.SingleOrDefault(method => method.Name == name);
+			if (existingMethod != null)
 			{
 				// already have this method? assume we generated it for a passthrough field
+				ErrorHandler.Assert(
+					methodAttributes.HasFlag(MethodAttributes.SpecialName) && (name.StartsWith("get_") || name.StartsWith("set_")),
+					"Existing method without [SpecialName] found");
+				existingMethod.Attributes |= methodAttributes & ~MethodAttributes.MemberAccessMask;
 				Context.Logger?.LogInfo($"Skipping existing method: {typeDef.FullName}.{name} ");
 				return null;
 			}
