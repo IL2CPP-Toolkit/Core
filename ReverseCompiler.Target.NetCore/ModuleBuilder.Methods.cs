@@ -30,7 +30,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 			MethodAttributes methodAttributes = (MethodAttributes)cppMethodDef.flags;
 			string name = Metadata.GetStringFromIndex(cppMethodDef.nameIndex);
 
-			MethodDefinition existingMethod = typeDef.Methods.SingleOrDefault(method => method.Name == name);
+			MethodDefinition existingMethod = typeDef.Methods.FirstOrDefault(method => method.Name == name);
 			if (existingMethod != null)
 			{
 				// already have this method? assume we generated it for a passthrough field
