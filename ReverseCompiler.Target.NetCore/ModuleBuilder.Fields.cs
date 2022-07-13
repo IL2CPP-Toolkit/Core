@@ -20,8 +20,8 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 			{
 				Il2CppFieldDefinition cppFieldDef = Metadata.fieldDefs[i];
 				Il2CppType cppFieldType = Il2Cpp.Types[cppFieldDef.typeIndex];
-				string fieldName = Metadata.GetStringFromIndex(cppFieldDef.nameIndex);
-				fieldName = BackingFieldRegex.Replace(fieldName, match => match.Groups[1].Value);
+				string fieldStorageName = Metadata.GetStringFromIndex(cppFieldDef.nameIndex);
+				string fieldName = BackingFieldRegex.Replace(fieldStorageName, match => match.Groups[1].Value);
 
 				TypeReference fieldTypeRef = UseTypeReference(typeDef, cppFieldType);
 				if (fieldTypeRef == null)
@@ -50,11 +50,11 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 
 				if (isStatic)
 				{
-					typeInfo.DefineStaticField(fieldName, fieldTypeRef, 1);
+					typeInfo.DefineStaticField(fieldName, fieldStorageName, fieldTypeRef, 1);
 				}
 				else
 				{
-					typeInfo.DefineField(fieldName, fieldTypeRef, 1);
+					typeInfo.DefineField(fieldName, fieldStorageName, fieldTypeRef, 1);
 				}
 			}
 		}
@@ -121,7 +121,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 				ForType.Methods.Add(methodDef);
 			}
 
-			public void DefineField(string name, TypeReference fieldType, byte indirection)
+			public void DefineField(string name, string storageName, TypeReference fieldType, byte indirection)
 			{
 				GenericInstanceType typeLookupInst = ModuleDefinition.ImportReference(typeof(Il2CppTypeInfoLookup<>)).MakeGenericType(ForTypeRef);
 				MethodDefinition instanceGetMethod = new($"get_{name}", kGetterAttrs, fieldType) { HasThis = true, SemanticsAttributes = MethodSemanticsAttributes.Getter };
@@ -136,7 +136,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 				getValueMethodInst.Parameters.Add(new ParameterDefinition("indirection", ParameterAttributes.HasDefault, ModuleDefinition.TypeSystem.Byte));
 
 				getMethodIL.Emit(OpCodes.Ldarg_0);
-				getMethodIL.Emit(OpCodes.Ldstr, name);
+				getMethodIL.Emit(OpCodes.Ldstr, storageName);
 				getMethodIL.EmitByte(indirection);
 				getMethodIL.Emit(OpCodes.Call, getValueMethodInst);
 				getMethodIL.Emit(OpCodes.Ret);
@@ -148,7 +148,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 				ForType.Properties.Add(instanceProperty);
 			}
 
-			public FieldDefinition DefineStaticField(string name, TypeReference fieldType, byte indirection)
+			public FieldDefinition DefineStaticField(string name, string storageName, TypeReference fieldType, byte indirection)
 			{
 				TypeReference fieldTypeDefType = ModuleDefinition.ImportReference(StaticFieldMemberType).MakeGenericType(ForTypeRef, fieldType);
 				MethodReference ctor = fieldTypeDefType.GetConstructor();
@@ -162,7 +162,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 				FieldReference fieldRef = new(name, fieldTypeDefType, ForTypeRef);
 
 				ILProcessor cctorIl = GetCCtor();
-				cctorIl.Emit(OpCodes.Ldstr, name);
+				cctorIl.Emit(OpCodes.Ldstr, storageName);
 				cctorIl.EmitByte(indirection);
 				cctorIl.Emit(OpCodes.Newobj, ctor);
 				cctorIl.Emit(OpCodes.Stsfld, fieldRef);
