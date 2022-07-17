@@ -22,6 +22,9 @@ namespace Il2CppToolkit.Runtime.Types
 
 				foreach (Type type in asm.GetTypes())
 				{
+					GeneratedAttribute attr = type.GetCustomAttribute<GeneratedAttribute>();
+					if (attr == null) continue;
+
 					s_nameToType.Add(type.FullName, type);
 				}
 			}
