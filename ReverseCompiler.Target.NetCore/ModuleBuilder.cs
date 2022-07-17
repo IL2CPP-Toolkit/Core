@@ -36,6 +36,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 			};
 			Module.AssemblyReferences.Add(SystemRuntimeRef);
 #endif
+			assemblyDefinition.CustomAttributes.Add(new CustomAttribute(ImportReference(typeof(GeneratedAttribute)).GetConstructor()));
 			AddBuiltInTypes(Module);
 			RuntimeObjectTypeRef = ImportReference(typeof(RuntimeObject));
 			IRuntimeObjectTypeRef = ImportReference(typeof(IRuntimeObject));
