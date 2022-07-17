@@ -25,7 +25,7 @@ namespace Il2CppToolkit.Runtime.Types
 					GeneratedAttribute attr = type.GetCustomAttribute<GeneratedAttribute>();
 					if (attr == null) continue;
 
-					s_nameToType.Add(type.FullName, type);
+					s_nameToType.TryAdd(type.FullName, type);
 				}
 			}
 		}
