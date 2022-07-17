@@ -34,11 +34,12 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 			if (name == ".ctor" || name == ".cctor")
 				return null;
 
+			bool isGetterOrSetter = name.StartsWith("get_") || name.StartsWith("set_");
 			MethodDefinition existingMethod = typeDef.Methods.FirstOrDefault(method => method.Name == name);
 			if (methodAttributes.HasFlag(MethodAttributes.SpecialName) && existingMethod != null)
 			{
 				Context.Logger?.LogInfo($"Skipping existing method: {typeDef.FullName}.{name} ");
-				if (methodAttributes.HasFlag(MethodAttributes.SpecialName) && (name.StartsWith("get_") || name.StartsWith("set_")))
+				if (methodAttributes.HasFlag(MethodAttributes.SpecialName) && isGetterOrSetter)
 				{
 					// copy property accessor attributes so they satisfy things like virtual interface implementations.
 					existingMethod.Attributes |= methodAttributes & ~MethodAttributes.MemberAccessMask;
@@ -53,6 +54,11 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 			}
 
 			bool isStatic = methodAttributes.HasFlag(MethodAttributes.Static);
+			if (isStatic/* && isGetterOrSetter*/)
+			{
+				Context.Logger?.LogInfo($"Skipping static property accessor (unsupported): {typeDef.FullName}.{name} ");
+				return null;
+			}
 
 			Il2CppType cppReturnType = Il2Cpp.Types[cppMethodDef.returnType];
 			MethodDefinition methodDef = new(name, methodAttributes, ImportReference(typeof(void)))
@@ -74,8 +80,8 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 
 			if (isStatic)
 			{
-				ParameterDefinition runtimeParam = new("runtime", ParameterAttributes.None, IRuntimeObjectTypeRef);
-				methodDef.Parameters.Add(runtimeParam);
+				ParameterDefinition sourceParam = new("source", ParameterAttributes.None, IMemorySourceTypeRef);
+				methodDef.Parameters.Add(sourceParam);
 			}
 
 			methodDef.ReturnType = UseTypeReference(methodDef, cppReturnType);

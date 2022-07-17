@@ -7,7 +7,7 @@ namespace Il2CppToolkit.Runtime
 	{
 		private readonly string Name;
 		private readonly byte Indirection;
-		public StaticFieldMember([CallerMemberName] string name = "", byte indirection = 1)
+		public StaticFieldMember(string name, byte indirection)
 		{
 			Name = name;
 			Indirection = indirection;
