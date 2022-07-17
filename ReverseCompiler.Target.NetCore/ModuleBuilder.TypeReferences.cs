@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Il2CppToolkit.Model;
+using Il2CppToolkit.Runtime;
 using Mono.Cecil;
 
 namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
@@ -109,6 +110,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 				typeFlags |= TypeAttributes.Public;
 
 			typeDef = new TypeDefinition(namespaceName, typeName, typeFlags);
+			typeDef.CustomAttributes.Add(new CustomAttribute(ImportReference(typeof(GeneratedAttribute)).GetConstructor()));
 			TypeDefinitions.Add(cppTypeDef, typeDef);
 			return typeDef;
 		}
