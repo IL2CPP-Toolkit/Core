@@ -77,9 +77,9 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 					Context.Logger?.LogInfo($"[{typeRef.FullName}] Fields");
 					DefineFields(cppTypeDef, typeDef);
 					Context.Logger?.LogInfo($"[{typeRef.FullName}] Methods");
-					// DefineMethods(cppTypeDef, typeDef);
+					DefineMethods(cppTypeDef, typeDef);
 					Context.Logger?.LogInfo($"[{typeRef.FullName}] Properties");
-					// DefineProperties(cppTypeDef, typeDef);
+					DefineProperties(cppTypeDef, typeDef);
 				}
 			} while (TypeDefinitionQueue.Count > 0 || typesToBuild.Count > 0);
 		}

@@ -54,7 +54,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 			}
 
 			bool isStatic = methodAttributes.HasFlag(MethodAttributes.Static);
-			if (isStatic/* && isGetterOrSetter*/)
+			if (isStatic && isGetterOrSetter)
 			{
 				Context.Logger?.LogInfo($"Skipping static property accessor (unsupported): {typeDef.FullName}.{name} ");
 				return null;
