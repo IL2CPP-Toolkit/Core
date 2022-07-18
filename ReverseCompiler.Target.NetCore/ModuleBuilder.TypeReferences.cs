@@ -79,6 +79,26 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 				return null;
 			}
 
+			// exclude delegate types
+			if (cppTypeDef.parentIndex != -1)
+			{
+				var parentType = Il2Cpp.Types[cppTypeDef.parentIndex];
+				if (parentType.type == Il2CppTypeEnum.IL2CPP_TYPE_CLASS)
+				{
+					Il2CppTypeDefinition cppParentTypeDef = Context.Model.GetTypeDefinitionFromIl2CppType(parentType);
+					string parentTypeName = Metadata.GetStringFromIndex(cppParentTypeDef.nameIndex);
+					if (parentTypeName == "Delegate" || parentTypeName == "MulticastDelegate")
+					{
+						Context.Logger?.LogWarning($"Excluding delegate type {typeName}");
+						return null;
+					}
+				}
+			}
+			if (typeName.Contains("<") && !IncludeCompilerGeneratedTypes)
+			{
+				return null;
+			}
+
 			// nested type
 			if (cppTypeDef.declaringTypeIndex != -1)
 			{

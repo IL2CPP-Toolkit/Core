@@ -123,7 +123,9 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 				// split type/interface name: ^(.*)\.(.+)$
 				while (openRefs.TryDequeue(out TypeReference typeRef))
 				{
-					if (typeRef.FullName == interfaceName)
+					if (typeRef.FullName == interfaceName
+						// nested interfaces may not yet have been processed, so accept a simple name match in those cases
+						|| (interfaceName.EndsWith($".{typeRef.Name}") && (typeRef.Resolve().Attributes & TypeAttributes.VisibilityMask) > TypeAttributes.Public))
 					{
 						// if (typeRef is TypeDefinition overrideMethodOwner)
 						// {
