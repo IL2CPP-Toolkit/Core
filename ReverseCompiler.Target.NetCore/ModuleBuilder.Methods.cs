@@ -162,6 +162,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 			}
 
 			TypeReference classTypeRef = typeDef;
+			int parameterOffset = isStatic ? 1 : 0;
 			if (typeDef.HasGenericParameters)
 				classTypeRef = typeDef.MakeGenericType(typeDef.GenericParameters);
 			GenericInstanceType typeLookupInst = Module.ImportReference(typeof(Il2CppTypeInfoLookup<>)).MakeGenericType(classTypeRef);
@@ -184,7 +185,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 					methodIL.Emit(OpCodes.Dup);
 					methodIL.EmitI4(p);
 					methodIL.EmitArg(p + 1);
-					TypeReference paramType = methodDef.Parameters[p].ParameterType;
+					TypeReference paramType = methodDef.Parameters[p + parameterOffset].ParameterType;
 					if (paramType.IsGenericInstance && paramType is GenericInstanceType genericInstance && genericInstance.Name == "Nullable`1")
 					{
 						var nullableType = ImportReference(typeof(Nullable<>)).MakeGenericType(genericInstance.ElementType.GenericParameters);
