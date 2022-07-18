@@ -1,4 +1,5 @@
 using System;
+using System.Runtime.CompilerServices;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 
@@ -71,14 +72,20 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 			FieldDefinition AddIRuntimeObjectProperty(string name, TypeReference typeReference)
 			{
 				FieldDefinition fieldDef = new($"<{name}>k__BackingField", FieldAttributes.Private | FieldAttributes.InitOnly, typeReference);
-				MethodDefinition getMethodDef = new($"get_{name}", kRTObjGetterAttrs, typeReference);
-				getMethodDef.SemanticsAttributes = MethodSemanticsAttributes.Getter;
+				fieldDef.CustomAttributes.Add(new CustomAttribute(ImportReference(typeof(CompilerGeneratedAttribute)).GetConstructor()));
+				MethodDefinition getMethodDef = new($"get_{name}", kRTObjGetterAttrs, typeReference)
+				{
+					SemanticsAttributes = MethodSemanticsAttributes.Getter
+				};
+				getMethodDef.CustomAttributes.Add(new CustomAttribute(ImportReference(typeof(CompilerGeneratedAttribute)).GetConstructor()));
 				ILProcessor getMethodIL = getMethodDef.Body.GetILProcessor();
 				getMethodIL.Emit(OpCodes.Ldarg_0);
 				getMethodIL.Emit(OpCodes.Ldfld, fieldDef);
 				getMethodIL.Emit(OpCodes.Ret);
-				PropertyDefinition propertyDef = new($"{name}", PropertyAttributes.None, typeReference);
-				propertyDef.GetMethod = getMethodDef;
+				PropertyDefinition propertyDef = new($"{name}", PropertyAttributes.None, typeReference)
+				{
+					GetMethod = getMethodDef
+				};
 				typeDef.Fields.Add(fieldDef);
 				typeDef.Methods.Add(getMethodDef);
 				typeDef.Properties.Add(propertyDef);
@@ -86,6 +93,18 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 			}
 			FieldDefinition sourceFieldDef = AddIRuntimeObjectProperty("Source", IMemorySourceTypeRef);
 			FieldDefinition addressFieldDef = AddIRuntimeObjectProperty("Address", ImportReference(typeof(UInt64)));
+
+			MethodDefinition defaultCtorMethod = new(".ctor", kCtorAttrs, ImportReference(typeof(void)));
+			defaultCtorMethod.Body.GetILProcessor().Emit(OpCodes.Ldarg_0);
+			defaultCtorMethod.Body.GetILProcessor().Emit(OpCodes.Ldc_I4_0);
+			defaultCtorMethod.Body.GetILProcessor().Emit(OpCodes.Conv_I8);
+			defaultCtorMethod.Body.GetILProcessor().Emit(OpCodes.Stsfld, addressFieldDef);
+			defaultCtorMethod.Body.GetILProcessor().Emit(OpCodes.Ldarg_0);
+			defaultCtorMethod.Body.GetILProcessor().Emit(OpCodes.Ldnull);
+			defaultCtorMethod.Body.GetILProcessor().Emit(OpCodes.Stsfld, sourceFieldDef);
+			defaultCtorMethod.Body.GetILProcessor().Emit(OpCodes.Ret);
+			typeDef.Methods.Add(defaultCtorMethod);
+
 			MethodDefinition ctorMethod = new(".ctor", kCtorAttrs, ImportReference(typeof(void)));
 			ctorMethod.Parameters.Add(new ParameterDefinition(IMemorySourceTypeRef));
 			ctorMethod.Parameters.Add(new ParameterDefinition(ImportReference(typeof(UInt64))));

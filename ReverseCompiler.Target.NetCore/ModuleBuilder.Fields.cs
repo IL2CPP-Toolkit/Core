@@ -136,6 +136,12 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 				getValueMethodInst.Parameters.Add(new ParameterDefinition("indirection", ParameterAttributes.HasDefault, ModuleDefinition.TypeSystem.Byte));
 
 				getMethodIL.Emit(OpCodes.Ldarg_0);
+
+				if (ForType.IsValueType)
+				{
+					getMethodIL.Emit(OpCodes.Ldobj, ForTypeRef);
+					getMethodIL.Emit(OpCodes.Box, ForTypeRef);
+				}
 				getMethodIL.Emit(OpCodes.Ldstr, storageName);
 				getMethodIL.EmitByte(indirection);
 				getMethodIL.Emit(OpCodes.Call, getValueMethodInst);

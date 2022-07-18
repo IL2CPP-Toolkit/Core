@@ -56,7 +56,7 @@ namespace Il2CppToolkit.Runtime
 			};
 		}
 
-		public static Value CallMethodCore(IRuntimeObject obj, [CallerMemberName] string name = "", object[] arguments = null)
+		public static Value CallMethodCore(Il2CsRuntimeContext context, IRuntimeObject obj, [CallerMemberName] string name = "", object[] arguments = null)
 		{
 
 			if (arguments == null)
@@ -69,18 +69,18 @@ namespace Il2CppToolkit.Runtime
 				Instance = obj == null ? null : new Il2CppObject() { Address = obj.Address, Klass = Il2CppTypeName<TClass>.klass },
 			};
 			req.Arguments.AddRange(arguments.Select(ValueFrom));
-			CallMethodResponse response = obj.Source.ParentContext.InjectionClient.Il2Cpp.CallMethod(req);
+			CallMethodResponse response = context.InjectionClient.Il2Cpp.CallMethod(req);
 			return response.ReturnValue;
 		}
 
 		public static void CallMethod(IRuntimeObject obj, [CallerMemberName] string name = "", object[] arguments = null)
 		{
-			CallMethodCore(obj, name, arguments);
+			CallMethodCore(obj.Source.ParentContext, obj, name, arguments);
 		}
 
 		public static TValue CallMethod<TValue>(IRuntimeObject obj, [CallerMemberName] string name = "", object[] arguments = null)
 		{
-			Value returnValue = CallMethodCore(obj, name, arguments);
+			Value returnValue = CallMethodCore(obj.Source.ParentContext, obj, name, arguments);
 
 			if (returnValue == null)
 				return default;
@@ -98,6 +98,33 @@ namespace Il2CppToolkit.Runtime
 				ValueOneofCase.Uint64 => (TValue)(object)returnValue.Uint64,
 				_ => default,
 			};
+		}
+
+		public static TValue CallStaticMethod<TValue>(IMemorySource source, [CallerMemberName] string name = "", object[] arguments = null)
+		{
+			Value returnValue = CallMethodCore(source.ParentContext, null, name, arguments);
+
+			if (returnValue == null)
+				return default;
+
+			return returnValue.ValueCase switch
+			{
+				ValueOneofCase.Bit => (TValue)(object)returnValue.Bit,
+				ValueOneofCase.Double => (TValue)(object)returnValue.Double,
+				ValueOneofCase.Float => (TValue)(object)returnValue.Float,
+				ValueOneofCase.Int32 => (TValue)(object)returnValue.Int32,
+				ValueOneofCase.Int64 => (TValue)(object)returnValue.Int64,
+				ValueOneofCase.Obj => HydrateObject<TValue>(source.ParentContext, returnValue.Obj),
+				ValueOneofCase.Str => (TValue)(object)returnValue.Str,
+				ValueOneofCase.Uint32 => (TValue)(object)returnValue.Uint32,
+				ValueOneofCase.Uint64 => (TValue)(object)returnValue.Uint64,
+				_ => default,
+			};
+		}
+
+		public static void CallStaticMethod(IMemorySource source, [CallerMemberName] string name = "", object[] arguments = null)
+		{
+			CallMethodCore(source.ParentContext, null, name, arguments);
 		}
 
 		private static TValue HydrateObject<TValue>(IMemorySource source, Il2CppObject obj)

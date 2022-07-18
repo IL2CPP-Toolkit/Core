@@ -170,6 +170,12 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 			{
 				ILProcessor methodIL = methodDef.Body.GetILProcessor();
 				methodIL.Emit(OpCodes.Ldarg_0);
+				// value type?
+				if (!isStatic && typeDef.IsValueType)
+				{
+					methodIL.Emit(OpCodes.Ldobj, typeDef);
+					methodIL.Emit(OpCodes.Box, typeDef);
+				}
 				methodIL.Emit(OpCodes.Ldstr, name);
 				methodIL.EmitI4(cppMethodDef.parameterCount);
 				methodIL.Emit(OpCodes.Newarr, ImportReference(typeof(object)));
@@ -200,27 +206,29 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 		private MethodReference PrepareMethodRefAndGetImplementationToCall(MethodDefinition methodDef, Il2CppType returnType, GenericInstanceType typeLookupInst)
 		{
 			TypeReference typeArg = methodDef.ReturnType;
-			TypeReference returnTypeRef = typeArg;
-			if (returnType.type == Il2CppTypeEnum.IL2CPP_TYPE_VOID)
+			bool isStatic = methodDef.IsStatic;
+			MethodReference callMethod = new(isStatic ? "CallStaticMethod" : "CallMethod", methodDef.ReturnType, typeLookupInst) { HasThis = false };
+			if (returnType.type != Il2CppTypeEnum.IL2CPP_TYPE_VOID)
 			{
-				MethodReference callMethod = new("CallMethod", methodDef.ReturnType, typeLookupInst) { HasThis = false };
-				callMethod.Parameters.Add(new ParameterDefinition(IRuntimeObjectTypeRef));
-				callMethod.Parameters.Add(new ParameterDefinition(ImportReference(typeof(string))));
-				callMethod.Parameters.Add(new ParameterDefinition(new ArrayType(ImportReference(typeof(object)))));
-				return callMethod;
+				callMethod.GenericParameters.Add(new GenericParameter("TValue", callMethod));
+				callMethod.ReturnType = callMethod.GenericParameters[0];
+			}
+			if (isStatic)
+			{
+				callMethod.Parameters.Add(new ParameterDefinition(IMemorySourceTypeRef));
 			}
 			else
 			{
-				string methodName = "CallMethod";
-				MethodReference callMethod = new(methodName, methodDef.ReturnType, typeLookupInst) { HasThis = false };
-				callMethod.GenericParameters.Add(new GenericParameter("TValue", callMethod));
 				callMethod.Parameters.Add(new ParameterDefinition(IRuntimeObjectTypeRef));
-				callMethod.Parameters.Add(new ParameterDefinition(ImportReference(typeof(string))));
-				callMethod.Parameters.Add(new ParameterDefinition(new ArrayType(ImportReference(typeof(object)))));
-				callMethod.ReturnType = callMethod.GenericParameters[0];
-				GenericInstanceMethod callMethodInst = callMethod.MakeGeneric(typeArg);
-				return callMethodInst;
 			}
+			callMethod.Parameters.Add(new ParameterDefinition(ImportReference(typeof(string))));
+			callMethod.Parameters.Add(new ParameterDefinition(new ArrayType(ImportReference(typeof(object)))));
+
+			if (returnType.type != Il2CppTypeEnum.IL2CPP_TYPE_VOID)
+			{
+				return callMethod.MakeGeneric(typeArg);
+			}
+			return callMethod;
 		}
 	}
 }

@@ -25,7 +25,8 @@
             "args": [
                 "${workspaceFolder}\\Test.sln",
                 "-m:8",
-                "-verbosity:m"
+                "-verbosity:m",
+                "-p:TargetFramework=net5.0"
             ],
             "problemMatcher": "$msCompile",
             "group": {
