@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using Il2CppToolkit.Common.Errors;
 using Il2CppToolkit.Model;
 using Il2CppToolkit.Runtime;
@@ -11,6 +12,8 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 {
 	public partial class ModuleBuilder
 	{
+		private static readonly Regex splitExplicitImpl = new(@"^(.*)\.(.+)$", RegexOptions.Compiled);
+		private static readonly Regex templateBrackets = new(@"<[^<>]*?>", RegexOptions.Compiled);
 		private void DefineMethods(Il2CppTypeDefinition cppTypeDef, TypeDefinition typeDef)
 		{
 			int methodEnd = cppTypeDef.methodStart + cppTypeDef.method_count;
@@ -111,10 +114,13 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 			if (methodDef.IsPrivate && methodDef.IsFinal && methodDef.IsVirtual && lastDot >= 0)
 			{
 				ErrorHandler.Assert(lastDot != -1, "explicit impl without interface in name");
-				string interfaceName = name.Substring(0, lastDot);
-				string methodName = name.Substring(lastDot + 1);
+				Match splitMatch = splitExplicitImpl.Match(name);
+				string interfaceName = splitMatch.Groups[1].Captures[0].Value;
+				string methodName = splitMatch.Groups[2].Captures[0].Value;
+				interfaceName = templateBrackets.Replace(interfaceName, match => $"`{match.Value.Split(',').Count()}{match.Value}");
 				Queue<TypeReference> openRefs = new();
 				openRefs.Enqueue(typeDef);
+				// split type/interface name: ^(.*)\.(.+)$
 				while (openRefs.TryDequeue(out TypeReference typeRef))
 				{
 					if (typeRef.FullName == interfaceName)
