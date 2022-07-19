@@ -98,10 +98,10 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 			defaultCtorMethod.Body.GetILProcessor().Emit(OpCodes.Ldarg_0);
 			defaultCtorMethod.Body.GetILProcessor().Emit(OpCodes.Ldc_I4_0);
 			defaultCtorMethod.Body.GetILProcessor().Emit(OpCodes.Conv_I8);
-			defaultCtorMethod.Body.GetILProcessor().Emit(OpCodes.Stsfld, addressFieldDef);
+			defaultCtorMethod.Body.GetILProcessor().Emit(OpCodes.Stfld, addressFieldDef);
 			defaultCtorMethod.Body.GetILProcessor().Emit(OpCodes.Ldarg_0);
 			defaultCtorMethod.Body.GetILProcessor().Emit(OpCodes.Ldnull);
-			defaultCtorMethod.Body.GetILProcessor().Emit(OpCodes.Stsfld, sourceFieldDef);
+			defaultCtorMethod.Body.GetILProcessor().Emit(OpCodes.Stfld, sourceFieldDef);
 			defaultCtorMethod.Body.GetILProcessor().Emit(OpCodes.Ret);
 			typeDef.Methods.Add(defaultCtorMethod);
 
