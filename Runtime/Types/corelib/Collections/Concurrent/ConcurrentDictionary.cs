@@ -33,10 +33,13 @@ namespace Il2CppToolkit.Runtime.Types.corelib.Collections.Concurrent
 		[Ignore]
 		private readonly Dictionary<TKey, TValue> m_dict = new();
 
+		private bool m_isLoaded = false;
 		private void Load()
 		{
-			if (Address == 0)
+			if (Address == 0 || m_isLoaded)
 				return;
+
+			m_isLoaded = true;
 
 			foreach (Node head in m_table.Buckets)
 			{

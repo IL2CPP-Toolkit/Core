@@ -13,11 +13,13 @@ namespace Il2CppToolkit.Runtime.Types.corelib.Collections.Generic
 
 		private readonly Stack<T> m_stack = new();
 
+		private bool m_isLoaded = false;
 		private void Load()
 		{
-			if (Address == 0)
+			if (Address == 0 || m_isLoaded)
 				return;
 
+			m_isLoaded = true;
 			uint count = Source.ReadValue<uint>(Address + 0x18);
 			Native__Array<T> entries = new(Source, Source.ReadPointer(Address + 0x10), count);
 			foreach (T entry in entries)
