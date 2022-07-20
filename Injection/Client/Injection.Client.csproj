@@ -22,7 +22,7 @@
 		</None>
 		<TfmSpecificPackageFile Include="$(BinDir)\Il2CppToolkit.Injection.Host.dll" Link="Il2CppToolkit.Injection.Host.dll">
 			<Pack>true</Pack>
-			<PackagePath>lib/$(TargetFramework)</PackagePath>
+			<PackagePath>runtimes/win7-x64/native</PackagePath>
 		</TfmSpecificPackageFile>
 		<None Include="$(BinDir)\Il2CppToolkit.Injection.Host.pdb" Link="Il2CppToolkit.Injection.Host.pdb">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
