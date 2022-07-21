@@ -12,7 +12,12 @@ namespace Il2CppToolkit.Runtime
 		}
 		public static string GetTypeName(Type type, bool includeFirst = true)
 		{
-			string typeName = includeFirst ? type.Namespace : "";
+			string typeName = string.Empty;
+			if (type.DeclaringType != null)
+			{
+				typeName = $"{GetTypeName(type.DeclaringType, includeFirst)}.";
+			}
+			typeName += includeFirst ? type.Namespace : "";
 			if (!string.IsNullOrEmpty(typeName))
 				typeName += ".";
 			typeName += type.Name;
