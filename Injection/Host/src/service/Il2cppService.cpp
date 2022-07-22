@@ -2,6 +2,8 @@
 #include <string>
 #include <locale>
 #include <codecvt>
+#include <ranges>
+#include <stack>
 #include "ExecutionQueue.h"
 #include <il2cpp/il2cpp-api.h>
 #include <il2cpp/il2cpp-string-types.h>
@@ -245,14 +247,58 @@ struct ArgumentValueHolder
 	::il2cppservice::GetTypeInfoResponse* response) noexcept
 {
 	std::optional<::grpc::Status> result{m_executionQueue.Invoke<::grpc::Status>([&]() mutable noexcept {
-		const Il2CppClassInfo* pClassInfo{Il2CppContext::instance().FindClass(request->klass().namespaze(), request->klass().name())};
-		if (!pClassInfo)
+		Il2CppClass* pCls{nullptr};
+		{
+			const ::il2cppservice::ClassId* klass{&request->klass()};
+			std::stack<const ::il2cppservice::ClassId*> classHeirarchy{};
+			classHeirarchy.push(klass);
+			while (klass->has_declaringtype())
+			{
+				klass = &klass->declaringtype();
+				classHeirarchy.push(klass);
+			}
+			// reverse
+			while (!classHeirarchy.empty())
+			{
+				const ::il2cppservice::ClassId* pParent{classHeirarchy.top()};
+				if (pCls == nullptr)
+				{
+					const Il2CppClassInfo* pDeclaringClassInfo{Il2CppContext::instance().FindClass(pParent->namespaze(), pParent->name())};
+					if (!pDeclaringClassInfo)
+						return ::grpc::Status{grpc::StatusCode::NOT_FOUND, "Could not find class"};
+					pCls = pDeclaringClassInfo->klass();
+				}
+				else
+				{
+					void* iter{nullptr};
+					bool found{false};
+					while (Il2CppClass* pNestedClass = il2cpp_class_get_nested_types(pCls, &iter))
+					{
+						if (pParent->name() == pNestedClass->name)
+						{
+							pCls = pNestedClass;
+							found = true;
+							break;
+						}
+					}
+					if (!found)
+						return ::grpc::Status{grpc::StatusCode::NOT_FOUND, "Could not find class"};
+				}
+
+				if (!pCls)
+					return ::grpc::Status{grpc::StatusCode::NOT_FOUND, "Could not find class"};
+				classHeirarchy.pop();
+			}
+		}
+
+		if (!pCls)
 			return ::grpc::Status{grpc::StatusCode::NOT_FOUND, "Could not find class"};
 
-		const Il2CppClass* pCls{pClassInfo->klass()};
+		Il2CppClassInfo classInfo{pCls};
+
 		response->mutable_typeinfo()->set_address(reinterpret_cast<uint64_t>(pCls));
 		response->mutable_typeinfo()->set_staticfieldsaddress(reinterpret_cast<uint64_t>(il2cpp_class_get_static_field_data(pCls)));
-		response->mutable_typeinfo()->mutable_klassid()->set_name(pClassInfo->name());
+		response->mutable_typeinfo()->mutable_klassid()->set_name(classInfo.name());
 
 		for (int n{0}, m{pCls->field_count}; n < m; ++n)
 		{

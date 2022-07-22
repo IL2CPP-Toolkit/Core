@@ -14,6 +14,8 @@ message ClassId
 {
 	string namespaze = 1;
 	string name = 2;
+
+	optional ClassId declaringType = 8;
 }
 
 message Il2CppObject

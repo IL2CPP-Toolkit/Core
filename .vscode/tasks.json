@@ -24,7 +24,7 @@
             "type": "process",
             "args": [
                 "${workspaceFolder}\\Test.sln",
-                "-m:8",
+                "-m:1",
                 "-verbosity:m",
                 "-p:TargetFramework=net5.0"
             ],

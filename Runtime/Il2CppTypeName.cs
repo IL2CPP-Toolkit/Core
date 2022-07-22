@@ -8,16 +8,18 @@ namespace Il2CppToolkit.Runtime
 	{
 		public static ClassId GetKlass(Type type)
 		{
-			return new() { Name = GetTypeName(type, false), Namespaze = type.Namespace };
+			ClassId klass = new() { Name = GetTypeName(type, false), Namespaze = type.Namespace };
+			Type declaringType = type;
+			ClassId currentKlass = klass;
+			while ((declaringType = declaringType.DeclaringType) != null)
+			{
+				currentKlass = currentKlass.DeclaringType = GetKlass(declaringType);
+			}
+			return klass;
 		}
 		public static string GetTypeName(Type type, bool includeFirst = true)
 		{
-			string typeName = string.Empty;
-			if (type.DeclaringType != null)
-			{
-				typeName = $"{GetTypeName(type.DeclaringType, includeFirst)}.";
-			}
-			typeName += includeFirst ? type.Namespace : "";
+			string typeName = includeFirst ? type.Namespace : "";
 			if (!string.IsNullOrEmpty(typeName))
 				typeName += ".";
 			typeName += type.Name;

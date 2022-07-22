@@ -108,6 +108,9 @@
         "xutility": "cpp",
         "condition_variable": "cpp",
         "*.inc": "cpp",
-        "codecvt": "cpp"
+        "codecvt": "cpp",
+        "ranges": "cpp",
+        "span": "cpp",
+        "stack": "cpp"
     }
 }
