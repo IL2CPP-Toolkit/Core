@@ -30,7 +30,7 @@ message Value
 	oneof value
 	{
 		double double_ = 1;
-		double float_ = 2;
+		float float_ = 2;
 		int32 int32_ = 3;
 		uint32 uint32_ = 4;
 		int64 int64_ = 5;
