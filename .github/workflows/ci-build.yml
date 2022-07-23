@@ -44,8 +44,6 @@ jobs:
       # this time.
       - name: Restore artifacts, and setup vcpkg
         uses: lukka/run-vcpkg@v10
-        with:
-          runVcpkgInstall: true
 
       # Add  MSBuild to the PATH: https://github.com/microsoft/setup-msbuild
       - name: Setup MSBuild.exe
@@ -65,6 +63,4 @@ jobs:
       - name: Push packages to github
         run: |
           dotnet nuget add source --username il2cpp-toolkit --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text --name github "https://nuget.pkg.github.com/il2cpptoolkit/index.json"
-          dotnet nuget push publish\*.nupkg -k $env:PUBLISH_TOKEN -s github --skip-duplicate
-        env:
-          PUBLISH_TOKEN: ${{ secrets.PUBLISH_TOKEN }}
+          dotnet nuget push publish\*.nupkg -k ${{ secrets.GITHUB_TOKEN }} -s github --skip-duplicate
