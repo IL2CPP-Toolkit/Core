@@ -2,6 +2,7 @@
 	<PropertyGroup>
 		<TargetFrameworks>net472;net5.0;net6.0</TargetFrameworks>
 		<LangVersion>9.0</LangVersion>
+		<RepositoryUrl>https://github.com/IL2CPP-Toolkit/Core</RepositoryUrl>
 		<AssemblyName>Il2CppToolkit.Injection.Client</AssemblyName>
 		<OutputType>Library</OutputType>
 		<Platforms>x64</Platforms>
