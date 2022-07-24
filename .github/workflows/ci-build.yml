@@ -64,5 +64,4 @@ jobs:
       # NuGet Push
       - name: Push packages to github
         run: |
-          dotnet nuget add source --username il2cpp-toolkit --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text --name github "https://nuget.pkg.github.com/il2cpptoolkit/index.json"
-          dotnet nuget push publish\*.nupkg -k ${{ secrets.GITHUB_TOKEN }} -s github --skip-duplicate
+          dotnet nuget push publish\*.nupkg -k ${{ secrets.GITHUB_TOKEN }} -s https://nuget.pkg.github.com/il2cpptoolkit/index.json --skip-duplicate
