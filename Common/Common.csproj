@@ -6,6 +6,7 @@
     <OutputType>Library</OutputType>
     <AssemblyName>Il2CppToolkit.Common</AssemblyName>
     <RootNamespace>Il2CppToolkit.Common</RootNamespace>
+    <RepositoryUrl>https://github.com/IL2CPP-Toolkit/Core</RepositoryUrl>
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
     <Platforms>x64</Platforms>
   </PropertyGroup>

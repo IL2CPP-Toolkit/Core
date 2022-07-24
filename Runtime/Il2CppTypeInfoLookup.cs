@@ -129,7 +129,11 @@ namespace Il2CppToolkit.Runtime
 
 		private static TValue HydrateObject<TValue>(IMemorySource source, Il2CppObject obj)
 		{
-			return (TValue)Activator.CreateInstance(typeof(TValue), source, obj.Address);
+			string typeName = Il2CppTypeName.GetTypeName(obj.Klass);
+			Type objType = Types.LoadedTypes.GetType(typeName);
+			if (objType == null)
+				return default;
+			return (TValue)Activator.CreateInstance(objType, source, obj.Address);
 		}
 
 		public static TValue GetValue<TValue>(IRuntimeObject obj, string name, byte indirection = 1)

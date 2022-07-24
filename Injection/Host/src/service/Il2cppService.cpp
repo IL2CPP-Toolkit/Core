@@ -39,6 +39,19 @@ struct numeric_value
 	} value;
 };
 
+void SetClassId(::il2cppservice::ClassId* pClassId, const Il2CppClass* pClass) noexcept
+{
+	pClassId->set_name(pClass->name);
+	pClassId->set_namespaze(pClass->namespaze);
+	const Il2CppClass* pDeclaringType = pClass;
+	::il2cppservice::ClassId* pCurrentClass = pClassId;
+	while ((pDeclaringType = pDeclaringType->declaringType) != nullptr)
+	{
+		pCurrentClass = pCurrentClass->mutable_declaringtype();
+		SetClassId(pCurrentClass, pDeclaringType);
+	}
+}
+
 static void ObjectToValue(Il2CppObject* pObj, const Il2CppType& cppType, ::il2cppservice::Value& value) noexcept
 {
 	switch (cppType.type)
@@ -103,8 +116,7 @@ static void ObjectToValue(Il2CppObject* pObj, const Il2CppType& cppType, ::il2cp
 		case Il2CppTypeEnum::IL2CPP_TYPE_CLASS: {
 			const auto& pReturnObj = value.mutable_obj_();
 			pReturnObj->set_address(reinterpret_cast<uint64_t>(pObj));
-			pReturnObj->mutable_klass()->set_name(pObj->klass->name);
-			pReturnObj->mutable_klass()->set_namespaze(pObj->klass->namespaze);
+			SetClassId(pReturnObj->mutable_klass(), pObj->klass);
 			break;
 		}
 		case Il2CppTypeEnum::IL2CPP_TYPE_STRING: {
@@ -120,6 +132,7 @@ static void ObjectToValue(Il2CppObject* pObj, const Il2CppType& cppType, ::il2cp
 		}
 	}
 }
+
 
 template<typename T>
 struct ArgumentValue

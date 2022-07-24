@@ -17,6 +17,7 @@ namespace Il2CppToolkit.Runtime
 			}
 			return klass;
 		}
+
 		public static string GetTypeName(Type type, bool includeFirst = true)
 		{
 			string typeName = includeFirst ? type.Namespace : "";
@@ -31,6 +32,23 @@ namespace Il2CppToolkit.Runtime
 				typeName += string.Join(",", type.GenericTypeArguments.Select(arg => GetTypeName(arg)));
 				typeName += ">";
 			}
+			return typeName;
+		}
+
+		public static string GetTypeName(ClassId type)
+		{
+			string typeName = string.Empty;
+			if (type.DeclaringType != null)
+			{
+				typeName = GetTypeName(type.DeclaringType);
+				typeName += "+";
+			}
+			if (!string.IsNullOrEmpty(type.Namespaze))
+			{
+				typeName += type.Namespaze;
+				typeName += ".";
+			}
+			typeName += type.Name;
 			return typeName;
 		}
 	}

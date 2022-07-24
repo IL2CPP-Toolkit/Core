@@ -9,9 +9,14 @@ namespace Il2CppToolkit.Runtime.Types
 	{
 		private static readonly Dictionary<string, Type> s_nameToType = new();
 
+		public static Type GetType(string fullName)
+		{
+			return s_nameToType.TryGetValue(fullName, out Type retVal) ? retVal : null;
+		}
+
 		public static Type GetType(ClassDefinition classDef)
 		{
-			return s_nameToType.TryGetValue(classDef.FullName, out Type retVal) ? retVal : null;
+			return GetType(classDef.FullName);
 		}
 
 		static LoadedTypes()
