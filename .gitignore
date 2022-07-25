@@ -3,6 +3,7 @@ nuget-local
 packages
 /Test
 *.log
+.nuget-token
 
 publish
 

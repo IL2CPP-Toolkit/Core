@@ -1,16 +1,27 @@
 import caporal from "caporal";
-import { build, Flavor, Platform } from "./build";
+import { build } from "./build";
+import { push } from "./nuget";
+import { buildOptions, Flavor } from "./options";
 
-caporal
-  .version("1.0.0")
+const cli = caporal.version("1.0.0");
+cli
   .command("local", "Builds and publishes local nuget versions")
-  .action(buildLocal);
+  .option("-n, --no-build", "No build")
+  .action(buildLocal as any);
 
-caporal.parse(process.argv);
+cli.parse(process.argv);
 
-async function buildLocal() {
-  await build({
+interface CliArgs {
+  noBuild: boolean;
+}
+
+async function buildLocal(_: any, args: CliArgs, _logger: any) {
+  const opts = buildOptions({
     flavor: Flavor.Debug,
     targets: ["Pack"],
   });
+  if (!args.noBuild) {
+    await build(opts);
+  }
+  await push(opts);
 }

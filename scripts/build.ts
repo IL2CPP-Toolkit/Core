@@ -1,37 +1,8 @@
 import { spawn } from "child-process-promise";
 import path from "path";
+import { BuildOptions } from "./options";
 
-export enum Flavor {
-  Debug = "Debug",
-  Release = "Release",
-}
-
-export enum Platform {
-  x64 = "x64",
-}
-
-export interface BuildOptions {
-  project: string;
-  flavor: Flavor;
-  platform: Platform;
-  targets: string[];
-  publishDir: string;
-  packageDir: string;
-}
-
-const basePath = path.resolve(__dirname, "..");
-
-const defaultOptions: BuildOptions = {
-  project: path.join(basePath, "Core.sln"),
-  flavor: Flavor.Debug,
-  platform: Platform.x64,
-  targets: ["Build"],
-  publishDir: path.join(basePath, "publish/"),
-  packageDir: path.join(basePath, "nuget-local/"),
-};
-
-export function build(options: Partial<BuildOptions> = {}) {
-  const opts = { ...defaultOptions, ...options };
+export function build(opts: BuildOptions) {
   const cmdArgs = [
     opts.project,
     "-m:1",
@@ -42,11 +13,9 @@ export function build(options: Partial<BuildOptions> = {}) {
     `-p:PackageOutputPath=${path.format(path.posix.parse(opts.packageDir))}`,
     `-p:PublishDir=${path.format(path.posix.parse(opts.publishDir))}`,
   ];
-  console.log({ cmdArgs }, cmdArgs.join(" "));
-  // throw new Error();
   return spawn(
     `${process.env.VSInstallDir}/MSBuild/Current/Bin/amd64/MSBuild.exe`,
     cmdArgs,
-    { stdio: "inherit", cwd: basePath }
+    { stdio: "inherit", cwd: opts.basePath }
   );
 }
