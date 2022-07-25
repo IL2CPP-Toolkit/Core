@@ -56,13 +56,13 @@ jobs:
       - name: Restore the application
         run: msbuild $env:Solution_Name /t:Restore /p:Configuration=Release
 
-      # Build + Pack
+      # Build
       - name: Build
         run: |
           msbuild $env:Solution_Name -m -t:Build -p:Configuration=Release -p:Platform=x64
-          msbuild $env:Solution_Name -m -t:Pack -p:TargetFramework=net5.0 -p:Configuration=Release -p:Platform=x64 -p:PackageOutputPath="$(Get-Location)\publish"
+        # msbuild $env:Solution_Name -m -t:Pack -p:TargetFramework=net5.0 -p:Configuration=Release -p:Platform=x64 -p:PackageOutputPath="$(Get-Location)\publish"
 
       # NuGet Push
-      - name: Push packages to github
-        run: |
-          dotnet nuget push publish\*.nupkg -k ${{ secrets.GITHUB_TOKEN }} -s https://nuget.pkg.github.com/il2cpptoolkit/index.json --skip-duplicate
+      # - name: Push packages to github
+      #   run: |
+      #     dotnet nuget push publish\*.nupkg -k ${{ secrets.GITHUB_TOKEN }} -s https://nuget.pkg.github.com/il2cpptoolkit/index.json --skip-duplicate
