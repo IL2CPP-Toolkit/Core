@@ -144,58 +144,6 @@ namespace Il2CppToolkit.Runtime
 			}
 		}
 
-		public static T WriteValue<T>(this IMemorySource source, ulong address, byte indirection, object value)
-		{
-			return (T)WriteValue(source, typeof(T), address, value, indirection);
-		}
-
-		public static object WriteValue(this IMemorySource source, Type type, ulong address, object value, byte indirection)
-		{
-			try
-			{
-				if (!type.IsValueType)
-				{
-					++indirection;
-				}
-				for (; indirection > 1; --indirection)
-				{
-					address = ReadPointer(source, address);
-					if (address == 0)
-						break;
-				}
-				if (address == 0 && !type.IsAssignableTo(typeof(INullConstructable)))
-				{
-					return default;
-				}
-				if (TypeSystem.TryGetTypeFactory(type, out ITypeFactory factory))
-				{
-					factory.WriteValue(source, address, value);
-					return value;
-				}
-				// TODO: requires allocation >:O
-				// if (type == typeof(string))
-				// {
-				//     return WriteString(source, address);
-				// }
-				if (type.IsEnum)
-				{
-					WritePrimitive(source, type.GetEnumUnderlyingType(), address, value);
-					return value;
-				}
-				if (type.IsPrimitive)
-				{
-					WritePrimitive(source, type, address, value);
-					return value;
-				}
-				throw new InvalidOperationException($"Type '{type.FullName}' does not support writing");
-			}
-			catch (Exception ex)
-			{
-				ObjectWriteError?.Invoke(source, new(type, address, ex));
-				throw;
-			}
-		}
-
 		public static ulong ReadPointer(this IMemorySource source, ulong address)
 		{
 			return ReadPrimitive<ulong>(source, address);
@@ -233,11 +181,6 @@ namespace Il2CppToolkit.Runtime
 					return originalType == typeof(object) ? unk : null;
 				}
 			}
-			if (type.IsAssignableTo(typeof(StructBase)))
-			{
-				object classObject = Activator.CreateInstance(type, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance, null, new object[] { (IMemorySource)source, address }, null);
-				return classObject;
-			}
 			if (type.IsAssignableTo(typeof(IRuntimeObject)))
 			{
 				object classObject = Activator.CreateInstance(type, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance, null, new object[] { (IMemorySource)source, address }, null);
@@ -247,82 +190,7 @@ namespace Il2CppToolkit.Runtime
 			{
 				return null;
 			}
-			// value type
-			object valueObject = Activator.CreateInstance(type);
-			ReadFields(source, type, valueObject, address);
-			return valueObject;
-		}
-
-		public static void ReadFields(this IMemorySource source, Type type, object target, ulong targetAddress)
-		{
-			MethodInfo readFieldsOverride = type.GetMethod(
-				"ReadFields",
-				BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public,
-				null,
-				CallingConventions.HasThis,
-				new[]
-				{
-					typeof(IMemorySource),
-					typeof(ulong),
-				},
-				null);
-
-			if (readFieldsOverride != null)
-			{
-				readFieldsOverride.Invoke(target, new object[] { (IMemorySource)source, targetAddress });
-				return;
-			}
-
-			do
-			{
-				FieldInfo[] fields =
-					type.GetFields(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
-				foreach (FieldInfo field in fields)
-				{
-					try
-					{
-						if (field.Attributes.HasFlag(FieldAttributes.Literal))
-							continue;
-						ReadField(source, target, targetAddress, field);
-					}
-					catch (Exception)
-					{ }
-				}
-
-				type = type.BaseType;
-			} while (type != null && type != typeof(StructBase) && type != typeof(object) && type != typeof(ValueType));
-		}
-
-		private static void ReadField(this IMemorySource source, object target, ulong targetAddress, FieldInfo field)
-		{
-			if (field.GetCustomAttribute<IgnoreAttribute>(inherit: true) != null)
-			{
-				return;
-			}
-			ulong offset = targetAddress + source.ParentContext.GetMemberFieldOffset(field, targetAddress);
-			byte indirection = 1;
-			IndirectionAttribute indirectionAttr = field.GetCustomAttribute<IndirectionAttribute>(inherit: true);
-			if (indirectionAttr != null)
-			{
-				indirection = indirectionAttr.Indirection;
-			}
-
-			object result = ReadValue(source, field.FieldType, offset, indirection);
-			field.SetValue(target, result);
-		}
-
-		private static void WriteField(this IMemorySource source, object target, ulong targetAddress, FieldInfo field, object value)
-		{
-			ulong offset = targetAddress + source.ParentContext.GetMemberFieldOffset(field, targetAddress);
-			byte indirection = 1;
-			IndirectionAttribute indirectionAttr = field.GetCustomAttribute<IndirectionAttribute>(inherit: true);
-			if (indirectionAttr != null)
-			{
-				indirection = indirectionAttr.Indirection;
-			}
-
-			object result = WriteValue(source, field.FieldType, offset, value, indirection);
-			field.SetValue(target, result);
+			return null;
 		}
 
 		private static object ReadPrimitive(this IMemorySource context, Type type, ulong address)
@@ -341,28 +209,6 @@ namespace Il2CppToolkit.Runtime
 				return (T)impl.ReadFn(context, address);
 			}
 			throw new ArgumentException($"Type '{typeof(T).FullName}' is not a valid primitive type");
-		}
-
-		private static void WritePrimitive(this IMemorySource context, Type type, ulong address, object value)
-		{
-			if (!s_implMap.TryGetValue(type, out var impl))
-				throw new ArgumentException($"Type '{type.FullName}' is not a valid primitive type");
-			impl.WriteFn(context, address, value);
-		}
-
-		private static void WritePrimitive<T>(this IMemorySource context, ulong address, T value)
-		{
-			if (!s_implMap.TryGetValue(typeof(T), out var impl))
-				throw new ArgumentException($"Type '{typeof(T).FullName}' is not a valid primitive type");
-			impl.WriteFn(context, address, value);
-		}
-
-		private static object GetDefaultValue(Type type)
-		{
-			if (type.IsAssignableTo(typeof(IEnumerable<>)))
-			{ }
-
-			return null;
 		}
 	}
 }

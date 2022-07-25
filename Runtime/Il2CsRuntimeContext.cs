@@ -26,7 +26,6 @@ namespace Il2CppToolkit.Runtime
 			}
 
 		}
-		private readonly Dictionary<string, ulong> moduleAddresses = new();
 		private readonly IntPtr processHandle;
 		public InjectionClient InjectionClient { get; private set; }
 		public Process TargetProcess { get; }
@@ -45,57 +44,6 @@ namespace Il2CppToolkit.Runtime
 		{
 			NativeWrapper.CloseHandle(processHandle);
 			InjectionClient.Dispose();
-		}
-
-		public ulong GetMemberFieldOffset(FieldInfo field, ulong objectAddress)
-		{
-			AddressAttribute addressAttr = field.GetCustomAttribute<AddressAttribute>(inherit: true);
-			if (addressAttr != null)
-			{
-				ulong address = addressAttr.Address;
-				if (!string.IsNullOrEmpty(addressAttr.RelativeToModule))
-				{
-					address += GetModuleAddress(addressAttr.RelativeToModule);
-				}
-				return address;
-			}
-
-			OffsetAttribute offsetAttr = field.GetCustomAttribute<OffsetAttribute>(inherit: true);
-			if (offsetAttr != null)
-			{
-				return offsetAttr.OffsetBytes;
-			}
-
-			DynamicOffsetAttribute dynamicOffsetAttr = field.GetCustomAttribute<DynamicOffsetAttribute>(inherit: true);
-			if (dynamicOffsetAttr != null)
-			{
-				ClassDefinition classDef = this.ReadValue<ClassDefinition>(objectAddress);
-				while (classDef != null && classDef.FullName != "System.Object")
-				{
-					FieldDefinition fieldDef = classDef.GetFields().FirstOrDefault(fld => fld.Name == dynamicOffsetAttr.FieldName);
-					if (fieldDef.Name != null)
-					{
-						return (ulong)fieldDef.Offset;
-					}
-					classDef = classDef.Base;
-				}
-			}
-			RuntimeError.OffsetRequired.Raise($"Field {field.Name} requires offset information");
-			return 0;
-		}
-
-		public ulong GetModuleAddress(string moduleName)
-		{
-			if (moduleAddresses.ContainsKey(moduleName))
-				return moduleAddresses[moduleName];
-
-			ProcessModule module = TargetProcess.Modules.OfType<ProcessModule>().FirstOrDefault(m => m.ModuleName == moduleName);
-
-			if (module == null)
-				throw new Exception("Unable to locate GameAssembly.dll in memory");
-
-			moduleAddresses.Add(moduleName, (ulong)module.BaseAddress);
-			return moduleAddresses[moduleName];
 		}
 
 		public ReadOnlyMemory<byte> ReadMemory(ulong address, ulong size)
