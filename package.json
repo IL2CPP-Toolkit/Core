@@ -1,0 +1,25 @@
+{
+  "name": "il2cpptoolkit",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/IL2CPP-Toolkit/Core.git",
+  "author": "Daniel Chattan <dnchattan@gmail.com>",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "build": "ts-node ./scripts/build-cli.ts"
+  },
+  "devDependencies": {
+    "@types/child-process-promise": "^2.2.2",
+    "@types/node": "^18.0.6",
+    "@types/rimraf": "^3.0.2",
+    "caporal": "^1.4.0",
+    "chalk": "^5.0.1",
+    "child-process-promise": "^2.2.1",
+    "cli-spinners": "^2.6.1",
+    "rimraf": "^3.0.2",
+    "ts-node": "^10.9.1",
+    "tslib": "^2.4.0",
+    "typescript": "^4.7.4"
+  }
+}
