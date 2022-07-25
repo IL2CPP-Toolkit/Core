@@ -28,7 +28,7 @@ const defaultOptions: BuildOptions = {
   platform: Platform.x64,
   targets: ["Build"],
   publishDir: path.join(basePath, "publish/"),
-  packageDir: path.join(basePath, "nuget-local/"),
+  packageDir: path.join(basePath, "publish/packages"),
 };
 
 export function buildOptions(opts?: Partial<BuildOptions>) {
