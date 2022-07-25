@@ -7,21 +7,27 @@ export async function push(opts: BuildOptions) {
   const token = await fs.readFile(path.join(__dirname, "../.nuget-token"), {
     encoding: "utf8",
   });
-  return spawn(
-    "dotnet.exe",
-    [
-      "nuget",
-      "push",
-      path.join(opts.packageDir, "*.nupkg"),
-      "-k",
-      token,
-      "-s",
-      "http://localhost:8090/v3/index.json",
-    ],
-    {
-      stdio: "inherit",
-      cwd: opts.basePath,
-      shell: true,
-    }
-  );
+
+  function pushPattern(pattern: string) {
+    return spawn(
+      "dotnet.exe",
+      [
+        "nuget",
+        "push",
+        path.join(opts.packageDir, pattern),
+        "-k",
+        token,
+        "-s",
+        "http://localhost:8090/v3/index.json",
+      ],
+      {
+        stdio: "inherit",
+        cwd: opts.basePath,
+        shell: true,
+      }
+    );
+  }
+
+  await pushPattern("*.nupkg");
+  await pushPattern("*.snupkg");
 }

@@ -163,7 +163,7 @@ namespace Il2CppToolkit.Runtime
 			}
 
 			Type originalType = type;
-			if (type.IsInterface || type.IsAbstract || type == typeof(Object))
+			// if (type.IsInterface || type.IsAbstract || type == typeof(Object))
 			{
 				UnknownClass unk = (UnknownClass)ReadStruct(source, typeof(UnknownClass), address);
 
