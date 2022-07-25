@@ -2,6 +2,7 @@ import caporal from "caporal";
 import { build } from "./build";
 import { push } from "./nuget";
 import { buildOptions, Flavor } from "./options";
+import rimraf from "rimraf";
 
 const cli = caporal.version("1.0.0");
 cli
@@ -20,6 +21,9 @@ async function buildLocal(_: any, args: CliArgs, _logger: any) {
     flavor: Flavor.Debug,
     targets: ["Pack"],
   });
+
+  rimraf.sync(opts.packageDir);
+
   if (!args.noBuild) {
     await build(opts);
   }

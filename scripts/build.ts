@@ -10,6 +10,8 @@ export function build(opts: BuildOptions) {
     `-p:Platform=${opts.platform}`,
     "-p:TargetFramework=net5.0",
     `-t:${opts.targets.join(";")}`,
+    "-p:IncludeSymbols=true",
+    "-p:SymbolPackageFormat=snupkg",
     `-p:PackageOutputPath=${path.format(path.posix.parse(opts.packageDir))}`,
     `-p:PublishDir=${path.format(path.posix.parse(opts.publishDir))}`,
   ];

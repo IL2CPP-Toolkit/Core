@@ -22,6 +22,7 @@ namespace Il2CppToolkit.Runtime
 	}
 	public static class MemorySourceExtensions
 	{
+		private static Assembly ThisAsm;
 		public static event EventHandler<MemoryAccessEventArgs> ObjectReadFromMemory;
 		public static event EventHandler<MemoryAccessErrorEventArgs> ObjectReadError;
 		public static event EventHandler<MemoryAccessErrorEventArgs> ObjectWriteError;
@@ -35,6 +36,7 @@ namespace Il2CppToolkit.Runtime
 		private static readonly Dictionary<Type, ConvertPrimitive> s_implMap = new();
 		static MemorySourceExtensions()
 		{
+			ThisAsm = typeof(MemorySourceExtensions).Assembly;
 			s_implMap.Add(typeof(Char), new()
 			{
 				ReadFn = (context, address) => context.ReadMemory(address, sizeof(Char)).ToChar(),
@@ -162,9 +164,10 @@ namespace Il2CppToolkit.Runtime
 				return result;
 			}
 
-			Type originalType = type;
 			// if (type.IsInterface || type.IsAbstract || type == typeof(Object))
+			if (type.Assembly != ThisAsm)
 			{
+				Type originalType = type;
 				UnknownClass unk = (UnknownClass)ReadStruct(source, typeof(UnknownClass), address);
 
 				if (unk?.ClassDefinition == null)
