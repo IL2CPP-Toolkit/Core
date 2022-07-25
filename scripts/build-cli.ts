@@ -7,12 +7,12 @@ const cli = caporal.version("1.0.0");
 cli
   .command("local", "Builds and publishes local nuget versions")
   .option("-n, --no-build", "No build")
-  .action(buildLocal as any);
+  .action(buildLocal);
 
 cli.parse(process.argv);
 
 interface CliArgs {
-  noBuild: boolean;
+  noBuild?: boolean;
 }
 
 async function buildLocal(_: any, args: CliArgs, _logger: any) {
