@@ -25,7 +25,6 @@ namespace Il2CppToolkit.Runtime
 		private static Assembly ThisAsm;
 		public static event EventHandler<MemoryAccessEventArgs> ObjectReadFromMemory;
 		public static event EventHandler<MemoryAccessErrorEventArgs> ObjectReadError;
-		public static event EventHandler<MemoryAccessErrorEventArgs> ObjectWriteError;
 
 		private class ConvertPrimitive
 		{
@@ -177,6 +176,15 @@ namespace Il2CppToolkit.Runtime
 
 				if (type == null)
 					return originalType == typeof(object) ? unk : null;
+
+				// make sure we always fetch metadata for types at time of hydration
+				// this is the one time we can be 100% sure of the concrete type that
+				// obj->klass points to, and we don't get another chance to resolve
+				// this type deterministically (nested types can't be looked up by name)
+				if (!Il2CppTypeCache.HasType(type))
+				{
+					Il2CppTypeCache.GetTypeInfo(source.ParentContext, type, unk.ClassDefinition.Address);
+				}
 
 				if (type.IsGenericType)
 				{

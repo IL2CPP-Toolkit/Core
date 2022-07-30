@@ -18,11 +18,19 @@ namespace Il2CppToolkit.Runtime
 			return klass;
 		}
 
-		public static string GetTypeName(Type type, bool includeFirst = true)
+		private static string GetTypeScope(Type type, bool includeNamespace)
 		{
-			string typeName = includeFirst ? type.Namespace : "";
-			if (!string.IsNullOrEmpty(typeName))
-				typeName += ".";
+			if (type.DeclaringType != null)
+			{
+				return $"{GetTypeName(type.DeclaringType, includeNamespace)}.";
+			}
+			return (includeNamespace && !string.IsNullOrEmpty(type.Namespace)) ? $"{type.Namespace}." : "";
+		}
+
+		public static string GetTypeName(Type type, bool includeNamespace = true)
+		{
+			string typeScope = GetTypeScope(type, includeNamespace);
+			string typeName = typeScope;
 			typeName += type.Name;
 
 			if (type.IsConstructedGenericType)

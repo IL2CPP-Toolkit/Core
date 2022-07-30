@@ -15,6 +15,7 @@
 	</Target>
 	<Target Name="protocpp" BeforeTargets="BuildGenerateSources">
 		<Error Text="Could not locate protoc tool at $(ProtocTool)" Condition=" !Exists('$(ProtocTool)') " />
+		<Error Text="Could not locate grpc tools dir at $(GrpcToolsDir)" Condition=" !Exists('$(GrpcToolsDir)') " />
 		<Exec Command="$(ProtocTool) -I=$(MSBuildThisFileDirectory) --cpp_out=$(ProjectDir)src\gen il2cpp.proto" />
 		<Exec Command="$(ProtocTool) -I=$(MSBuildThisFileDirectory) --grpc_out=$(ProjectDir)src\gen --plugin=protoc-gen-grpc=$(GrpcToolsDir)\grpc_cpp_plugin.exe il2cpp.proto" />
 	</Target>

@@ -15,6 +15,7 @@
     <ClInclude Include="src\il2cpp\Il2CppClassHolder.h" />
     <ClInclude Include="src\il2cpp\Il2CppClassInfo.h" />
     <ClInclude Include="src\il2cpp\Il2CppContext.h" />
+    <ClInclude Include="src\il2cpp\Il2CppHelpers.h" />
     <ClInclude Include="src\il2cpp\SystemString.h" />
     <ClInclude Include="src\inc\ExecutionQueue.h" />
     <ClInclude Include="src\inc\framework.h" />
@@ -40,6 +41,7 @@
     <ClInclude Include="src\inc\pch.h" />
     <ClInclude Include="src\inc\PublicApi.h" />
     <ClInclude Include="src\inc\safe_queue.h" />
+    <ClInclude Include="src\inc\buffer.h" />
     <ClInclude Include="src\inc\SmartHandle.h" />
     <ClInclude Include="src\InjectionHost.h" />
     <ClInclude Include="src\MessageHandler.h" />
@@ -52,6 +54,7 @@
     <ClCompile Include="src\il2cpp\Il2CppClassHolder.cpp" />
     <ClCompile Include="src\il2cpp\Il2CppClassInfo.cpp" />
     <ClCompile Include="src\il2cpp\Il2CppContext.cpp" />
+    <ClCompile Include="src\il2cpp\Il2CppHelpers.cpp" />
     <ClCompile Include="src\il2cpp\SystemString.cpp" />
     <ClCompile Include="src\InjectionHost.cpp" />
     <ClCompile Include="src\MessageHandler.cpp" />
