@@ -6,7 +6,7 @@ on:
       - main
       - v*.*
     paths:
-      - **
+      - "**"
       - "!scripts/**"
 
 jobs:
