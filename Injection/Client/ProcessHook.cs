@@ -15,6 +15,13 @@ namespace Il2CppToolkit.Injection.Client
 		public ProcessHook(uint processId, int timeout = 3000)
 		{
 			ProcessId = processId;
+
+			// don't wait for the full timeout for initial state check
+			// (we should only wait immediately after a call to InjectHook)
+			int hrGetState = NativeMethods.GetState(ProcessId, ref _state, 10);
+			if (hrGetState == 0)
+				return;
+
 			Dispatcher = new();
 
 			Dispatcher.WaitFor(() =>
@@ -34,8 +41,8 @@ namespace Il2CppToolkit.Injection.Client
 			{
 				if (disposing)
 				{
-					Dispatcher.WaitFor(() => _ = NativeMethods.ReleaseHook(ProcessId));
-					Dispatcher.Dispose();
+					Dispatcher?.WaitFor(() => _ = NativeMethods.ReleaseHook(ProcessId));
+					Dispatcher?.Dispose();
 				}
 
 				IsDisposed = true;
