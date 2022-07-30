@@ -335,22 +335,25 @@ struct ArgumentValueHolder
 		response->mutable_typeinfo()->set_staticfieldsaddress(reinterpret_cast<uint64_t>(il2cpp_class_get_static_field_data(pCls)));
 		SetClassId(response->mutable_typeinfo()->mutable_klassid(), pCls);
 
-		for (int n{0}, m{pCls->field_count}; n < m; ++n)
+		if (pCls->fields)
 		{
-			::il2cppservice::Il2CppField* pFld{response->mutable_typeinfo()->mutable_fields()->Add()};
-			const FieldInfo* pFieldInfo{&pCls->fields[n]};
+			for (int n{0}, m{pCls->field_count}; n < m; ++n)
+			{
+				::il2cppservice::Il2CppField* pFld{response->mutable_typeinfo()->mutable_fields()->Add()};
+				const FieldInfo* pFieldInfo{&pCls->fields[n]};
 
-			Il2CppClass* pFieldClassType{il2cpp_class_from_il2cpp_type(pFieldInfo->type)};
+				Il2CppClass* pFieldClassType{il2cpp_class_from_il2cpp_type(pFieldInfo->type)};
 
-			const bool isStatic{(pFieldInfo->type->attrs & FIELD_ATTRIBUTE_STATIC) == FIELD_ATTRIBUTE_STATIC};
-			int32_t offset{pFieldInfo->offset};
-			if (!!pCls->valuetype && !isStatic)
-				offset -= sizeof(Il2CppObject); // valueType field metadata incorrectly considers object header in member field offsets
+				const bool isStatic{(pFieldInfo->type->attrs & FIELD_ATTRIBUTE_STATIC) == FIELD_ATTRIBUTE_STATIC};
+				int32_t offset{pFieldInfo->offset};
+				if (!!pCls->valuetype && !isStatic)
+					offset -= sizeof(Il2CppObject); // valueType field metadata incorrectly considers object header in member field offsets
 
-			pFld->set_name(pFieldInfo->name);
-			pFld->set_offset(offset);
-			pFld->set_klassaddr(reinterpret_cast<uint64_t>(pFieldClassType));
-			pFld->set_static_(isStatic);
+				pFld->set_name(pFieldInfo->name);
+				pFld->set_offset(offset);
+				pFld->set_klassaddr(reinterpret_cast<uint64_t>(pFieldClassType));
+				pFld->set_static_(isStatic);
+			}
 		}
 		return ::grpc::Status::OK;
 	})};
