@@ -1,27 +1,96 @@
 ﻿using Il2CppToolkit.Common.Errors;
 using Il2CppToolkit.Injection.Client;
+using Il2CppToolkit.Runtime.Types.Reflection;
 using System;
+using System.Collections.Concurrent;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using static Il2CppToolkit.Injection.Client.Value;
 
 namespace Il2CppToolkit.Runtime
 {
+	public static class Il2CppTypeCache
+	{
+		private static readonly ConcurrentDictionary<ulong, Il2CppTypeInfo> TypeInfoByAddr = new();
+		private static readonly ConcurrentDictionary<Type, Il2CppTypeInfo> TypeInfoByType = new();
+
+		public static bool HasType(Type managedType)
+		{
+			return TypeInfoByType.TryGetValue(managedType, out _);
+		}
+
+		public static bool TryGetOrLoadTypeInfoCore(Il2CsRuntimeContext runtime, Type managedType, ulong classAddr, out Il2CppTypeInfo result)
+		{
+			if (managedType == null)
+				throw new ArgumentNullException(nameof(managedType));
+
+			result = TypeInfoByType.GetOrAdd(managedType, (Type managedType) =>
+				classAddr > 0
+					? runtime.InjectionClient.Il2Cpp.GetTypeInfo(new() { Address = classAddr }).TypeInfo
+					: runtime.InjectionClient.Il2Cpp.GetTypeInfo(new() { Klass = Il2CppTypeName.GetKlass(managedType) }).TypeInfo
+				);
+
+			if (result == null)
+				return false;
+
+			return TypeInfoByAddr.TryAdd(result.KlassId.Address, result);
+		}
+
+		public static Il2CppTypeInfo GetTypeInfo(Il2CsRuntimeContext runtime, Type managedType, ulong classAddr = 0)
+		{
+			if (managedType == null)
+				throw new ArgumentNullException(nameof(managedType));
+
+			if (!TryGetOrLoadTypeInfoCore(runtime, managedType, classAddr, out Il2CppTypeInfo result) || result == null)
+				return result;
+
+			Type baseType = managedType;
+			ClassDefinition clsDef = null;
+			if (classAddr > 0)
+				clsDef = new(runtime, classAddr);
+			while ((baseType = baseType.BaseType) != null && baseType.GetCustomAttribute<GeneratedAttribute>() != null)
+			{
+				clsDef = clsDef?.Base;
+				if (!TryGetOrLoadTypeInfoCore(runtime, baseType, clsDef?.Address ?? 0, out _))
+					break;
+			}
+
+			return result;
+		}
+
+		// public static Il2CppTypeInfo GetTypeInfo(Il2CsRuntimeContext runtime, Type managedType)
+		// {
+		// 	if (managedType == null)
+		// 		throw new ArgumentNullException(nameof(managedType));
+
+		// 	Il2CppTypeInfo result = TypeInfoByType.GetOrAdd(managedType, (Type managedType) =>
+		// 		runtime.InjectionClient.Il2Cpp.GetTypeInfo(new() { Klass = Il2CppTypeName.GetKlass(managedType) }).TypeInfo
+		// 		);
+
+		// 	if (result == null)
+		// 		return null;
+
+		// 	TypeInfoByAddr.TryAdd(result.KlassId.Address, result);
+		// 	return result;
+		// }
+	}
+
 	public class Il2CppTypeInfoLookup<TClass>
 	{
-		private static GetTypeInfoResponse s_typeInfo;
-		private static ClassId klass => Il2CppTypeName<TClass>.klass;
+		// private static GetTypeInfoResponse s_typeInfo;
+		// private static ClassId klass => Il2CppTypeName<TClass>.klass;
 
-		public static Il2CppTypeInfo GetTypeInfo(InjectionClient client)
-		{
-			s_typeInfo ??= client.Il2Cpp.GetTypeInfo(CreateRequest(), null, DateTime.MaxValue, default);
-			return s_typeInfo.TypeInfo;
-		}
+		// public static Il2CppTypeInfo GetTypeInfo(InjectionClient client)
+		// {
+		// 	s_typeInfo ??= client.Il2Cpp.GetTypeInfo(CreateRequest(), null, DateTime.MaxValue, default);
+		// 	return s_typeInfo.TypeInfo;
+		// }
 
-		private static GetTypeInfoRequest CreateRequest()
-		{
-			return new() { Klass = klass };
-		}
+		// private static GetTypeInfoRequest CreateRequest()
+		// {
+		// 	return new() { Klass = klass };
+		// }
 
 		public static Value ValueFrom(object value)
 		{
@@ -36,7 +105,7 @@ namespace Il2CppToolkit.Runtime
 				long i8 => new Value() { Int64 = i8 },
 				bool bit => new Value() { Bit = bit },
 				string str => new Value() { Str = str },
-				IRuntimeObject obj => new Value() { Obj = new Il2CppObject() { Address = obj.Address, Klass = Il2CppTypeName.GetKlass(obj.GetType()) } },
+				IRuntimeObject obj => new Value() { Obj = new Il2CppObject() { Address = obj.Address } },
 				_ => throw new NotSupportedException($"Argument type of '{value.GetType().FullName}' is not supported")
 			};
 		}
@@ -58,16 +127,15 @@ namespace Il2CppToolkit.Runtime
 
 		public static Value CallMethodCore(Il2CsRuntimeContext context, IRuntimeObject obj, [CallerMemberName] string name = "", object[] arguments = null)
 		{
-
 			if (arguments == null)
 				throw new ArgumentNullException(nameof(arguments));
 
-			CallMethodRequest req = new()
-			{
-				Klass = klass,
-				MethodName = name,
-				Instance = obj == null ? null : new Il2CppObject() { Address = obj.Address, Klass = Il2CppTypeName<TClass>.klass },
-			};
+			CallMethodRequest req = new() { MethodName = name, };
+			if (obj != null)
+				req.Instance = new() { Address = obj.Address };
+			else
+				req.Klass = Il2CppTypeName<TClass>.klass;
+
 			req.Arguments.AddRange(arguments.Select(ValueFrom));
 			CallMethodResponse response = context.InjectionClient.Il2Cpp.CallMethod(req);
 			return response.ReturnValue;
@@ -133,20 +201,33 @@ namespace Il2CppToolkit.Runtime
 			Type objType = Types.LoadedTypes.GetType(typeName);
 			if (objType == null)
 				return default;
+
+			// make sure we always fetch metadata for types at time of hydration
+			// this is the one time we can be 100% sure of the concrete type that
+			// obj->klass points to, and we don't get another chance to resolve
+			// this type deterministically (nested types can't be looked up by name)
+			if (!Il2CppTypeCache.HasType(objType))
+			{
+				ClassDefinition clsDef = source.ParentContext.ReadValue<ClassDefinition>(obj.Address);
+				Il2CppTypeCache.GetTypeInfo(source.ParentContext, objType, clsDef.Address);
+			}
 			return (TValue)Activator.CreateInstance(objType, source, obj.Address);
 		}
 
 		public static TValue GetValue<TValue>(IRuntimeObject obj, string name, byte indirection = 1)
 		{
-			Il2CppTypeInfo typeInfo = GetTypeInfo(obj.Source.ParentContext.InjectionClient);
+			Il2CppTypeInfo typeInfo = Il2CppTypeCache.GetTypeInfo(obj.Source.ParentContext, typeof(TClass));
 			Il2CppField fld = typeInfo.Fields.First(fld => fld.Name == name);
+			Il2CppTypeCache.GetTypeInfo(obj.Source.ParentContext, typeof(TValue), fld.KlassAddr);
 			return obj.Source.ReadValue<TValue>(obj.Address + fld.Offset, indirection);
 		}
 
 		public static TValue GetStaticValue<TValue>(Il2CsRuntimeContext context, string name, byte indirection = 1)
 		{
-			Il2CppTypeInfo typeInfo = GetTypeInfo(context.InjectionClient);
+			Il2CppTypeInfo typeInfo = Il2CppTypeCache.GetTypeInfo(context, typeof(TClass));
+
 			Il2CppField fld = typeInfo.Fields.First(fld => fld.Name == name);
+			Il2CppTypeCache.GetTypeInfo(context, typeof(TValue), fld.KlassAddr);
 			return context.ReadValue<TValue>(typeInfo.StaticFieldsAddress + fld.Offset, indirection);
 		}
 	}

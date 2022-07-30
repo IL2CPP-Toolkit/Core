@@ -7,13 +7,14 @@
 #include "ExecutionQueue.h"
 #include <il2cpp/il2cpp-api.h>
 #include <il2cpp/il2cpp-string-types.h>
+#include <il2cpp/il2cpp-tabledefs.h>
 #include "../il2cpp/Il2CppClassInfo.h"
 #include "../il2cpp/Il2CppContext.h"
+#include "../il2cpp/Il2CppHelpers.h"
 #include "../il2cpp/SystemString.h"
 #include "il2cpp.pb.cc"
 #include "il2cpp.grpc.pb.cc"
 #include "Il2CppService.h"
-#include <il2cpp/il2cpp-tabledefs.h>
 
 Il2CppServiceImpl::Il2CppServiceImpl(ExecutionQueue& queue) noexcept : m_executionQueue{queue} {}
 
@@ -43,6 +44,7 @@ void SetClassId(::il2cppservice::ClassId* pClassId, const Il2CppClass* pClass) n
 {
 	pClassId->set_name(pClass->name);
 	pClassId->set_namespaze(pClass->namespaze);
+	pClassId->set_address(reinterpret_cast<uint64_t>(pClass));
 	const Il2CppClass* pDeclaringType = pClass;
 	::il2cppservice::ClassId* pCurrentClass = pClassId;
 	while ((pDeclaringType = pDeclaringType->declaringType) != nullptr)
@@ -161,25 +163,28 @@ struct ArgumentValueHolder
 	::il2cppservice::CallMethodResponse* response) noexcept
 {
 	std::optional<::grpc::Status> result{m_executionQueue.Invoke<::grpc::Status>([&]() mutable noexcept {
-		const Il2CppClassInfo* pClsInfo{Il2CppContext::instance().FindClass(request->klass().namespaze(), request->klass().name())};
-		if (!pClsInfo)
-			return ::grpc::Status{::grpc::StatusCode::FAILED_PRECONDITION, "Class not found"};
-
-		Il2CppObject* pObj{nullptr};
+		Il2CppObject* pObj{};
+		Il2CppClass* pClass{};
 		if (request->has_instance())
 		{
-			const auto& instance{request->instance()};
-			pObj = Il2CppContext::instance().GetCppObject(
-				instance.klass().namespaze(), instance.klass().name(), reinterpret_cast<void*>(instance.address()));
-
+			const ::il2cppservice::Il2CppObject& instance{request->instance()};
+			pObj = il2cpp_object_from_ptr(reinterpret_cast<void*>(instance.address()));
 			if (!pObj)
 			{
 				return ::grpc::Status{::grpc::StatusCode::FAILED_PRECONDITION, "Object not found"};
 			}
+			pClass = pObj->klass;
+		}
+		else
+		{
+			const Il2CppClassInfo* pClsInfo{Il2CppContext::instance().FindClass(request->klass().namespaze(), request->klass().name())};
+			if (!pClsInfo)
+				return ::grpc::Status{::grpc::StatusCode::FAILED_PRECONDITION, "Class not found"};
+			pClass = pClsInfo->klass();
 		}
 
 		const int nArgs{request->arguments_size()};
-		const MethodInfo* pMethod{il2cpp_class_get_method_from_name(pClsInfo->klass(), request->methodname().c_str(), nArgs)};
+		const MethodInfo* pMethod{il2cpp_class_get_method_from_name(pClass, request->methodname().c_str(), nArgs)};
 		if (!pMethod)
 			return ::grpc::Status{::grpc::StatusCode::NOT_FOUND, "Method not found"};
 
@@ -187,68 +192,78 @@ struct ArgumentValueHolder
 		if (!pArgs)
 			return ::grpc::Status{::grpc::StatusCode::RESOURCE_EXHAUSTED, "Out of memory"};
 
-		std::vector<ArgumentValueHolder> argHolders{};
-		for (int n{0}, m{request->arguments_size()}; n < m; ++n)
+		try
 		{
-			const ::il2cppservice::Value& arg{request->arguments().at(n)};
-			if (arg.has_bit_())
+			std::vector<ArgumentValueHolder> argHolders{};
+			for (int n{0}, m{request->arguments_size()}; n < m; ++n)
 			{
-				ArgumentValueHolder& argHolder{argHolders.emplace_back(arg.bit_(), arg.nullstate())};
-				pArgs[n] = reinterpret_cast<void*>(&argHolder);
+				const ::il2cppservice::Value& arg{request->arguments().at(n)};
+				if (arg.has_bit_())
+				{
+					ArgumentValueHolder& argHolder{argHolders.emplace_back(arg.bit_(), arg.nullstate())};
+					pArgs[n] = reinterpret_cast<void*>(&argHolder);
+				}
+				else if (arg.has_double_())
+				{
+					ArgumentValueHolder& argHolder{argHolders.emplace_back(arg.double_(), arg.nullstate())};
+					pArgs[n] = reinterpret_cast<void*>(&argHolder);
+				}
+				else if (arg.has_float_())
+				{
+					ArgumentValueHolder& argHolder{argHolders.emplace_back(static_cast<float>(arg.float_()), arg.nullstate())};
+					pArgs[n] = reinterpret_cast<void*>(&argHolder);
+				}
+				else if (arg.has_int32_())
+				{
+					ArgumentValueHolder& argHolder{argHolders.emplace_back(arg.int32_(), arg.nullstate())};
+					pArgs[n] = reinterpret_cast<void*>(&argHolder);
+				}
+				else if (arg.has_uint32_())
+				{
+					ArgumentValueHolder& argHolder{argHolders.emplace_back(arg.uint32_(), arg.nullstate())};
+					pArgs[n] = reinterpret_cast<void*>(&argHolder);
+				}
+				else if (arg.has_int64_())
+				{
+					ArgumentValueHolder& argHolder{argHolders.emplace_back(arg.int64_(), arg.nullstate())};
+					pArgs[n] = reinterpret_cast<void*>(&argHolder);
+				}
+				else if (arg.has_uint64_())
+				{
+					ArgumentValueHolder& argHolder{argHolders.emplace_back(arg.uint64_(), arg.nullstate())};
+					pArgs[n] = reinterpret_cast<void*>(&argHolder);
+				}
+				else if (arg.has_str_())
+				{
+					ArgumentValueHolder& argHolder{argHolders.emplace_back(il2cpp_string_new(arg.str_().c_str()), arg.nullstate())};
+					pArgs[n] = reinterpret_cast<void*>(&argHolder);
+				}
+				else if (arg.has_obj_())
+				{
+					Il2CppObject* pArg{il2cpp_object_from_ptr(reinterpret_cast<void*>(arg.obj_().address()))};
+					// ArgumentValueHolder& argHolder{argHolders.emplace_back(pArg, arg.nullstate())};
+					pArgs[n] = reinterpret_cast<void*>(pArg);
+				}
 			}
-			else if (arg.has_double_())
+
+			Il2CppException* pEx{};
+			Il2CppObject* pResult{il2cpp_runtime_invoke(pMethod, pObj, pArgs, &pEx)};
+			if (pEx)
 			{
-				ArgumentValueHolder& argHolder{argHolders.emplace_back(arg.double_(), arg.nullstate())};
-				pArgs[n] = reinterpret_cast<void*>(&argHolder);
+				std::string exceptionMessage{il2cpp_format_exception_to_string(pEx) + ' ' + il2cpp_format_stack_trace_to_string(pEx)};
+				return ::grpc::Status{::grpc::StatusCode::UNKNOWN, "Exception occurred"};
 			}
-			else if (arg.has_float_())
+			if (pResult)
 			{
-				ArgumentValueHolder& argHolder{argHolders.emplace_back(static_cast<float>(arg.float_()), arg.nullstate())};
-				pArgs[n] = reinterpret_cast<void*>(&argHolder);
-			}
-			else if (arg.has_int32_())
-			{
-				ArgumentValueHolder& argHolder{argHolders.emplace_back(arg.int32_(), arg.nullstate())};
-				pArgs[n] = reinterpret_cast<void*>(&argHolder);
-			}
-			else if (arg.has_uint32_())
-			{
-				ArgumentValueHolder& argHolder{argHolders.emplace_back(arg.uint32_(), arg.nullstate())};
-				pArgs[n] = reinterpret_cast<void*>(&argHolder);
-			}
-			else if (arg.has_int64_())
-			{
-				ArgumentValueHolder& argHolder{argHolders.emplace_back(arg.int64_(), arg.nullstate())};
-				pArgs[n] = reinterpret_cast<void*>(&argHolder);
-			}
-			else if (arg.has_uint64_())
-			{
-				ArgumentValueHolder& argHolder{argHolders.emplace_back(arg.uint64_(), arg.nullstate())};
-				pArgs[n] = reinterpret_cast<void*>(&argHolder);
-			}
-			else if (arg.has_str_())
-			{
-				ArgumentValueHolder& argHolder{argHolders.emplace_back(il2cpp_string_new(arg.str_().c_str()), arg.nullstate())};
-				pArgs[n] = reinterpret_cast<void*>(&argHolder);
-			}
-			else if (arg.has_obj_())
-			{
-				Il2CppObject* pArg = Il2CppContext::instance().GetCppObject(
-					arg.obj_().klass().namespaze(), arg.obj_().klass().name(), reinterpret_cast<void*>(arg.obj_().address()));
-				// ArgumentValueHolder& argHolder{argHolders.emplace_back(pArg, arg.nullstate())};
-				pArgs[n] = reinterpret_cast<void*>(pArg);
+				::il2cppservice::Value* pRetVal{response->mutable_returnvalue()};
+				ObjectToValue(pResult, *pMethod->return_type, *pRetVal);
 			}
 		}
-
-		Il2CppException* pex;
-		Il2CppObject* pResult{il2cpp_runtime_invoke(pMethod, pObj, pArgs, &pex)};
-		if (pResult)
+		catch (...)
 		{
-			::il2cppservice::Value* pRetVal{response->mutable_returnvalue()};
-			ObjectToValue(pResult, *pMethod->return_type, *pRetVal);
+			il2cpp_free(pArgs);
+			return ::grpc::Status{::grpc::StatusCode::UNKNOWN, "Exception occurred"};
 		}
-
-		il2cpp_free(pArgs);
 		return ::grpc::Status::OK;
 	})};
 	return result.value_or(::grpc::Status::CANCELLED);
@@ -262,45 +277,53 @@ struct ArgumentValueHolder
 	std::optional<::grpc::Status> result{m_executionQueue.Invoke<::grpc::Status>([&]() mutable noexcept {
 		Il2CppClass* pCls{nullptr};
 		{
-			const ::il2cppservice::ClassId* klass{&request->klass()};
-			std::stack<const ::il2cppservice::ClassId*> classHeirarchy{};
-			classHeirarchy.push(klass);
-			while (klass->has_declaringtype())
+			if (request->has_address())
 			{
-				klass = &klass->declaringtype();
-				classHeirarchy.push(klass);
+				pCls = il2cpp_klass_from_ptr(reinterpret_cast<void*>(request->address()));
 			}
-			// reverse
-			while (!classHeirarchy.empty())
+			else
 			{
-				const ::il2cppservice::ClassId* pParent{classHeirarchy.top()};
-				if (pCls == nullptr)
+				const ::il2cppservice::ClassId* klass{&request->klass()};
+				std::stack<const ::il2cppservice::ClassId*> classHeirarchy{};
+				classHeirarchy.push(klass);
+				while (klass->has_declaringtype())
 				{
-					const Il2CppClassInfo* pDeclaringClassInfo{Il2CppContext::instance().FindClass(pParent->namespaze(), pParent->name())};
-					if (!pDeclaringClassInfo)
-						return ::grpc::Status{grpc::StatusCode::NOT_FOUND, "Could not find class"};
-					pCls = pDeclaringClassInfo->klass();
+					klass = &klass->declaringtype();
+					classHeirarchy.push(klass);
 				}
-				else
+				// reverse
+				while (!classHeirarchy.empty())
 				{
-					void* iter{nullptr};
-					bool found{false};
-					while (Il2CppClass* pNestedClass = il2cpp_class_get_nested_types(pCls, &iter))
+					const ::il2cppservice::ClassId* pParent{classHeirarchy.top()};
+					if (pCls == nullptr)
 					{
-						if (pParent->name() == pNestedClass->name)
-						{
-							pCls = pNestedClass;
-							found = true;
-							break;
-						}
+						const Il2CppClassInfo* pDeclaringClassInfo{
+							Il2CppContext::instance().FindClass(pParent->namespaze(), pParent->name())};
+						if (!pDeclaringClassInfo)
+							return ::grpc::Status{grpc::StatusCode::NOT_FOUND, "Could not find class"};
+						pCls = pDeclaringClassInfo->klass();
 					}
-					if (!found)
-						return ::grpc::Status{grpc::StatusCode::NOT_FOUND, "Could not find class"};
-				}
+					else
+					{
+						void* iter{nullptr};
+						bool found{false};
+						while (Il2CppClass* pNestedClass = il2cpp_class_get_nested_types(pCls, &iter))
+						{
+							if (pParent->name() == pNestedClass->name)
+							{
+								pCls = pNestedClass;
+								found = true;
+								break;
+							}
+						}
+						if (!found)
+							return ::grpc::Status{grpc::StatusCode::NOT_FOUND, "Could not find class"};
+					}
 
-				if (!pCls)
-					return ::grpc::Status{grpc::StatusCode::NOT_FOUND, "Could not find class"};
-				classHeirarchy.pop();
+					if (!pCls)
+						return ::grpc::Status{grpc::StatusCode::NOT_FOUND, "Could not find class"};
+					classHeirarchy.pop();
+				}
 			}
 		}
 
@@ -309,22 +332,28 @@ struct ArgumentValueHolder
 
 		Il2CppClassInfo classInfo{pCls};
 
-		response->mutable_typeinfo()->set_address(reinterpret_cast<uint64_t>(pCls));
 		response->mutable_typeinfo()->set_staticfieldsaddress(reinterpret_cast<uint64_t>(il2cpp_class_get_static_field_data(pCls)));
-		response->mutable_typeinfo()->mutable_klassid()->set_name(classInfo.name());
+		SetClassId(response->mutable_typeinfo()->mutable_klassid(), pCls);
 
-		for (int n{0}, m{pCls->field_count}; n < m; ++n)
+		if (pCls->fields)
 		{
-			::il2cppservice::Il2CppField* pFld{response->mutable_typeinfo()->mutable_fields()->Add()};
+			for (int n{0}, m{pCls->field_count}; n < m; ++n)
+			{
+				::il2cppservice::Il2CppField* pFld{response->mutable_typeinfo()->mutable_fields()->Add()};
+				const FieldInfo* pFieldInfo{&pCls->fields[n]};
 
-			const bool isStatic{(pCls->fields[n].type->attrs & FIELD_ATTRIBUTE_STATIC) == FIELD_ATTRIBUTE_STATIC};
-			int32_t offset{pCls->fields[n].offset};
-			if (!!pCls->valuetype && !isStatic)
-				offset -= sizeof(Il2CppObject); // valueType field metadata incorrectly considers object header in member field offsets
+				Il2CppClass* pFieldClassType{il2cpp_class_from_il2cpp_type(pFieldInfo->type)};
 
-			pFld->set_name(pCls->fields[n].name);
-			pFld->set_offset(offset);
-			pFld->set_static_(isStatic);
+				const bool isStatic{(pFieldInfo->type->attrs & FIELD_ATTRIBUTE_STATIC) == FIELD_ATTRIBUTE_STATIC};
+				int32_t offset{pFieldInfo->offset};
+				if (!!pCls->valuetype && !isStatic)
+					offset -= sizeof(Il2CppObject); // valueType field metadata incorrectly considers object header in member field offsets
+
+				pFld->set_name(pFieldInfo->name);
+				pFld->set_offset(offset);
+				pFld->set_klassaddr(reinterpret_cast<uint64_t>(pFieldClassType));
+				pFld->set_static_(isStatic);
+			}
 		}
 		return ::grpc::Status::OK;
 	})};
@@ -337,8 +366,7 @@ struct ArgumentValueHolder
 	::il2cppservice::PinObjectMessage* response) noexcept
 {
 	std::optional<::grpc::Status> result{m_executionQueue.Invoke<::grpc::Status>([&]() mutable noexcept {
-		Il2CppObject* pObj{Il2CppContext::instance().GetCppObject(
-			request->obj().klass().namespaze(), request->obj().klass().name(), reinterpret_cast<void*>(request->obj().address()))};
+		Il2CppObject* pObj{il2cpp_object_from_ptr(reinterpret_cast<void*>(request->obj().address()))};
 
 		if (!pObj)
 			return ::grpc::Status{::grpc::StatusCode::FAILED_PRECONDITION, "Object not found"};

@@ -28,8 +28,7 @@ namespace Il2CppToolkit.Runtime
 			{
 				Obj = new Il2CppObject()
 				{
-					Address = Reference.Address,
-					Klass = Il2CppTypeName<T>.klass
+					Address = Reference.Address
 				}
 			});
 		}

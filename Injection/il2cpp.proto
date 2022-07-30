@@ -14,6 +14,7 @@ message ClassId
 {
 	string namespaze = 1;
 	string name = 2;
+	optional uint64 address = 3;
 
 	optional ClassId declaringType = 8;
 }
@@ -22,7 +23,7 @@ message Il2CppObject
 {
 	uint32 handle = 1;
 	uint64 address = 2;
-	ClassId klass = 3;
+	optional ClassId klass = 3;
 }
 
 message Value
@@ -48,20 +49,22 @@ message Il2CppField
 	string name = 1;
 	uint32 offset = 2;
 
+	uint64 klassAddr = 9;
+
 	bool static = 15;
 }
 
 message Il2CppTypeInfo
 {
 	ClassId klassId = 1;
-	uint64 address = 2;
-	uint64 staticFieldsAddress = 3;
-	repeated Il2CppField fields = 4;
+	uint64 staticFieldsAddress = 2;
+	repeated Il2CppField fields = 3;
 }
 
 message GetTypeInfoRequest
 {
-	ClassId klass = 1;
+	optional uint64 address = 1;
+	optional ClassId klass = 2;
 }
 
 message GetTypeInfoResponse
@@ -71,8 +74,9 @@ message GetTypeInfoResponse
 
 message CallMethodRequest
 {
-	ClassId klass = 1;
-	string methodName = 2;
+	string methodName = 1;
+	// must be klass or instance
+	optional ClassId klass = 2;
 	optional Il2CppObject instance = 3;
 	repeated Value arguments = 4;
 }
