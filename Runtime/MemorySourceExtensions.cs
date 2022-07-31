@@ -164,7 +164,7 @@ namespace Il2CppToolkit.Runtime
 			}
 
 			// if (type.IsInterface || type.IsAbstract || type == typeof(Object))
-			if (type.Assembly != ThisAsm)
+			if (type.Assembly != ThisAsm && !type.IsValueType)
 			{
 				Type originalType = type;
 				UnknownClass unk = (UnknownClass)ReadStruct(source, typeof(UnknownClass), address);
