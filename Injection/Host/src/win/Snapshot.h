@@ -5,13 +5,13 @@
 class Snapshot
 {
 public:
-	Snapshot() noexcept;
+	Snapshot(DWORD dwProcId) noexcept;
 	~Snapshot() noexcept;
 
-	bool FindProcess(DWORD procId) noexcept;
+	bool FindProcess(DWORD dwProcId) noexcept;
 	bool FindProcess(const std::wstring& wzName) noexcept;
-	bool FindFirstThread() noexcept;
-	bool FindModule(DWORD procId, const std::wstring& wzName) noexcept;
+	bool FindFirstThread(DWORD dwProcId) noexcept;
+	bool FindModule(DWORD dwProcId, const std::wstring& wzName) noexcept;
 	bool NextProcess() noexcept;
 	bool NextModule() noexcept;
 	bool NextThread() noexcept;

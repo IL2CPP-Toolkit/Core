@@ -1,9 +1,9 @@
 #include "pch.h"
 #include "Snapshot.h"
 
-Snapshot::Snapshot() noexcept
+Snapshot::Snapshot(DWORD dwProcId) noexcept
 {
-	m_snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS | TH32CS_SNAPMODULE32 | TH32CS_SNAPMODULE | TH32CS_SNAPTHREAD, NULL);
+	m_snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS | TH32CS_SNAPMODULE32 | TH32CS_SNAPMODULE | TH32CS_SNAPTHREAD, dwProcId);
 }
 
 Snapshot::~Snapshot() noexcept
@@ -11,11 +11,11 @@ Snapshot::~Snapshot() noexcept
 	CloseHandle(m_snapshot);
 }
 
-bool Snapshot::FindProcess(DWORD procId) noexcept
+bool Snapshot::FindProcess(DWORD dwProcId) noexcept
 {
 	while (NextProcess())
 	{
-		if (m_process.th32ProcessID == procId)
+		if (m_process.th32ProcessID == dwProcId)
 		{
 			return true;
 		}
@@ -35,11 +35,11 @@ bool Snapshot::FindProcess(const std::wstring& wzName) noexcept
 	return false;
 }
 
-bool Snapshot::FindModule(DWORD procId, const std::wstring& wzName) noexcept
+bool Snapshot::FindModule(DWORD dwProcId, const std::wstring& wzName) noexcept
 {
 	while (NextModule())
 	{
-		if (m_module.th32ProcessID == procId && _wcsicmp(m_module.szExePath, wzName.c_str()) == 0)
+		if (m_module.th32ProcessID == dwProcId && _wcsicmp(m_module.szExePath, wzName.c_str()) == 0)
 		{
 			return true;
 		}
@@ -47,12 +47,12 @@ bool Snapshot::FindModule(DWORD procId, const std::wstring& wzName) noexcept
 	return false;
 }
 
-bool Snapshot::FindFirstThread() noexcept
+bool Snapshot::FindFirstThread(DWORD dwProcId) noexcept
 {
 	m_thread = {};
 	while (NextThread())
 	{
-		if (m_thread.th32OwnerProcessID == m_process.th32ProcessID)
+		if (m_thread.th32OwnerProcessID == dwProcId)
 			return true;
 	}
 	m_thread = {};
