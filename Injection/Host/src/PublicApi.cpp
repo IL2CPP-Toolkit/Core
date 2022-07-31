@@ -30,8 +30,8 @@ extern "C" __declspec(dllexport) HRESULT WINAPI GetState(DWORD procId, PublicSta
 	if (FAILED(GetModuleFileName(thisModule, &wzModuleName[0], MAX_PATH)))
 		return E_NOINTERFACE;
 
-	Snapshot snapshot;
-	if (!snapshot.FindProcess(procId) || !snapshot.FindModule(wzModuleName))
+	Snapshot snapshot{procId};
+	if (!snapshot.FindModule(procId, wzModuleName))
 		return E_NOINTERFACE;
 
 	const byte* baseAddr{snapshot.Module().modBaseAddr};
@@ -43,13 +43,14 @@ extern "C" __declspec(dllexport) HRESULT WINAPI GetState(DWORD procId, PublicSta
 	// scan for a port number until timeoutMs
 	std::chrono::system_clock::time_point deadline{std::chrono::system_clock::now() + std::chrono::milliseconds{timeoutMs}};
 	int count{0};
-	bool lastResult{false};
-	while (std::chrono::system_clock::now() < deadline && pState->port <= 0 && sizeof(PublicState) == readBytes)
+	bool lastResult{};
+	do
 	{
 		++count;
 		lastResult = ReadProcessMemory(hProcess, remoteAddr, pState, sizeof(PublicState), &readBytes);
-		std::this_thread::sleep_for(std::chrono::milliseconds{10});
-	}
+		if (!lastResult || count > 1) // skip first wait if we were successful
+			std::this_thread::sleep_for(std::chrono::milliseconds{10});
+	} while (std::chrono::system_clock::now() < deadline && pState->port <= 0 && sizeof(PublicState) != readBytes);
 
 	if (!lastResult)
 	{
@@ -75,8 +76,8 @@ extern "C" __declspec(dllexport) HRESULT WINAPI InjectHook(DWORD procId) noexcep
 		return E_NOINTERFACE;
 	}
 	InjectionHook injection{thisModule, &HandleHookedMessage};
-	Snapshot snapshot;
-	if (!snapshot.FindProcess(procId) || !snapshot.FindFirstThread())
+	Snapshot snapshot{procId};
+	if (!snapshot.FindProcess(procId) || !snapshot.FindFirstThread(procId))
 		return E_INVALIDARG;
 
 	g_hookMap.emplace(procId, injection.Hook(WH_CALLWNDPROC, snapshot.Thread().th32ThreadID));
