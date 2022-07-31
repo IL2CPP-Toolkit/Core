@@ -3,11 +3,7 @@
 
 Snapshot::Snapshot() noexcept
 {
-	m_snapshot = CreateToolhelp32Snapshot(
-		TH32CS_SNAPPROCESS |
-		TH32CS_SNAPMODULE32 |
-		TH32CS_SNAPMODULE |
-		TH32CS_SNAPTHREAD, NULL);
+	m_snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS | TH32CS_SNAPMODULE32 | TH32CS_SNAPMODULE | TH32CS_SNAPTHREAD, NULL);
 }
 
 Snapshot::~Snapshot() noexcept
@@ -39,11 +35,11 @@ bool Snapshot::FindProcess(const std::wstring& wzName) noexcept
 	return false;
 }
 
-bool Snapshot::FindModule(const std::wstring& wzName) noexcept
+bool Snapshot::FindModule(DWORD procId, const std::wstring& wzName) noexcept
 {
 	while (NextModule())
 	{
-		if (_wcsicmp(m_module.szExePath, wzName.c_str()) == 0)
+		if (m_module.th32ProcessID == procId && _wcsicmp(m_module.szExePath, wzName.c_str()) == 0)
 		{
 			return true;
 		}

@@ -11,23 +11,15 @@ public:
 	bool FindProcess(DWORD procId) noexcept;
 	bool FindProcess(const std::wstring& wzName) noexcept;
 	bool FindFirstThread() noexcept;
-	bool FindModule(const std::wstring& wzName) noexcept;
+	bool FindModule(DWORD procId, const std::wstring& wzName) noexcept;
 	bool NextProcess() noexcept;
 	bool NextModule() noexcept;
 	bool NextThread() noexcept;
 
-	const PROCESSENTRY32& Process() const noexcept
-	{
-		return m_process;
-	}
-	const MODULEENTRY32& Module() const noexcept
-	{
-		return m_module;
-	}
-	const THREADENTRY32& Thread() const noexcept
-	{
-		return m_thread;
-	}
+	const PROCESSENTRY32& Process() const noexcept { return m_process; }
+	const MODULEENTRY32& Module() const noexcept { return m_module; }
+	const THREADENTRY32& Thread() const noexcept { return m_thread; }
+
 private:
 	HANDLE m_snapshot;
 	PROCESSENTRY32 m_process{};

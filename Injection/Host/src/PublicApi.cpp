@@ -31,7 +31,7 @@ extern "C" __declspec(dllexport) HRESULT WINAPI GetState(DWORD procId, PublicSta
 		return E_NOINTERFACE;
 
 	Snapshot snapshot;
-	if (!snapshot.FindProcess(procId) || !snapshot.FindModule(wzModuleName))
+	if (!snapshot.FindModule(procId, wzModuleName))
 		return E_NOINTERFACE;
 
 	const byte* baseAddr{snapshot.Module().modBaseAddr};
