@@ -162,9 +162,9 @@ struct ArgumentValueHolder
 	const ::il2cppservice::CallMethodRequest* request,
 	::il2cppservice::CallMethodResponse* response) noexcept
 {
-	std::optional<::grpc::Status> result{m_executionQueue.Invoke<::grpc::Status>([&]() mutable noexcept {
-		Il2CppObject* pObj{};
-		Il2CppClass* pClass{};
+	std::optional<::grpc::Status> result{m_executionQueue.Invoke<::grpc::Status>([&]() mutable {
+		Il2CppObject* pObj{nullptr};
+		Il2CppClass* pClass{nullptr};
 		if (request->has_instance())
 		{
 			const ::il2cppservice::Il2CppObject& instance{request->instance()};
@@ -182,6 +182,9 @@ struct ArgumentValueHolder
 				return ::grpc::Status{::grpc::StatusCode::FAILED_PRECONDITION, "Class not found"};
 			pClass = pClsInfo->klass();
 		}
+
+		if (!pClass)
+			return ::grpc::Status{::grpc::StatusCode::FAILED_PRECONDITION, "Class not found"};
 
 		const int nArgs{request->arguments_size()};
 		const MethodInfo* pMethod{il2cpp_class_get_method_from_name(pClass, request->methodname().c_str(), nArgs)};
@@ -274,7 +277,7 @@ struct ArgumentValueHolder
 	const ::il2cppservice::GetTypeInfoRequest* request,
 	::il2cppservice::GetTypeInfoResponse* response) noexcept
 {
-	std::optional<::grpc::Status> result{m_executionQueue.Invoke<::grpc::Status>([&]() mutable noexcept {
+	std::optional<::grpc::Status> result{m_executionQueue.Invoke<::grpc::Status>([&]() mutable {
 		Il2CppClass* pCls{nullptr};
 		{
 			if (request->has_address())
@@ -365,7 +368,7 @@ struct ArgumentValueHolder
 	const ::il2cppservice::PinObjectMessage* request,
 	::il2cppservice::PinObjectMessage* response) noexcept
 {
-	std::optional<::grpc::Status> result{m_executionQueue.Invoke<::grpc::Status>([&]() mutable noexcept {
+	std::optional<::grpc::Status> result{m_executionQueue.Invoke<::grpc::Status>([&]() mutable {
 		Il2CppObject* pObj{il2cpp_object_from_ptr(reinterpret_cast<void*>(request->obj().address()))};
 
 		if (!pObj)
@@ -385,7 +388,7 @@ struct ArgumentValueHolder
 	const ::il2cppservice::FreeObjectRequest* request,
 	::il2cppservice::FreeObjectResponse* response) noexcept
 {
-	std::optional<::grpc::Status> result{m_executionQueue.Invoke<::grpc::Status>([&]() mutable noexcept {
+	std::optional<::grpc::Status> result{m_executionQueue.Invoke<::grpc::Status>([&]() mutable {
 		il2cpp_gchandle_free(request->handle());
 		return ::grpc::Status::OK;
 	})};
