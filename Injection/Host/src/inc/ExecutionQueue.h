@@ -18,10 +18,10 @@ public:
 	template<typename T>
 	std::optional<T> Invoke(std::function<T()>&& task) noexcept
 	{
+		std::optional<T> result{std::nullopt};
 		try
 		{
 			std::atomic<bool> finished{false};
-			std::optional<T> result{std::nullopt};
 
 			if (isShutdown.load())
 				return result;
