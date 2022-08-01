@@ -131,7 +131,7 @@ namespace Il2CppToolkit.Runtime
 				throw new ArgumentNullException(nameof(arguments));
 
 			CallMethodRequest req = new() { MethodName = name, };
-			if (obj != null)
+			if (obj != null && !obj.GetType().IsValueType)
 				req.Instance = new() { Address = obj.Address };
 			else
 				req.Klass = Il2CppTypeName<TClass>.klass;
