@@ -19,25 +19,25 @@ public:
 	std::optional<T> Invoke(std::function<T()>&& task) noexcept
 	{
 		std::optional<T> result{std::nullopt};
-		try
-		{
-			std::atomic<bool> finished{false};
+		std::atomic<bool> finished{false};
 
-			if (isShutdown.load())
-				return result;
+		if (isShutdown.load())
+			return result;
 
-			q.enqueue([task = std::move(task), &result, &finished]() mutable noexcept {
+		q.enqueue([task = std::move(task), &result, &finished]() mutable noexcept {
+			try
+			{
 				result = task();
-				finished.store(true);
-			});
+			}
+			catch (...)
+			{
+				// don't crash the process
+			}
+			finished.store(true);
+		});
 
-			while (!finished.load() && !isShutdown.load())
-				std::this_thread::yield();
-		}
-		catch (...)
-		{
-			// don't crash the process
-		}
+		while (!finished.load() && !isShutdown.load())
+			std::this_thread::yield();
 		return result;
 	}
 
