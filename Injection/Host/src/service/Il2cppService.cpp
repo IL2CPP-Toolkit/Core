@@ -178,6 +178,11 @@ struct ArgumentValueHolder
 				}
 				pClass = pObj->klass;
 			}
+			else
+			{
+				// value types aren't Il2CppObjects, but Il2Cpp treats them that way in all API contracts
+				pObj = reinterpret_cast<Il2CppObject*>(instance.address());
+			}
 		}
 
 		if (!pClass)
@@ -196,6 +201,15 @@ struct ArgumentValueHolder
 		const MethodInfo* pMethod{il2cpp_class_get_method_from_name(pClass, request->methodname().c_str(), nArgs)};
 		if (!pMethod)
 			return ::grpc::Status{::grpc::StatusCode::NOT_FOUND, "Method not found"};
+
+		if (pMethod->flags & METHOD_ATTRIBUTE_STATIC)
+		{
+			assert(!pObj); // Method call does not expect an instance
+		}
+		else if (!pObj)
+		{
+			return ::grpc::Status{::grpc::StatusCode::INVALID_ARGUMENT, "Instance method requires a non-null instance"};
+		}
 
 		void** pArgs{reinterpret_cast<void**>(il2cpp_alloc(sizeof(void*) * nArgs))};
 		if (!pArgs)
