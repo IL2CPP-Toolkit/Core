@@ -45,6 +45,9 @@ namespace Il2CppToolkit.Runtime
 			if (!TryGetOrLoadTypeInfoCore(runtime, managedType, classAddr, out Il2CppTypeInfo result) || result == null)
 				return result;
 
+			if (managedType.IsValueType)
+				return result;
+
 			Type baseType = managedType;
 			ClassDefinition clsDef = null;
 			if (classAddr > 0)
@@ -131,10 +134,9 @@ namespace Il2CppToolkit.Runtime
 				throw new ArgumentNullException(nameof(arguments));
 
 			CallMethodRequest req = new() { MethodName = name, };
-			if (obj != null && !obj.GetType().IsValueType)
+			req.Klass = Il2CppTypeName<TClass>.klass;
+			if (obj != null)
 				req.Instance = new() { Address = obj.Address };
-			else
-				req.Klass = Il2CppTypeName<TClass>.klass;
 
 			req.Arguments.AddRange(arguments.Select(ValueFrom));
 			CallMethodResponse response = context.InjectionClient.Il2Cpp.CallMethod(req);

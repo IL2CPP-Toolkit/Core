@@ -45,6 +45,7 @@ void SetClassId(::il2cppservice::ClassId* pClassId, const Il2CppClass* pClass) n
 	pClassId->set_name(pClass->name);
 	pClassId->set_namespaze(pClass->namespaze);
 	pClassId->set_address(reinterpret_cast<uint64_t>(pClass));
+	pClassId->set_isvaluetype(pClass->valuetype);
 	const Il2CppClass* pDeclaringType = pClass;
 	::il2cppservice::ClassId* pCurrentClass = pClassId;
 	while ((pDeclaringType = pDeclaringType->declaringType) != nullptr)
@@ -168,15 +169,20 @@ struct ArgumentValueHolder
 		if (request->has_instance())
 		{
 			const ::il2cppservice::Il2CppObject& instance{request->instance()};
-			pObj = il2cpp_object_from_ptr(reinterpret_cast<void*>(instance.address()));
-			if (!pObj)
+			if (!request->klass().isvaluetype())
 			{
-				return ::grpc::Status{::grpc::StatusCode::FAILED_PRECONDITION, "Object not found"};
+				pObj = il2cpp_object_from_ptr(reinterpret_cast<void*>(instance.address()));
+				if (!pObj)
+				{
+					return ::grpc::Status{::grpc::StatusCode::FAILED_PRECONDITION, "Object not found"};
+				}
+				pClass = pObj->klass;
 			}
-			pClass = pObj->klass;
 		}
-		else
+
+		if (!pClass)
 		{
+			assert(request->klass().isvaluetype());
 			const Il2CppClassInfo* pClsInfo{Il2CppContext::instance().FindClass(request->klass().namespaze(), request->klass().name())};
 			if (!pClsInfo)
 				return ::grpc::Status{::grpc::StatusCode::FAILED_PRECONDITION, "Class not found"};
