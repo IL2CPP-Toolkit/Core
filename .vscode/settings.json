@@ -1,4 +1,5 @@
 {
+    "omnisharp.useModernNet": true,
     "C_Cpp.default.intelliSenseMode": "msvc-x64",
     "C_Cpp.default.systemIncludePath": [
         "D:\\git\\github\\IL2Cpp-Toolkit\\Core\\Injection\\Host\\vcpkg_installed\\x64-windows\\include",

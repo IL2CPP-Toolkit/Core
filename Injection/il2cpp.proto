@@ -15,6 +15,7 @@ message ClassId
 	string namespaze = 1;
 	string name = 2;
 	optional uint64 address = 3;
+	bool isValueType = 4;
 
 	optional ClassId declaringType = 8;
 }
@@ -75,8 +76,7 @@ message GetTypeInfoResponse
 message CallMethodRequest
 {
 	string methodName = 1;
-	// must be klass or instance
-	optional ClassId klass = 2;
+	ClassId klass = 2;
 	optional Il2CppObject instance = 3;
 	repeated Value arguments = 4;
 }

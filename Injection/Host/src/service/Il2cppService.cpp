@@ -45,6 +45,7 @@ void SetClassId(::il2cppservice::ClassId* pClassId, const Il2CppClass* pClass) n
 	pClassId->set_name(pClass->name);
 	pClassId->set_namespaze(pClass->namespaze);
 	pClassId->set_address(reinterpret_cast<uint64_t>(pClass));
+	pClassId->set_isvaluetype(pClass->valuetype);
 	const Il2CppClass* pDeclaringType = pClass;
 	::il2cppservice::ClassId* pCurrentClass = pClassId;
 	while ((pDeclaringType = pDeclaringType->declaringType) != nullptr)
@@ -168,15 +169,25 @@ struct ArgumentValueHolder
 		if (request->has_instance())
 		{
 			const ::il2cppservice::Il2CppObject& instance{request->instance()};
-			pObj = il2cpp_object_from_ptr(reinterpret_cast<void*>(instance.address()));
-			if (!pObj)
+			if (!request->klass().isvaluetype())
 			{
-				return ::grpc::Status{::grpc::StatusCode::FAILED_PRECONDITION, "Object not found"};
+				pObj = il2cpp_object_from_ptr(reinterpret_cast<void*>(instance.address()));
+				if (!pObj)
+				{
+					return ::grpc::Status{::grpc::StatusCode::FAILED_PRECONDITION, "Object not found"};
+				}
+				pClass = pObj->klass;
 			}
-			pClass = pObj->klass;
+			else
+			{
+				// value types aren't Il2CppObjects, but Il2Cpp treats them that way in all API contracts
+				pObj = reinterpret_cast<Il2CppObject*>(instance.address());
+			}
 		}
-		else
+
+		if (!pClass)
 		{
+			assert(request->klass().isvaluetype());
 			const Il2CppClassInfo* pClsInfo{Il2CppContext::instance().FindClass(request->klass().namespaze(), request->klass().name())};
 			if (!pClsInfo)
 				return ::grpc::Status{::grpc::StatusCode::FAILED_PRECONDITION, "Class not found"};
@@ -190,6 +201,15 @@ struct ArgumentValueHolder
 		const MethodInfo* pMethod{il2cpp_class_get_method_from_name(pClass, request->methodname().c_str(), nArgs)};
 		if (!pMethod)
 			return ::grpc::Status{::grpc::StatusCode::NOT_FOUND, "Method not found"};
+
+		if (pMethod->flags & METHOD_ATTRIBUTE_STATIC)
+		{
+			assert(!pObj); // Method call does not expect an instance
+		}
+		else if (!pObj)
+		{
+			return ::grpc::Status{::grpc::StatusCode::INVALID_ARGUMENT, "Instance method requires a non-null instance"};
+		}
 
 		void** pArgs{reinterpret_cast<void**>(il2cpp_alloc(sizeof(void*) * nArgs))};
 		if (!pArgs)

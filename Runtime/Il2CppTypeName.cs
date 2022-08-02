@@ -8,7 +8,7 @@ namespace Il2CppToolkit.Runtime
 	{
 		public static ClassId GetKlass(Type type)
 		{
-			ClassId klass = new() { Name = GetTypeName(type, false), Namespaze = type.Namespace };
+			ClassId klass = new() { Name = GetTypeName(type, false), Namespaze = type.Namespace, IsValueType = type.IsValueType };
 			Type declaringType = type;
 			ClassId currentKlass = klass;
 			while ((declaringType = declaringType.DeclaringType) != null)
