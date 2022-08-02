@@ -186,10 +186,16 @@ namespace Il2CppToolkit.Runtime
 					Il2CppTypeCache.GetTypeInfo(source.ParentContext, type, unk.ClassDefinition.Address);
 				}
 
-				if (type.IsGenericType)
+				if (type.IsGenericType && type.ContainsGenericParameters)
 				{
-					// TODO: Get generic type arguments at runtime
-					return originalType == typeof(object) ? unk : null;
+					if(originalType.IsGenericType && originalType.ContainsGenericParameters)
+					{
+						return originalType == typeof(object) ? unk : null;
+					}
+					else // if (type.GetGenericTypeDefinition() == originalType)
+					{
+						type = originalType;
+					}
 				}
 			}
 			if (type.IsAssignableTo(typeof(IRuntimeObject)))
