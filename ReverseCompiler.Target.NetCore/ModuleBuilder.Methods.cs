@@ -192,7 +192,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 						var nullableArgCtor = ImportReference(typeof(NullableArg<>)).MakeGenericType(genericInstance.GenericArguments).GetConstructor(nullableType);
 						methodIL.Emit(OpCodes.Newobj, nullableArgCtor);
 					}
-					else if (paramType.IsValueType)
+					else if (paramType.IsValueType || paramType.IsGenericParameter)
 					{
 						methodIL.Emit(OpCodes.Box, paramType);
 					}
