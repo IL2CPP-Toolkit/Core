@@ -32,6 +32,7 @@ namespace Il2CppToolkit.Runtime
 
 		public IMemorySource Parent => null;
 		public Il2CsRuntimeContext ParentContext => this;
+		internal Il2CppTypeCache TypeCache = new();
 
 		public Il2CsRuntimeContext(Process target)
 		{

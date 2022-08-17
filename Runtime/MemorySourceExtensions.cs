@@ -181,7 +181,7 @@ namespace Il2CppToolkit.Runtime
 				// this is the one time we can be 100% sure of the concrete type that
 				// obj->klass points to, and we don't get another chance to resolve
 				// this type deterministically (nested types can't be looked up by name)
-				if (!Il2CppTypeCache.HasType(type))
+				if (!Il2CppTypeCache.HasType(source.ParentContext, type))
 				{
 					Il2CppTypeCache.GetTypeInfo(source.ParentContext, type, unk.ClassDefinition.Address);
 				}
