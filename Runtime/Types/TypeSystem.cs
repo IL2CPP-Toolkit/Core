@@ -1,6 +1,7 @@
 ﻿using Il2CppToolkit.Common.Errors;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 
 namespace Il2CppToolkit.Runtime.Types
@@ -32,7 +33,8 @@ namespace Il2CppToolkit.Runtime.Types
 
 		public static bool TryGetTypeFactory(Type type, out ITypeFactory typeFactory)
 		{
-			if (!NativeFactoryMapping.TryGetValue(type, out Type typeFactoryType))
+			if (!NativeFactoryMapping.TryGetValue(type, out Type typeFactoryType)
+				&& (!type.IsConstructedGenericType || !NativeFactoryMapping.TryGetValue(type.GetGenericTypeDefinition(), out typeFactoryType)))
 			{
 				typeFactory = null;
 				return false;
