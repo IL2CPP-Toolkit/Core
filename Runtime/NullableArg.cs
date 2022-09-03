@@ -5,6 +5,7 @@ namespace Il2CppToolkit.Runtime
 		internal bool HasValue = false;
 		internal object Value = null;
 	}
+
 	public class NullableArg<T> : NullableArg where T : struct
 	{
 		internal T TypedValue;
