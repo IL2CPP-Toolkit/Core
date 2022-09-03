@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFrameworks>net472;net5.0;net6.0</TargetFrameworks>
 		<LangVersion>9.0</LangVersion>
@@ -24,6 +24,10 @@
 		<TfmSpecificPackageFile Include="$(BinDir)\Il2CppToolkit.Injection.Host.dll" Link="Il2CppToolkit.Injection.Host.dll">
 			<Pack>true</Pack>
 			<PackagePath>runtimes/win7-x64/native</PackagePath>
+		</TfmSpecificPackageFile>
+		<TfmSpecificPackageFile Include="$(BinDir)\Il2CppToolkit.Injection.Host.dll" Link="Il2CppToolkit.Injection.Host.dll">
+			<Pack>true</Pack>
+			<PackagePath>runtimes/win10-x64/native</PackagePath>
 		</TfmSpecificPackageFile>
 		<None Include="$(BinDir)\Il2CppToolkit.Injection.Host.pdb" Link="Il2CppToolkit.Injection.Host.pdb">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
