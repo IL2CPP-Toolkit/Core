@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Il2CppToolkit.Model;
@@ -11,10 +12,12 @@ namespace Il2CppToolkit.ReverseCompiler
 		private readonly List<ICompilerTarget> m_targets = new();
 
 		public ArtifactContainer Artifacts => m_context.Artifacts;
+		public event EventHandler<ProgressUpdatedEventArgs> ProgressUpdated;
 
 		public Compiler(TypeModel model, ICompilerLogger logger = null)
 		{
 			m_context = new(model, logger);
+			m_context.ProgressUpdated += (_, e) => ProgressUpdated?.Invoke(this, e);
 		}
 
 		public void AddTarget(ICompilerTarget target)

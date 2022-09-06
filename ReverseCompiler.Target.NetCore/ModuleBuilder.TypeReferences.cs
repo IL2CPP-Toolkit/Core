@@ -63,6 +63,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 
 			EnqueuedTypes.Add(cppTypeDef);
 			TypeDefinitionQueue.Enqueue(cppTypeDef);
+			AddWork();
 			return typeDef;
 		}
 

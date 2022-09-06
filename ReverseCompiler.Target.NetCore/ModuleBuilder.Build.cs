@@ -11,8 +11,38 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 {
 	public partial class ModuleBuilder
 	{
+		private int Completed = 0;
+		private int Total = 0;
+		private int UpdateCounter = 0;
+		private string CurrentAction;
 		private readonly HashSet<Il2CppTypeDefinition> EnqueuedTypes = new();
 		private Queue<Il2CppTypeDefinition> TypeDefinitionQueue = new();
+		public event EventHandler<ProgressUpdatedEventArgs> ProgressUpdated;
+
+		private void AddWork(int count = 1)
+		{
+			++Total;
+			OnWorkUpdated();
+		}
+		private void CompleteWork(int count = 1)
+		{
+			++Completed;
+			OnWorkUpdated();
+		}
+		private void SetAction(string actionName)
+		{
+			if (CurrentAction == actionName)
+				return;
+			CurrentAction = actionName;
+			UpdateCounter = -1; // force update when action changes
+			OnWorkUpdated();
+		}
+		private void OnWorkUpdated()
+		{
+			if (++UpdateCounter % 50 != 0 || Total < 10)
+				return;
+			ProgressUpdated?.Invoke(this, new() { Total = Math.Max(Total, 1), Completed = Completed, DisplayName = CurrentAction });
+		}
 
 		public void Build()
 		{
@@ -24,12 +54,14 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 			Queue<Il2CppTypeDefinition> typesToBuild = new();
 			do
 			{
+				SetAction("Processing");
 				do
 				{
 					Queue<Il2CppTypeDefinition> currentQueue = TypeDefinitionQueue;
 					TypeDefinitionQueue = new();
 					while (currentQueue.TryDequeue(out Il2CppTypeDefinition cppTypeDef))
 					{
+						CompleteWork();
 						TypeReference typeRef = UseTypeDefinition(cppTypeDef);
 						if (typeRef == null)
 							continue;
@@ -50,13 +82,16 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 						}
 						Context.Logger?.LogInfo($"[{typeRef.FullName}] Marked->Build");
 						typesToBuild.Enqueue(cppTypeDef);
+						AddWork();
 					}
 				}
 				while (TypeDefinitionQueue.Count > 0);
 
 				Context.Logger?.LogInfo($"Building marked types");
+				SetAction("Compiling");
 				while (typesToBuild.TryDequeue(out Il2CppTypeDefinition cppTypeDef))
 				{
+					CompleteWork();
 					TypeReference typeRef = UseTypeDefinition(cppTypeDef);
 					if (typeRef == null)
 						continue;

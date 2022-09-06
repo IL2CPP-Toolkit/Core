@@ -33,6 +33,8 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 
 		public override Task Execute()
 		{
+			OnProgressUpdated(0, 100, "Initializing");
+
 			IReadOnlyList<TypeDescriptor> includedDescriptors = FilterTypes(m_typeSelectors).ToList();
 
 			AssemblyNameDefinition assemblyName = new(m_asmName, m_asmVersion);
@@ -47,11 +49,19 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 			foreach (TypeDescriptor td in includedDescriptors)
 				mb.IncludeTypeDefinition(td.TypeDef);
 
+			mb.ProgressUpdated += OnBuilderProgressUpdated;
 			mb.Build();
 
 			Write(assemblyDefinition);
 
+			OnProgressUpdated(100, 100, "");
+
 			return Task.CompletedTask;
+		}
+
+		private void OnBuilderProgressUpdated(object sender, ProgressUpdatedEventArgs e)
+		{
+			OnProgressUpdated((int)((double)e.Completed / e.Total * 100), 100, e.DisplayName);
 		}
 
 		private void Write(AssemblyDefinition assemblyDefinition)

@@ -69,6 +69,8 @@ namespace Il2CppToolkit.ReverseCompiler.Cli
 
 			public void LogWarning(string message)
 			{
+				if (!Verbose)
+					return;
 				Console.Error.WriteLine($"WARN: {message}");
 			}
 		}
@@ -120,6 +122,10 @@ namespace Il2CppToolkit.ReverseCompiler.Cli
 				);
 				try
 				{
+					compiler.ProgressUpdated += (_, e) =>
+					{
+						Console.WriteLine($"[{((double)e.Completed / e.Total).ToString("P0")}] {e.Completed} / {e.Total}\t{e.DisplayName}");
+					};
 					compiler.Compile().Wait();
 				}
 				catch (Exception ex)
