@@ -49,16 +49,27 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 
 		private TypeReference UseTypeDefinition(Il2CppTypeDefinition cppTypeDef)
 		{
-			TypeReference typeDef = GetTypeDefinition(cppTypeDef);
+			TypeReference typeDef = GetOrCreateTypeDefinition(cppTypeDef);
 			if (typeDef == null)
 				return null;
 
 			if (EnqueuedTypes.Contains(cppTypeDef))
 				return typeDef;
 
-			if (cppTypeDef.declaringTypeIndex == -1 && typeDef is TypeDefinition td)
+			if (typeDef is TypeDefinition td)
 			{
-				Module.Types.Add(td);
+				if (cppTypeDef.declaringTypeIndex == -1)
+				{
+					Module.Types.Add(td);
+				}
+				else
+				{
+					Il2CppType cppParentType = Context.Model.Il2Cpp.Types[cppTypeDef.declaringTypeIndex];
+					Il2CppTypeDefinition cppParentTypeDef = Context.Model.GetTypeDefinitionFromIl2CppType(cppParentType);
+					TypeReference parentRef = GetOrCreateTypeDefinition(cppParentTypeDef);
+					if (parentRef is TypeDefinition parentDef)
+						parentDef.NestedTypes.Add(td);
+				}
 			}
 
 			EnqueuedTypes.Add(cppTypeDef);
@@ -67,7 +78,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 			return typeDef;
 		}
 
-		private TypeReference GetTypeDefinition(Il2CppTypeDefinition cppTypeDef)
+		private TypeReference GetOrCreateTypeDefinition(Il2CppTypeDefinition cppTypeDef)
 		{
 			if (TypeDefinitions.TryGetValue(cppTypeDef, out TypeDefinition typeDef))
 				return typeDef;
@@ -108,7 +119,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 				if (Metadata.GetStringFromIndex(cppDeclaringTypeDef.namespaceIndex).StartsWith("System"))
 					return null;
 
-				TypeReference parentRef = GetTypeDefinition(cppDeclaringTypeDef);
+				TypeReference parentRef = GetOrCreateTypeDefinition(cppDeclaringTypeDef);
 				if (parentRef == null || parentRef.Namespace.StartsWith("System"))
 					return null;
 				fullTypeName = @$"{parentRef.FullName}\";
