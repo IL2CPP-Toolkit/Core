@@ -115,7 +115,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 				if (!methodAttributes.HasFlag(MethodAttributes.Abstract))
 				{
 					ILProcessor methodIL = methodDef.Body.GetILProcessor();
-					methodIL.Emit(OpCodes.Newobj, ModuleBuilder.ImportReference(typeof(NotImplementedException)).GetConstructor());
+					methodIL.Emit(OpCodes.Newobj, ModuleBuilder.ImportReference(typeof(NotImplementedException)).GetConstructor(ModuleDefinition));
 					methodIL.Emit(OpCodes.Throw);
 				}
 				ForType.Methods.Add(methodDef);
@@ -157,7 +157,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 			public FieldDefinition DefineStaticField(string name, string storageName, TypeReference fieldType, byte indirection)
 			{
 				TypeReference fieldTypeDefType = ModuleDefinition.ImportReference(StaticFieldMemberType).MakeGenericType(ForTypeRef, fieldType);
-				MethodReference ctor = fieldTypeDefType.GetConstructor();
+				MethodReference ctor = fieldTypeDefType.GetConstructor(ModuleDefinition);
 
 				foreach (var param in StaticFieldMemberTypeCtor.GetParameters())
 					ctor.Parameters.Add(new ParameterDefinition(param.Name, (ParameterAttributes)param.Attributes, ModuleDefinition.ImportReference(param.ParameterType)));

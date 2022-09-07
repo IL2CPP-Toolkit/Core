@@ -20,7 +20,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 			ctorMethodIL.Emit(OpCodes.Ldarg_0);                       // this
 			if (typeDef.BaseType != null)
 			{
-				MethodReference baseCtor = typeDef.BaseType.GetConstructor();
+				MethodReference baseCtor = typeDef.BaseType.GetConstructor(Module);
 				ctorMethodIL.Emit(OpCodes.Call, baseCtor);            // instance void base::.ctor()
 			}
 			else if (!typeDef.IsValueType)
@@ -53,7 +53,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 			ctorMethod.Parameters.Add(new ParameterDefinition(IMemorySourceTypeRef));
 			ctorMethod.Parameters.Add(new ParameterDefinition(ImportReference(typeof(UInt64))));
 
-			MethodReference baseCtor = typeDef.BaseType.GetConstructor();
+			MethodReference baseCtor = typeDef.BaseType.GetConstructor(Module);
 			foreach (ParameterDefinition paramDef in ctorMethod.Parameters)
 				baseCtor.Parameters.Add(paramDef);
 
@@ -72,12 +72,12 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 			FieldDefinition AddIRuntimeObjectProperty(string name, TypeReference typeReference)
 			{
 				FieldDefinition fieldDef = new($"<{name}>k__BackingField", FieldAttributes.Private | FieldAttributes.InitOnly, typeReference);
-				fieldDef.CustomAttributes.Add(new CustomAttribute(ImportReference(typeof(CompilerGeneratedAttribute)).GetConstructor()));
+				fieldDef.CustomAttributes.Add(new CustomAttribute(ImportReference(typeof(CompilerGeneratedAttribute)).GetConstructor(Module)));
 				MethodDefinition getMethodDef = new($"get_{name}", kRTObjGetterAttrs, typeReference)
 				{
 					SemanticsAttributes = MethodSemanticsAttributes.Getter
 				};
-				getMethodDef.CustomAttributes.Add(new CustomAttribute(ImportReference(typeof(CompilerGeneratedAttribute)).GetConstructor()));
+				getMethodDef.CustomAttributes.Add(new CustomAttribute(ImportReference(typeof(CompilerGeneratedAttribute)).GetConstructor(Module)));
 				ILProcessor getMethodIL = getMethodDef.Body.GetILProcessor();
 				getMethodIL.Emit(OpCodes.Ldarg_0);
 				getMethodIL.Emit(OpCodes.Ldfld, fieldDef);

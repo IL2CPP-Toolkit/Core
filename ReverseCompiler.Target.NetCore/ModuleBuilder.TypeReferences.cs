@@ -64,11 +64,11 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 				}
 				else
 				{
-					Il2CppType cppParentType = Context.Model.Il2Cpp.Types[cppTypeDef.declaringTypeIndex];
-					Il2CppTypeDefinition cppParentTypeDef = Context.Model.GetTypeDefinitionFromIl2CppType(cppParentType);
-					TypeReference parentRef = GetOrCreateTypeDefinition(cppParentTypeDef);
-					if (parentRef is TypeDefinition parentDef)
-						parentDef.NestedTypes.Add(td);
+					//Il2CppType cppParentType = Context.Model.Il2Cpp.Types[cppTypeDef.declaringTypeIndex];
+					//Il2CppTypeDefinition cppParentTypeDef = Context.Model.GetTypeDefinitionFromIl2CppType(cppParentType);
+					//TypeReference parentRef = UseTypeDefinition(cppParentTypeDef);
+					//if (parentRef is TypeDefinition parentDef)
+					//	parentDef.NestedTypes.Add(td);
 				}
 			}
 
@@ -142,7 +142,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 				typeFlags |= TypeAttributes.Public;
 
 			typeDef = new TypeDefinition(namespaceName, typeName, typeFlags);
-			typeDef.CustomAttributes.Add(new CustomAttribute(ImportReference(typeof(GeneratedAttribute)).GetConstructor()));
+			typeDef.CustomAttributes.Add(new CustomAttribute(ImportReference(typeof(GeneratedAttribute)).GetConstructor(Module)));
 			TypeDefinitions.Add(cppTypeDef, typeDef);
 			return typeDef;
 		}

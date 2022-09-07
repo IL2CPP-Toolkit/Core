@@ -36,12 +36,12 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 			};
 			Module.AssemblyReferences.Add(SystemRuntimeRef);
 #endif
-			assemblyDefinition.CustomAttributes.Add(new CustomAttribute(ImportReference(typeof(GeneratedAttribute)).GetConstructor()));
+			assemblyDefinition.CustomAttributes.Add(new CustomAttribute(ImportReference(typeof(GeneratedAttribute)).GetConstructor(Module)));
 			AddBuiltInTypes(Module);
 			RuntimeObjectTypeRef = ImportReference(typeof(RuntimeObject));
 			IRuntimeObjectTypeRef = ImportReference(typeof(IRuntimeObject));
 			IMemorySourceTypeRef = ImportReference(typeof(IMemorySource));
-			ObjectCtorMethodRef = ImportReference(typeof(object)).GetConstructor();
+			ObjectCtorMethodRef = ImportReference(typeof(object)).GetConstructor(Module);
 			IncludeCompilerGeneratedTypes = includeCompilerGeneratedTypes;
 		}
 

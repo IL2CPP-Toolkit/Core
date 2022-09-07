@@ -44,9 +44,9 @@ namespace Mono.Cecil
 			return instance;
 		}
 
-		public static MethodReference GetConstructor(this TypeReference typeReference, params TypeReference[] arguments)
+		public static MethodReference GetConstructor(this TypeReference typeReference, ModuleDefinition module, params TypeReference[] arguments)
 		{
-			MethodReference methodRef = new(".ctor", typeReference.Module.TypeSystem.Void, typeReference)
+			MethodReference methodRef = new(".ctor", module.TypeSystem.Void, typeReference)
 			{
 				HasThis = true,
 				ExplicitThis = false,
