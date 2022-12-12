@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+
 using Il2CppToolkit.Model;
 using Il2CppToolkit.Runtime;
 using Mono.Cecil;
@@ -23,10 +25,11 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 		private readonly AssemblyNameReference SystemRuntimeRef;
 		private readonly bool IncludeCompilerGeneratedTypes;
 
-		public ModuleBuilder(ICompileContext context, AssemblyDefinition assemblyDefinition, bool includeCompilerGeneratedTypes)
+		public ModuleBuilder(ICompileContext context, AssemblyDefinition assemblyDefinition, IReadOnlyDictionary<Il2CppTypeDefinition, ArtifactSpecs.TypeSelectorResult> includedDescriptors, bool includeCompilerGeneratedTypes)
 		{
 			Context = context;
 			AssemblyDefinition = assemblyDefinition;
+			IncludedDescriptors = includedDescriptors;
 			Module.AssemblyReferences.Add(new AssemblyNameReference("Il2CppToolkit.Runtime", new Version(2, 0, 0, 0)));
 #if NET5_0_OR_GREATER
 			SystemRuntimeRef = new AssemblyNameReference("System.Runtime", new Version(5, 0, 0, 0))
@@ -44,6 +47,5 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 			ObjectCtorMethodRef = ImportReference(typeof(object)).GetConstructor(Module);
 			IncludeCompilerGeneratedTypes = includeCompilerGeneratedTypes;
 		}
-
 	}
 }

@@ -13,7 +13,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 	{
 		public override string Name => "Build Module";
 
-		private IReadOnlyList<Func<TypeDescriptor, bool>> m_typeSelectors;
+		private IReadOnlyList<Func<TypeDescriptor, ArtifactSpecs.TypeSelectorResult>> m_typeSelectors;
 		private string m_asmName;
 		private Version m_asmVersion;
 		private ICompileContext m_context;
@@ -35,7 +35,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 		{
 			OnProgressUpdated(0, 100, "Initializing");
 
-			IReadOnlyList<TypeDescriptor> includedDescriptors = FilterTypes(m_typeSelectors).ToList();
+			IReadOnlyDictionary<Il2CppTypeDefinition, ArtifactSpecs.TypeSelectorResult> includedDescriptors = FilterTypes(m_typeSelectors);
 
 			AssemblyNameDefinition assemblyName = new(m_asmName, m_asmVersion);
 			using AssemblyDefinition assemblyDefinition = AssemblyDefinition.CreateAssembly(
@@ -45,9 +45,8 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 				{
 					Kind = ModuleKind.Dll,
 				});
-			ModuleBuilder mb = new(m_context, assemblyDefinition, m_includeCompilerGeneratedTypes);
-			foreach (TypeDescriptor td in includedDescriptors)
-				mb.IncludeTypeDefinition(td.TypeDef);
+			ModuleBuilder mb = new(m_context, assemblyDefinition, includedDescriptors, m_includeCompilerGeneratedTypes);
+			mb.ProcessDescriptors();
 
 			mb.ProgressUpdated += OnBuilderProgressUpdated;
 			mb.Build();
@@ -92,23 +91,10 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 			}
 		}
 
-		private IEnumerable<TypeDescriptor> FilterTypes(IReadOnlyList<Func<TypeDescriptor, bool>> typeSelectors)
+		private IReadOnlyDictionary<Il2CppTypeDefinition, ArtifactSpecs.TypeSelectorResult> FilterTypes(IReadOnlyList<Func<TypeDescriptor, ArtifactSpecs.TypeSelectorResult>> typeSelectors)
 		{
-			if (typeSelectors == null || typeSelectors.Count == 0)
-			{
-				return m_context.Model.TypeDescriptors;
-			}
-			return m_context.Model.TypeDescriptors.Where(descriptor =>
-			{
-				foreach (Func<TypeDescriptor, bool> selector in typeSelectors)
-				{
-					if (selector(descriptor))
-					{
-						return true;
-					}
-				}
-				return false;
-			});
+			return m_context.Model.TypeDescriptors.GroupBy(descriptor => descriptor.TypeDef, descriptor => typeSelectors.Select(selector => selector(descriptor)).Max())
+				.ToDictionary(group => group.Key, group => group.Max());
 		}
 	}
 }

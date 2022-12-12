@@ -13,6 +13,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 		private readonly Dictionary<Il2CppTypeEnum, TypeReference> BuiltInTypes = new();
 		private readonly Dictionary<Il2CppGenericParameter, GenericParameter> GenericParameters = new();
 		private readonly Dictionary<Il2CppTypeDefinition, TypeDefinition> TypeDefinitions = new();
+		private readonly IReadOnlyDictionary<Il2CppTypeDefinition, ArtifactSpecs.TypeSelectorResult> IncludedDescriptors;
 
 		internal TypeReference ImportReference(Type type)
 		{
@@ -42,6 +43,16 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 			return typeRef;
 		}
 
+		internal void ProcessDescriptors()
+		{
+			foreach (var kvp in IncludedDescriptors)
+			{
+				if (kvp.Value != ArtifactSpecs.TypeSelectorResult.Include)
+					continue;
+				IncludeTypeDefinition(kvp.Key);
+			}
+		}
+
 		public void IncludeTypeDefinition(Il2CppTypeDefinition cppTypeDef)
 		{
 			UseTypeDefinition(cppTypeDef);
@@ -49,6 +60,12 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 
 		private TypeReference UseTypeDefinition(Il2CppTypeDefinition cppTypeDef)
 		{
+			if (!IncludedDescriptors.TryGetValue(cppTypeDef, out var typeSelectorResult) || typeSelectorResult == ArtifactSpecs.TypeSelectorResult.Exclude)
+			{
+				string typeName = Metadata.GetStringFromIndex(cppTypeDef.nameIndex);
+				Context.Logger?.LogInfo($"Excluding '{typeName}' based on exclusion rule");
+				return null;
+			}
 			TypeReference typeDef = GetOrCreateTypeDefinition(cppTypeDef);
 			if (typeDef == null)
 				return null;
@@ -130,6 +147,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 				fullTypeName += $"{namespaceName}.";
 
 			fullTypeName += typeName;
+
 			if (Runtime.Types.TypeSystem.TryGetSubstituteType(fullTypeName, out Type mappedType))
 			{
 				return ImportReference(mappedType);
@@ -240,12 +258,16 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 				{
 					Il2CppType cppConstraintType = Context.Model.Il2Cpp.Types[Context.Model.Metadata.constraintIndices[param.constraintsStart + i]];
 					TypeReference typeRef = UseTypeReference((MemberReference)iGenericParameterProvider, cppConstraintType);
+					if (typeRef is TypeDefinition typeDef)
+						typeRef = new(typeDef.Namespace, typeDef.Name, typeDef.Module, typeDef.Scope);
+
 					if (typeRef == null)
 					{
 						Context.Logger?.LogWarning($"Unsupported constraint");
 						continue;
 					}
-					genericParameter.Constraints.Add(new GenericParameterConstraint(typeRef));
+					GenericParameterConstraint paramConstraint = new(typeRef);
+					genericParameter.Constraints.Add(paramConstraint);
 				}
 			}
 			return genericParameter;
