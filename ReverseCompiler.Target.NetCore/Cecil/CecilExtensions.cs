@@ -30,6 +30,19 @@ namespace Mono.Cecil
 				.Replace('.', '_');
 		}
 
+		public static TypeReference AsGenericThis(this TypeReference self)
+		{
+			return self.HasGenericParameters ? self.MakeGenericType(self.GenericParameters) : self;
+		}
+
+		public static TypeReference AsTypeReference(this TypeDefinition self)
+		{
+			return new(self.Namespace, self.Name, self.Module, self.Scope)
+			{
+				IsValueType = self.IsValueType,
+			};
+		}
+
 		public static GenericInstanceType MakeGenericType(this TypeReference self, params TypeReference[] arguments) => MakeGenericType(self, (IEnumerable<TypeReference>)arguments);
 		public static GenericInstanceType MakeGenericType(this TypeReference self, IEnumerable<TypeReference> arguments)
 		{

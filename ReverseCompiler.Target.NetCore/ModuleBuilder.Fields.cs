@@ -73,7 +73,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 			public TypeInfoBuilder(TypeDefinition forType, ModuleDefinition moduleDefinition, ModuleBuilder moduleBuilder)
 			{
 				ForType = forType;
-				ForTypeRef = ForType.GenericParameters.Count > 0 ? ForType.MakeGenericType(ForType.GenericParameters.ToArray()) : ForType;
+				ForTypeRef = ForType.AsGenericThis();
 				ModuleDefinition = moduleDefinition;
 				ModuleBuilder = moduleBuilder;
 			}

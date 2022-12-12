@@ -2,9 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+
 using Il2CppToolkit.Common.Errors;
 using Il2CppToolkit.Model;
 using Il2CppToolkit.Runtime;
+
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 
@@ -23,7 +25,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 				MethodDefinition methodDef = DefineMethod(typeDef, cppMethodDef);
 				if (methodDef == null)
 					continue;
-				typeDef.Methods.Add(methodDef);
+				//typeDef.Methods.Add(methodDef);
 				MethodDefs.Add(i, methodDef);
 			}
 		}
@@ -68,6 +70,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 			{
 				DeclaringType = typeDef,
 			};
+			typeDef.Methods.Add(methodDef);
 
 			if (cppMethodDef.genericContainerIndex >= 0)
 			{
@@ -91,6 +94,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 			if (methodDef.ReturnType == null)
 			{
 				Context.Logger?.LogWarning($"{typeDef.FullName}.{name}(...) Unsupported return type");
+				typeDef.Methods.Remove(methodDef);
 				return null;
 			}
 
@@ -104,6 +108,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 				if (paramTypeRef == null)
 				{
 					Context.Logger?.LogWarning($"{typeDef.FullName}.{name}(...) Unsupported parameter type");
+					typeDef.Methods.Remove(methodDef);
 					return null;
 				}
 				methodDef.Parameters.Add(new ParameterDefinition(paramName, ParameterAttributes.None, paramTypeRef));
@@ -161,21 +166,19 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 				methodDef.Attributes |= MethodAttributes.Public;
 			}
 
-			TypeReference classTypeRef = typeDef;
+			TypeReference genericThisType = typeDef.AsGenericThis();
 			int parameterOffset = isStatic ? 1 : 0;
-			if (typeDef.HasGenericParameters)
-				classTypeRef = typeDef.MakeGenericType(typeDef.GenericParameters);
-			GenericInstanceType typeLookupInst = Module.ImportReference(typeof(Il2CppTypeInfoLookup<>)).MakeGenericType(classTypeRef);
+			GenericInstanceType typeLookupInst = Module.ImportReference(typeof(Il2CppTypeInfoLookup<>)).MakeGenericType(genericThisType);
 			MethodReference callMethodInst = PrepareMethodRefAndGetImplementationToCall(methodDef, cppReturnType, typeLookupInst);
 			if (!methodAttributes.HasFlag(MethodAttributes.Abstract))
 			{
 				ILProcessor methodIL = methodDef.Body.GetILProcessor();
 				methodIL.Emit(OpCodes.Ldarg_0);
 				// value type?
-				if (!isStatic && typeDef.IsValueType)
+				if (!isStatic && genericThisType.IsValueType)
 				{
-					methodIL.Emit(OpCodes.Ldobj, typeDef);
-					methodIL.Emit(OpCodes.Box, typeDef);
+					methodIL.Emit(OpCodes.Ldobj, genericThisType);
+					methodIL.Emit(OpCodes.Box, genericThisType);
 				}
 				methodIL.Emit(OpCodes.Ldstr, name);
 				methodIL.EmitI4(cppMethodDef.parameterCount);

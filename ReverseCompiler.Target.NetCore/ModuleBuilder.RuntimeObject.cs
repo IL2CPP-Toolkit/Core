@@ -68,40 +68,44 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 
 		private void ImplementIRuntimeObject(TypeDefinition typeDef)
 		{
+			TypeReference thisTypeRef = typeDef.AsGenericThis();
 			typeDef.Interfaces.Add(new InterfaceImplementation(IRuntimeObjectTypeRef));
-			FieldDefinition AddIRuntimeObjectProperty(string name, TypeReference typeReference)
+			FieldReference AddIRuntimeObjectProperty(string name, TypeReference typeReference)
 			{
 				FieldDefinition fieldDef = new($"<{name}>k__BackingField", FieldAttributes.Private | FieldAttributes.InitOnly, typeReference);
 				fieldDef.CustomAttributes.Add(new CustomAttribute(ImportReference(typeof(CompilerGeneratedAttribute)).GetConstructor(Module)));
+				typeDef.Fields.Add(fieldDef);
+				FieldReference fieldRef = new(fieldDef.Name, fieldDef.FieldType, thisTypeRef);
+
 				MethodDefinition getMethodDef = new($"get_{name}", kRTObjGetterAttrs, typeReference)
 				{
 					SemanticsAttributes = MethodSemanticsAttributes.Getter
 				};
 				getMethodDef.CustomAttributes.Add(new CustomAttribute(ImportReference(typeof(CompilerGeneratedAttribute)).GetConstructor(Module)));
+				typeDef.Methods.Add(getMethodDef);
 				ILProcessor getMethodIL = getMethodDef.Body.GetILProcessor();
 				getMethodIL.Emit(OpCodes.Ldarg_0);
-				getMethodIL.Emit(OpCodes.Ldfld, fieldDef);
+				getMethodIL.Emit(OpCodes.Ldfld, fieldRef);
 				getMethodIL.Emit(OpCodes.Ret);
+
 				PropertyDefinition propertyDef = new($"{name}", PropertyAttributes.None, typeReference)
 				{
 					GetMethod = getMethodDef
 				};
-				typeDef.Fields.Add(fieldDef);
-				typeDef.Methods.Add(getMethodDef);
 				typeDef.Properties.Add(propertyDef);
-				return fieldDef;
+				return fieldRef;
 			}
-			FieldDefinition sourceFieldDef = AddIRuntimeObjectProperty("Source", IMemorySourceTypeRef);
-			FieldDefinition addressFieldDef = AddIRuntimeObjectProperty("Address", ImportReference(typeof(UInt64)));
+			FieldReference sourceFieldRef = AddIRuntimeObjectProperty("Source", IMemorySourceTypeRef);
+			FieldReference addressFieldRef = AddIRuntimeObjectProperty("Address", ImportReference(typeof(UInt64)));
 
 			MethodDefinition defaultCtorMethod = new(".ctor", kCtorAttrs, ImportReference(typeof(void)));
 			defaultCtorMethod.Body.GetILProcessor().Emit(OpCodes.Ldarg_0);
 			defaultCtorMethod.Body.GetILProcessor().Emit(OpCodes.Ldc_I4_0);
 			defaultCtorMethod.Body.GetILProcessor().Emit(OpCodes.Conv_I8);
-			defaultCtorMethod.Body.GetILProcessor().Emit(OpCodes.Stfld, addressFieldDef);
+			defaultCtorMethod.Body.GetILProcessor().Emit(OpCodes.Stfld, addressFieldRef);
 			defaultCtorMethod.Body.GetILProcessor().Emit(OpCodes.Ldarg_0);
 			defaultCtorMethod.Body.GetILProcessor().Emit(OpCodes.Ldnull);
-			defaultCtorMethod.Body.GetILProcessor().Emit(OpCodes.Stfld, sourceFieldDef);
+			defaultCtorMethod.Body.GetILProcessor().Emit(OpCodes.Stfld, sourceFieldRef);
 			defaultCtorMethod.Body.GetILProcessor().Emit(OpCodes.Ret);
 			typeDef.Methods.Add(defaultCtorMethod);
 
@@ -118,11 +122,11 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 
 			ctorMethodIL.Emit(OpCodes.Ldarg_0);                 // this
 			ctorMethodIL.Emit(OpCodes.Ldarg_1);                 // memorySource
-			ctorMethodIL.Emit(OpCodes.Stfld, sourceFieldDef);   // class [Il2CppToolkit.Runtime]Il2CppToolkit.Runtime.IMemorySource T::__source
+			ctorMethodIL.Emit(OpCodes.Stfld, sourceFieldRef);   // class [Il2CppToolkit.Runtime]Il2CppToolkit.Runtime.IMemorySource T::__source
 
 			ctorMethodIL.Emit(OpCodes.Ldarg_0);                 // this
 			ctorMethodIL.Emit(OpCodes.Ldarg_2);                 // address
-			ctorMethodIL.Emit(OpCodes.Stfld, addressFieldDef);  // unsigned int64 T::__address
+			ctorMethodIL.Emit(OpCodes.Stfld, addressFieldRef);  // unsigned int64 T::__address
 
 			ctorMethodIL.Emit(OpCodes.Ret);
 			typeDef.Methods.Add(ctorMethod);
