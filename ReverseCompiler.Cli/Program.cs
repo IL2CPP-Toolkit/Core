@@ -80,14 +80,14 @@ namespace Il2CppToolkit.ReverseCompiler.Cli
 			ErrorHandler.OnError += HandleError;
 
 #if DEBUG
-            try
-            {
-                if (args.Length == 0)
-                {
-                    args = System.IO.File.ReadAllLines(@".\test.config");
-                }
-            }
-            catch { }
+			try
+			{
+				if (args.Length == 0)
+				{
+					args = System.IO.File.ReadAllLines(@".\test.config");
+				}
+			}
+			catch { }
 #endif
 
 			int result = 0;
@@ -110,11 +110,13 @@ namespace Il2CppToolkit.ReverseCompiler.Cli
 				}
 				bool allTypes = opts.IncludeTypes.Count() == 0;
 				compiler.AddConfiguration(
-					ArtifactSpecs.TypeSelectors.MakeValue(new List<Func<TypeDescriptor, bool>>{
+					ArtifactSpecs.TypeSelectors.MakeValue(new List<Func<TypeDescriptor, ArtifactSpecs.TypeSelectorResult>>{
 						{td => !td.FullName.StartsWith("<")
 							&& !td.FullName.StartsWith("System.")
 							&& !(td.TypeDef.IsEnum && td.GenericParameterNames?.Length > 0)
-							&& (allTypes || opts.IncludeTypes.Contains(td.Name))}
+							&& (allTypes || opts.IncludeTypes.Contains(td.Name)) 
+								? ArtifactSpecs.TypeSelectorResult.Include 
+								: ArtifactSpecs.TypeSelectorResult.Default}
 					}),
 					ArtifactSpecs.AssemblyName.MakeValue(opts.AssemblyName),
 					ArtifactSpecs.AssemblyVersion.MakeValue(Version.Parse(opts.AssemblyVersion)),
