@@ -312,7 +312,7 @@ namespace Il2CppToolkit.Model
 			}
 			else if (typeDef != null)
 			{
-				m_typeDefToAddress.Add(typeDef, address);
+				m_typeDefToAddress.TryAdd(typeDef, address);
 			}
 		}
 

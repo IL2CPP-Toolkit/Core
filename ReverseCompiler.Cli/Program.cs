@@ -114,9 +114,10 @@ namespace Il2CppToolkit.ReverseCompiler.Cli
 						{td => !td.FullName.StartsWith("<")
 							&& !td.FullName.StartsWith("System.")
 							&& !(td.TypeDef.IsEnum && td.GenericParameterNames?.Length > 0)
-							&& (allTypes || opts.IncludeTypes.Contains(td.Name)) 
-								? ArtifactSpecs.TypeSelectorResult.Include 
+							&& (allTypes || opts.IncludeTypes.Contains(td.Name))
+								? ArtifactSpecs.TypeSelectorResult.Include
 								: ArtifactSpecs.TypeSelectorResult.Default}
+
 					}),
 					ArtifactSpecs.AssemblyName.MakeValue(opts.AssemblyName),
 					ArtifactSpecs.AssemblyVersion.MakeValue(Version.Parse(opts.AssemblyVersion)),
