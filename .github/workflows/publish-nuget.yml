@@ -62,7 +62,7 @@ jobs:
       - name: Build
         run: |
           msbuild $env:Solution_Name -m -t:Build -p:Configuration=Release -p:Platform=x64
-          msbuild $env:Solution_Name -m -t:Pack -p:TargetFramework=net5.0 -p:Configuration=Release -p:Platform=x64 -p:PackageOutputPath="$(Get-Location)\publish"
+          msbuild $env:Solution_Name -m -t:Pack -p:TargetFramework=net6.0 -p:Configuration=Release -p:Platform=x64 -p:PackageOutputPath="$(Get-Location)\publish"
 
       # NuGet Push
       - name: Push package to nuget.org
