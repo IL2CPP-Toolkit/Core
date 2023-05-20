@@ -89,7 +89,7 @@ InjectionHost::InjectionHost() noexcept
 	builder.AddListeningPort("0.0.0.0:0", InsecureServerCredentials(), &PublicState::value.port);
 	builder.RegisterService(m_spIl2cppService.get());
 	m_spServer = builder.BuildAndStart();
-	m_thWatcher = std::thread{InjectionHost::WatcherThread};
+	//m_thWatcher = std::thread{InjectionHost::WatcherThread};
 	m_thServer = std::thread{InjectionHost::ServerThread};
 }
 
