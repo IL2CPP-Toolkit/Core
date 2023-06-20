@@ -2,7 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
+using static Il2CppToolkit.Model.ElfConstants;
+
 
 namespace Il2CppToolkit.Model
 {
@@ -324,7 +325,7 @@ namespace Il2CppToolkit.Model
 
 		public override SectionHelper GetSectionHelper(int methodCount, int typeDefinitionsCount, int imageCount)
 		{
-			var sectionHelper = new SectionHelper(this, methodCount, typeDefinitionsCount, metadataUsagesCount, imageCount);
+			var sectionHelper = new SectionHelper(this, methodCount, typeDefinitionsCount, m_metadataUsagesCount, imageCount);
 			sectionHelper.SetSection(SearchSectionType.Exec, header.TextSegment);
 			sectionHelper.SetSection(SearchSectionType.Data, header.DataSegment, header.RoDataSegment);
 			sectionHelper.SetSection(SearchSectionType.Bss, header.BssSegment);

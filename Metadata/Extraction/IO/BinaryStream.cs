@@ -55,6 +55,8 @@ namespace Il2CppToolkit.Model
 
 		public double ReadDouble() => reader.ReadDouble();
 
+		public string ReadString(int len) => reader.ReadString(len);
+
 		public uint ReadCompressedUInt32() => reader.ReadCompressedUInt32();
 
 		public int ReadCompressedInt32() => reader.ReadCompressedInt32();

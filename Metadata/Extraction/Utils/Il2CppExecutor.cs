@@ -54,7 +54,7 @@ namespace Il2CppToolkit.Model
 			}
 			else if (il2Cpp.Version < 27)
 			{
-				customAttributeGenerators = il2Cpp.customAttributeGenerators;
+				customAttributeGenerators = il2Cpp.CustomAttributeGenerators;
 			}
 		}
 

@@ -87,7 +87,7 @@ namespace Il2CppToolkit.Model
                     break;
             }
             double version = Options.ForceVersion ?? Metadata.Version;
-            Il2Cpp.SetProperties(version, Metadata.maxMetadataUsages);
+            Il2Cpp.SetProperties(version, Metadata.metadataUsagesCount);
             Trace.WriteLine($"Il2Cpp Version: {Il2Cpp.Version}");
             if (Il2Cpp.Version >= 27 && Il2Cpp is ElfBase { IsDumped: true })
             {
@@ -95,7 +95,7 @@ namespace Il2CppToolkit.Model
                 {
                     MetadataError.ConfigurationError.Raise("global-Metadata.data dump address must be provided");
                 }
-                Metadata.Address = Options.GlobalMetadataDumpAddress.Value;
+                Metadata.ImageBase = Options.GlobalMetadataDumpAddress.Value;
             }
 
 
@@ -107,7 +107,7 @@ namespace Il2CppToolkit.Model
                 {
                     Trace.WriteLine("Use custom PE loader");
                     Il2Cpp = PELoader.Load(il2cppPath);
-                    Il2Cpp.SetProperties(version, Metadata.maxMetadataUsages);
+                    Il2Cpp.SetProperties(version, Metadata.metadataUsagesCount);
                     flag = Il2Cpp.PlusSearch(Metadata.methodDefs.Count(x => x.methodIndex >= 0), Metadata.typeDefs.Length, Metadata.imageDefs.Length);
                 }
             }

@@ -39,13 +39,14 @@ namespace Il2CppToolkit.Model
 		public abstract bool PlusSearch(int methodCount, int typeDefinitionsCount, int imageCount);
 		public abstract bool SymbolSearch();
 		public abstract SectionHelper GetSectionHelper(int methodCount, int typeDefinitionsCount, int imageCount);
+		public abstract bool CheckDump();
 
 		protected Il2Cpp(Stream stream) : base(stream) { }
 
 		public void SetProperties(double version, long metadataUsagesCount)
 		{
 			Version = version;
-			m_metadataUsagesCount = metadataUsagesCount;
+			this.m_metadataUsagesCount = metadataUsagesCount;
 		}
 
 		protected bool AutoPlusInit(ulong codeRegistration, ulong metadataRegistration)
