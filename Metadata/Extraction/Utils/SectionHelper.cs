@@ -6,21 +6,26 @@ namespace Il2CppToolkit.Model
 {
 	public class SectionHelper
 	{
-		private Il2Cpp il2Cpp;
-		private int methodCount;
-		private int typeDefinitionsCount;
-		private long maxMetadataUsages;
-		private int imageCount;
-		public List<SearchSection> exec;
-		public List<SearchSection> data;
-		public List<SearchSection> bss;
+		private List<SearchSection> exec;
+		private List<SearchSection> data;
+		private List<SearchSection> bss;
+		private readonly Il2Cpp il2Cpp;
+		private readonly int methodCount;
+		private readonly int typeDefinitionsCount;
+		private readonly long metadataUsagesCount;
+		private readonly int imageCount;
+		private bool pointerInExec;
 
-		public SectionHelper(Il2Cpp il2Cpp, int methodCount, int typeDefinitionsCount, long maxMetadataUsages, int imageCount)
+		public List<SearchSection> Exec => exec;
+		public List<SearchSection> Data => data;
+		public List<SearchSection> Bss => bss;
+
+		public SectionHelper(Il2Cpp il2Cpp, int methodCount, int typeDefinitionsCount, long metadataUsagesCount, int imageCount)
 		{
 			this.il2Cpp = il2Cpp;
 			this.methodCount = methodCount;
 			this.typeDefinitionsCount = typeDefinitionsCount;
-			this.maxMetadataUsages = maxMetadataUsages;
+			this.metadataUsagesCount = metadataUsagesCount;
 			this.imageCount = imageCount;
 		}
 
@@ -163,7 +168,29 @@ namespace Il2CppToolkit.Model
 		{
 			if (il2Cpp.Version >= 24.2)
 			{
-				return FindCodeRegistration2019();
+				ulong codeRegistration;
+				if (il2Cpp is ElfBase)
+				{
+					codeRegistration = FindCodeRegistrationExec();
+					if (codeRegistration == 0)
+					{
+						codeRegistration = FindCodeRegistrationData();
+					}
+					else
+					{
+						pointerInExec = true;
+					}
+				}
+				else
+				{
+					codeRegistration = FindCodeRegistrationData();
+					if (codeRegistration == 0)
+					{
+						codeRegistration = FindCodeRegistrationExec();
+						pointerInExec = true;
+					}
+				}
+				return codeRegistration;
 			}
 			return FindCodeRegistrationOld();
 		}
@@ -220,7 +247,8 @@ namespace Il2CppToolkit.Model
 			foreach (var section in data)
 			{
 				il2Cpp.Position = section.offset;
-				while (il2Cpp.Position < section.offsetEnd)
+				var end = Math.Min(section.offsetEnd, il2Cpp.Length) - il2Cpp.PointerSize;
+				while (il2Cpp.Position < end)
 				{
 					var addr = il2Cpp.Position;
 					if (il2Cpp.ReadIntPtr() == typeDefinitionsCount)
@@ -231,7 +259,7 @@ namespace Il2CppToolkit.Model
 							var pointer = il2Cpp.MapVATR(il2Cpp.ReadUIntPtr());
 							if (CheckPointerRangeDataRa(pointer))
 							{
-								var pointers = il2Cpp.ReadClassArray<ulong>(pointer, maxMetadataUsages);
+								var pointers = il2Cpp.ReadClassArray<ulong>(pointer, metadataUsagesCount);
 								if (CheckPointerRangeBssVa(pointers))
 								{
 									return addr - il2Cpp.PointerSize * 12 - section.offset + section.address;
@@ -255,7 +283,8 @@ namespace Il2CppToolkit.Model
 			foreach (var section in data)
 			{
 				il2Cpp.Position = section.offset;
-				while (il2Cpp.Position < section.offsetEnd - il2Cpp.PointerSize)
+				var end = Math.Min(section.offsetEnd, il2Cpp.Length) - il2Cpp.PointerSize;
+				while (il2Cpp.Position < end)
 				{
 					var addr = il2Cpp.Position;
 					if (il2Cpp.ReadIntPtr() == typeDefinitionsCount)
@@ -263,24 +292,30 @@ namespace Il2CppToolkit.Model
 						il2Cpp.Position += il2Cpp.PointerSize;
 						if (il2Cpp.ReadIntPtr() == typeDefinitionsCount)
 						{
-							var pointer = il2Cpp.MapVATR(il2Cpp.ReadUIntPtr());
-							if (CheckPointerRangeDataRa(pointer))
+							try
 							{
-								var pointers = il2Cpp.ReadClassArray<ulong>(pointer, typeDefinitionsCount);
-								if (il2Cpp is ElfBase)
+								var pointer = il2Cpp.MapVATR(il2Cpp.ReadUIntPtr());
+								if (CheckPointerRangeDataRa(pointer))
 								{
-									if (CheckPointerRangeExecVa(pointers))
+									var pointers = il2Cpp.ReadClassArray<ulong>(pointer, typeDefinitionsCount);
+									bool flag;
+									if (pointerInExec)
+									{
+										flag = CheckPointerRangeExecVa(pointers);
+									}
+									else
+									{
+										flag = CheckPointerRangeDataVa(pointers);
+									}
+									if (flag)
 									{
 										return addr - il2Cpp.PointerSize * 10 - section.offset + section.address;
 									}
 								}
-								else
-								{
-									if (CheckPointerRangeDataVa(pointers))
-									{
-										return addr - il2Cpp.PointerSize * 10 - section.offset + section.address;
-									}
-								}
+							}
+							catch
+							{
+								// ignored
 							}
 						}
 					}
@@ -313,32 +348,55 @@ namespace Il2CppToolkit.Model
 
 		private static readonly byte[] featureBytes = { 0x6D, 0x73, 0x63, 0x6F, 0x72, 0x6C, 0x69, 0x62, 0x2E, 0x64, 0x6C, 0x6C, 0x00 }; //mscorlib.dll
 
-		private ulong FindCodeRegistration2019()
+		private ulong FindCodeRegistrationData()
 		{
-			var secs = data;
-			if (il2Cpp is ElfBase)
-			{
-				secs = exec;
-			}
+			return FindCodeRegistration2019(data);
+		}
+
+		private ulong FindCodeRegistrationExec()
+		{
+			return FindCodeRegistration2019(exec);
+		}
+
+		private ulong FindCodeRegistration2019(List<SearchSection> secs)
+		{
 			foreach (var sec in secs)
 			{
 				il2Cpp.Position = sec.offset;
 				var buff = il2Cpp.ReadBytes((int)(sec.offsetEnd - sec.offset));
 				foreach (var index in buff.Search(featureBytes))
 				{
-					var va = (ulong)index + sec.address;
-					va = FindReference(va);
-					if (va != 0ul)
+					var dllva = (ulong)index + sec.address;
+					foreach (var refva in FindReference(dllva))
 					{
-						va = FindReference(va);
-						if (va != 0ul)
+						foreach (var refva2 in FindReference(refva))
 						{
-							for (int i = 0; i < imageCount; i++)
+							if (il2Cpp.Version >= 27)
 							{
-								var va2 = FindReference(va - (ulong)i * il2Cpp.PointerSize);
-								if (va2 != 0ul)
+								for (int i = imageCount - 1; i >= 0; i--)
 								{
-									return va2 - il2Cpp.PointerSize * 13;
+									foreach (var refva3 in FindReference(refva2 - (ulong)i * il2Cpp.PointerSize))
+									{
+										il2Cpp.Position = il2Cpp.MapVATR(refva3 - il2Cpp.PointerSize);
+										if (il2Cpp.ReadIntPtr() == imageCount)
+										{
+											if (il2Cpp.Version >= 29)
+											{
+												return refva3 - il2Cpp.PointerSize * 14;
+											}
+											return refva3 - il2Cpp.PointerSize * 13;
+										}
+									}
+								}
+							}
+							else
+							{
+								for (int i = 0; i < imageCount; i++)
+								{
+									foreach (var refva3 in FindReference(refva2 - (ulong)i * il2Cpp.PointerSize))
+									{
+										return refva3 - il2Cpp.PointerSize * 13;
+									}
 								}
 							}
 						}
@@ -348,21 +406,22 @@ namespace Il2CppToolkit.Model
 			return 0ul;
 		}
 
-		private ulong FindReference(ulong addr)
+		private IEnumerable<ulong> FindReference(ulong addr)
 		{
 			foreach (var dataSec in data)
 			{
-				il2Cpp.Position = dataSec.offset;
-				while (il2Cpp.Position < dataSec.offsetEnd - il2Cpp.PointerSize)
+				var position = dataSec.offset;
+				var end = Math.Min(dataSec.offsetEnd, il2Cpp.Length) - il2Cpp.PointerSize;
+				while (position < end)
 				{
-					var offset = il2Cpp.Position;
+					il2Cpp.Position = position;
 					if (il2Cpp.ReadUIntPtr() == addr)
 					{
-						return offset - dataSec.offset + dataSec.address;
+						yield return position - dataSec.offset + dataSec.address;
 					}
+					position += il2Cpp.PointerSize;
 				}
 			}
-			return 0ul;
 		}
 	}
 }

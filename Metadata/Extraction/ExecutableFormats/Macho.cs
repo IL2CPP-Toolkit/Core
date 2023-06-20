@@ -9,10 +9,10 @@ namespace Il2CppToolkit.Model
 {
 	public sealed class Macho : Il2Cpp
 	{
-		private List<MachoSection> sections = new List<MachoSection>();
 		private static readonly byte[] FeatureBytes1 = { 0x0, 0x22 };//MOVS R2, #0
 		private static readonly byte[] FeatureBytes2 = { 0x78, 0x44, 0x79, 0x44 };//ADD R0, PC and ADD R1, PC
-		private ulong vmaddr;
+		private readonly List<MachoSection> sections = new();
+		private readonly ulong vmaddr;
 
 		public Macho(Stream stream) : base(stream)
 		{
@@ -197,11 +197,13 @@ namespace Il2CppToolkit.Model
 			var data = sections.Where(x => x.sectname == "__const").ToArray();
 			var code = sections.Where(x => x.flags == 0x80000400).ToArray();
 			var bss = sections.Where(x => x.flags == 1u).ToArray();
-			var sectionHelper = new SectionHelper(this, methodCount, typeDefinitionsCount, m_maxMetadataUsages, imageCount);
+			var sectionHelper = new SectionHelper(this, methodCount, typeDefinitionsCount, m_metadataUsagesCount, imageCount);
 			sectionHelper.SetSection(SearchSectionType.Exec, code);
 			sectionHelper.SetSection(SearchSectionType.Data, data);
 			sectionHelper.SetSection(SearchSectionType.Bss, bss);
 			return sectionHelper;
 		}
+
+		public override bool CheckDump() => false;
 	}
 }

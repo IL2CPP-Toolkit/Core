@@ -20,7 +20,7 @@
   </ItemGroup>
 
   <PropertyGroup>
-    <TargetFrameworks>net472;net5.0;net6.0</TargetFrameworks>
+    <TargetFrameworks>net6.0;net7.0</TargetFrameworks>
     <LangVersion>9.0</LangVersion>
     <OutputType>Exe</OutputType>
     <AssemblyName>Il2CppToolkit.ReverseCompiler.Cli</AssemblyName>

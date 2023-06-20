@@ -1,8 +1,11 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
+
 using Il2CppToolkit.Common;
 using Il2CppToolkit.Common.Errors;
 
@@ -236,7 +239,7 @@ namespace Il2CppToolkit.Model
 			if (m_loader.Il2Cpp.Version >= 27)
 			{
 				var sectionHelper = GetSectionHelper();
-				foreach (var sec in sectionHelper.data)
+				foreach (var sec in sectionHelper.Data)
 				{
 					m_loader.Il2Cpp.Position = sec.offset;
 					while (m_loader.Il2Cpp.Position < sec.offsetEnd - m_loader.Il2Cpp.PointerSize)
@@ -247,7 +250,7 @@ namespace Il2CppToolkit.Model
 						if (metadataValue < uint.MaxValue)
 						{
 							var encodedToken = (uint)metadataValue;
-							var usage = m_loader.Metadata.GetEncodedIndexType(encodedToken);
+							var usage = Metadata.GetEncodedIndexType(encodedToken);
 							if (usage > 0 && usage <= 6)
 							{
 								var decodedIndex = m_loader.Metadata.GetDecodedMethodIndex(encodedToken);
@@ -411,52 +414,152 @@ namespace Il2CppToolkit.Model
 			uint pointer = m_loader.Metadata.GetDefaultValueFromIndex(cppDefaultValue.dataIndex);
 			Il2CppType defaultValueType = m_loader.Il2Cpp.Types[cppDefaultValue.typeIndex];
 			m_loader.Metadata.Position = pointer;
-			switch (defaultValueType.type)
+			if (GetConstantValueFromBlob(defaultValueType.type, m_loader.Metadata.Reader, out var blobValue))
+			{
+				value = blobValue.Value;
+				return true;
+			}
+			else
+			{
+				value = pointer;
+				return false;
+			}
+		}
+
+		public bool GetConstantValueFromBlob(Il2CppTypeEnum type, BinaryReader reader, out BlobValue value)
+		{
+			value = new BlobValue
+			{
+				il2CppTypeEnum = type
+			};
+			switch (type)
 			{
 				case Il2CppTypeEnum.IL2CPP_TYPE_BOOLEAN:
-					value = m_loader.Metadata.ReadBoolean();
+					value.Value = reader.ReadBoolean();
 					return true;
 				case Il2CppTypeEnum.IL2CPP_TYPE_U1:
-					value = m_loader.Metadata.ReadByte();
+					value.Value = reader.ReadByte();
 					return true;
 				case Il2CppTypeEnum.IL2CPP_TYPE_I1:
-					value = m_loader.Metadata.ReadSByte();
+					value.Value = reader.ReadSByte();
 					return true;
 				case Il2CppTypeEnum.IL2CPP_TYPE_CHAR:
-					value = BitConverter.ToChar(m_loader.Metadata.ReadBytes(2), 0);
+					value.Value = BitConverter.ToChar(reader.ReadBytes(2), 0);
 					return true;
 				case Il2CppTypeEnum.IL2CPP_TYPE_U2:
-					value = m_loader.Metadata.ReadUInt16();
+					value.Value = reader.ReadUInt16();
 					return true;
 				case Il2CppTypeEnum.IL2CPP_TYPE_I2:
-					value = m_loader.Metadata.ReadInt16();
+					value.Value = reader.ReadInt16();
 					return true;
 				case Il2CppTypeEnum.IL2CPP_TYPE_U4:
-					value = m_loader.Metadata.ReadUInt32();
+					if (m_loader.Il2Cpp.Version >= 29)
+					{
+						value.Value = reader.ReadCompressedUInt32();
+					}
+					else
+					{
+						value.Value = reader.ReadUInt32();
+					}
 					return true;
 				case Il2CppTypeEnum.IL2CPP_TYPE_I4:
-					value = m_loader.Metadata.ReadInt32();
+					if (m_loader.Il2Cpp.Version >= 29)
+					{
+						value.Value = reader.ReadCompressedInt32();
+					}
+					else
+					{
+						value.Value = reader.ReadInt32();
+					}
 					return true;
 				case Il2CppTypeEnum.IL2CPP_TYPE_U8:
-					value = m_loader.Metadata.ReadUInt64();
+					value.Value = reader.ReadUInt64();
 					return true;
 				case Il2CppTypeEnum.IL2CPP_TYPE_I8:
-					value = m_loader.Metadata.ReadInt64();
+					value.Value = reader.ReadInt64();
 					return true;
 				case Il2CppTypeEnum.IL2CPP_TYPE_R4:
-					value = m_loader.Metadata.ReadSingle();
+					value.Value = reader.ReadSingle();
 					return true;
 				case Il2CppTypeEnum.IL2CPP_TYPE_R8:
-					value = m_loader.Metadata.ReadDouble();
+					value.Value = reader.ReadDouble();
 					return true;
 				case Il2CppTypeEnum.IL2CPP_TYPE_STRING:
-					int len = m_loader.Metadata.ReadInt32();
-					value = m_loader.Metadata.ReadString(len);
+					int length;
+					if (m_loader.Il2Cpp.Version >= 29)
+					{
+						length = reader.ReadCompressedInt32();
+						if (length == -1)
+						{
+							value.Value = null;
+						}
+						else
+						{
+							value.Value = Encoding.UTF8.GetString(reader.ReadBytes(length));
+						}
+					}
+					else
+					{
+						length = reader.ReadInt32();
+						value.Value = reader.ReadString(length);
+					}
+					return true;
+				case Il2CppTypeEnum.IL2CPP_TYPE_SZARRAY:
+					var arrayLen = reader.ReadCompressedInt32();
+					if (arrayLen == -1)
+					{
+						value.Value = null;
+					}
+					else
+					{
+						var array = new BlobValue[arrayLen];
+						var arrayElementType = ReadEncodedTypeEnum(reader, out var enumType);
+						var arrayElementsAreDifferent = reader.ReadByte();
+						for (int i = 0; i < arrayLen; i++)
+						{
+							var elementType = arrayElementType;
+							if (arrayElementsAreDifferent == 1)
+							{
+								elementType = ReadEncodedTypeEnum(reader, out enumType);
+							}
+							GetConstantValueFromBlob(elementType, reader, out var data);
+							data.il2CppTypeEnum = elementType;
+							data.EnumType = enumType;
+							array[i] = data;
+						}
+						value.Value = array;
+					}
+					return true;
+				case Il2CppTypeEnum.IL2CPP_TYPE_IL2CPP_TYPE_INDEX:
+					var typeIndex = reader.ReadCompressedInt32();
+					if (typeIndex == -1)
+					{
+						value.Value = null;
+					}
+					else
+					{
+						value.Value = m_loader.Il2Cpp.Types[typeIndex];
+					}
 					return true;
 				default:
-					value = pointer;
+					value = null;
 					return false;
 			}
 		}
+
+		public Il2CppTypeEnum ReadEncodedTypeEnum(BinaryReader reader, out Il2CppType enumType)
+		{
+			enumType = null;
+			var type = (Il2CppTypeEnum)reader.ReadByte();
+			if (type == Il2CppTypeEnum.IL2CPP_TYPE_ENUM)
+			{
+				var enumTypeIndex = reader.ReadCompressedInt32();
+				enumType = m_loader.Il2Cpp.Types[enumTypeIndex];
+				var typeDef = GetTypeDefinitionFromIl2CppType(enumType);
+				type = m_loader.Il2Cpp.Types[typeDef.elementTypeIndex].type;
+			}
+			return type;
+		}
 	}
+
 }

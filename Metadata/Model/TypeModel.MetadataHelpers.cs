@@ -165,7 +165,7 @@ namespace Il2CppToolkit.Model
 		{
 			if (m_loader.Il2Cpp.Version >= 27 && m_loader.Il2Cpp is ElfBase elf && elf.IsDumped)
 			{
-				ulong offset = il2CppType.data.genericParameterHandle - m_loader.Metadata.Address - m_loader.Metadata.header.genericParametersOffset;
+				ulong offset = il2CppType.data.genericParameterHandle - m_loader.Metadata.ImageBase - m_loader.Metadata.header.genericParametersOffset;
 				ulong index = offset / (ulong)m_loader.Metadata.SizeOf(typeof(Il2CppGenericParameter));
 				return m_loader.Metadata.genericParameters[index];
 			}
@@ -179,7 +179,7 @@ namespace Il2CppToolkit.Model
 		{
 			if (m_loader.Il2Cpp.Version >= 27 && m_loader.Il2Cpp is ElfBase elf && elf.IsDumped)
 			{
-				ulong offset = il2CppType.data.typeHandle - m_loader.Metadata.Address - m_loader.Metadata.header.typeDefinitionsOffset;
+				ulong offset = il2CppType.data.typeHandle - m_loader.Metadata.ImageBase - m_loader.Metadata.header.typeDefinitionsOffset;
 				ulong index = offset / (ulong)m_loader.Metadata.SizeOf(typeof(Il2CppTypeDefinition));
 				return (long)index;
 			}

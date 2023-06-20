@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net472;net5.0;net6.0</TargetFrameworks>
+    <TargetFrameworks>net6.0;net7.0</TargetFrameworks>
     <LangVersion>10.0</LangVersion>
     <RepositoryUrl>https://github.com/IL2CPP-Toolkit/Core</RepositoryUrl>
     <OutputType>Library</OutputType>
@@ -21,9 +21,4 @@
     <ProjectReference Include="..\Common\Common.csproj" />
     <ProjectReference Include="..\Injection\Client\Injection.Client.csproj" />
   </ItemGroup>
-
-  <ItemGroup>
-    <Reference Include="Microsoft.CSharp" Condition=" '$(TargetFramework)' == 'net472' " />
-  </ItemGroup>
-
 </Project>

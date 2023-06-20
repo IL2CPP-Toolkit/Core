@@ -26,7 +26,7 @@
                 "${workspaceFolder}\\Test.sln",
                 "-m:1",
                 "-verbosity:m",
-                "-p:TargetFramework=net5.0"
+                "-p:TargetFramework=net6.0"
             ],
             "problemMatcher": "$msCompile",
             "group": {
