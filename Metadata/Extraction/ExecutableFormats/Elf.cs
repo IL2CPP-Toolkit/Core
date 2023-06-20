@@ -10,29 +10,29 @@ namespace Il2CppToolkit.Model
 	{
 		private Elf32_Ehdr elfHeader;
 		private Elf32_Phdr[] programSegment;
-
 		private Elf32_Dyn[] dynamicSection;
 		private Elf32_Sym[] symbolTable;
 		private Elf32_Shdr[] sectionTable;
 		private Elf32_Phdr pt_dynamic;
 
 		/*
-        * LDR R1, [X]
-        * ADD R0, X, X
-        * ADD R2, X, X
-        */
+		 * LDR R1, [X]
+		 * ADD R0, X, X
+		 * ADD R2, X, X
+		 */
 		private static readonly string ARMFeatureBytes = "? 0x10 ? 0xE7 ? 0x00 ? 0xE0 ? 0x20 ? 0xE0";
 		private static readonly string X86FeatureBytes = "? 0x10 ? 0xE7 ? 0x00 ? 0xE0 ? 0x20 ? 0xE0"; //TODO
 
 		public Elf(Stream stream) : base(stream)
 		{
 			Is32Bit = true;
-			elfHeader = ReadClass<Elf32_Ehdr>();
+			Load();
+		}
+
+		protected override void Load()
+		{
+			elfHeader = ReadClass<Elf32_Ehdr>(0);
 			programSegment = ReadClassArray<Elf32_Phdr>(elfHeader.e_phoff, elfHeader.e_phnum);
-			if (!CheckSection())
-			{
-				GetDumpAddress();
-			}
 			if (IsDumped)
 			{
 				FixedProgramSegment();
@@ -54,7 +54,7 @@ namespace Il2CppToolkit.Model
 			}
 		}
 
-		public bool CheckSection()
+		protected override bool CheckSection()
 		{
 			try
 			{
@@ -134,10 +134,10 @@ namespace Il2CppToolkit.Model
 					if (elfHeader.e_machine == EM_ARM)
 					{
 						Position = result + 0x14;
-						codeRegistration = ReadUInt32() + result + 0xcu + (uint)DumpAddr;
+						codeRegistration = ReadUInt32() + result + 0xcu + (uint)ImageBase;
 						Position = result + 0x10;
 						var ptr = ReadUInt32() + result + 0x8;
-						Position = MapVATR(ptr + DumpAddr);
+						Position = MapVATR(ptr + ImageBase);
 						metadataRegistration = ReadUInt32();
 					}
 				}
@@ -274,28 +274,35 @@ namespace Il2CppToolkit.Model
 
 		private bool CheckProtection()
 		{
-			//.init_proc
-			if (dynamicSection.Any(x => x.d_tag == DT_INIT))
+			try
 			{
-				Console.WriteLine("WARNING: find .init_proc");
-				return true;
-			}
-			//JNI_OnLoad
-			var dynstrOffset = MapVATR(dynamicSection.First(x => x.d_tag == DT_STRTAB).d_un);
-			foreach (var symbol in symbolTable)
-			{
-				var name = ReadStringToNull(dynstrOffset + symbol.st_name);
-				switch (name)
+				//.init_proc
+				if (dynamicSection.Any(x => x.d_tag == DT_INIT))
 				{
-					case "JNI_OnLoad":
-						Console.WriteLine("WARNING: find JNI_OnLoad");
-						return true;
+					Console.WriteLine("WARNING: find .init_proc");
+					return true;
+				}
+				//JNI_OnLoad
+				var dynstrOffset = MapVATR(dynamicSection.First(x => x.d_tag == DT_STRTAB).d_un);
+				foreach (var symbol in symbolTable)
+				{
+					var name = ReadStringToNull(dynstrOffset + symbol.st_name);
+					switch (name)
+					{
+						case "JNI_OnLoad":
+							Console.WriteLine("WARNING: find JNI_OnLoad");
+							return true;
+					}
+				}
+				if (sectionTable != null && sectionTable.Any(x => x.sh_type == SHT_LOUSER))
+				{
+					Console.WriteLine("WARNING: find SHT_LOUSER section");
+					return true;
 				}
 			}
-			if (sectionTable != null && sectionTable.Any(x => x.sh_type == SHT_LOUSER))
+			catch
 			{
-				Console.WriteLine("WARNING: find SHT_LOUSER section");
-				return true;
+				// ignored
 			}
 			return false;
 		}
@@ -304,7 +311,7 @@ namespace Il2CppToolkit.Model
 		{
 			if (IsDumped)
 			{
-				return pointer - DumpAddr;
+				return pointer - ImageBase;
 			}
 			return pointer;
 		}
@@ -317,7 +324,7 @@ namespace Il2CppToolkit.Model
 				var phdr = programSegment[i];
 				phdr.p_offset = phdr.p_vaddr;
 				Write(phdr.p_offset);
-				phdr.p_vaddr += (uint)DumpAddr;
+				phdr.p_vaddr += (uint)ImageBase;
 				Write(phdr.p_vaddr);
 				Position += 4;
 				phdr.p_filesz = phdr.p_memsz;
@@ -344,7 +351,7 @@ namespace Il2CppToolkit.Model
 					case DT_JMPREL:
 					case DT_INIT_ARRAY:
 					case DT_FINI_ARRAY:
-						dyn.d_un += (uint)DumpAddr;
+						dyn.d_un += (uint)ImageBase;
 						Write(dyn.d_un);
 						break;
 				}
@@ -377,7 +384,7 @@ namespace Il2CppToolkit.Model
 			}
 			var data = dataList.ToArray();
 			var exec = execList.ToArray();
-			var sectionHelper = new SectionHelper(this, methodCount, typeDefinitionsCount, m_maxMetadataUsages, imageCount);
+			var sectionHelper = new SectionHelper(this, methodCount, typeDefinitionsCount, metadataUsagesCount, imageCount);
 			sectionHelper.SetSection(SearchSectionType.Exec, exec);
 			sectionHelper.SetSection(SearchSectionType.Data, data);
 			sectionHelper.SetSection(SearchSectionType.Bss, data);

@@ -5,7 +5,7 @@ namespace Il2CppToolkit.Model
 {
 	public sealed class WebAssembly : BinaryStream
 	{
-		private DataSection[] dataSections;
+		private readonly DataSection[] dataSections;
 
 		public WebAssembly(Stream stream) : base(stream)
 		{
@@ -46,14 +46,15 @@ namespace Il2CppToolkit.Model
 
 		public WebAssemblyMemory CreateMemory()
 		{
-			var last = dataSections[dataSections.Length - 1];
-			var stream = new MemoryStream((int)last.Offset + last.Data.Length);
+			var last = dataSections[^1];
+			var bssStart = last.Offset + (uint)last.Data.Length;
+			var stream = new MemoryStream(new byte[Length]);
 			foreach (var dataSection in dataSections)
 			{
 				stream.Position = dataSection.Offset;
 				stream.Write(dataSection.Data, 0, dataSection.Data.Length);
 			}
-			return new WebAssemblyMemory(stream, Is32Bit);
+			return new WebAssemblyMemory(stream, bssStart);
 		}
 	}
 }

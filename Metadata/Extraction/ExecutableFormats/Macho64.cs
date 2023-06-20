@@ -9,10 +9,10 @@ namespace Il2CppToolkit.Model
 {
 	public sealed class Macho64 : Il2Cpp
 	{
-		private List<MachoSection64Bit> sections = new List<MachoSection64Bit>();
 		private static readonly byte[] FeatureBytes1 = { 0x2, 0x0, 0x80, 0xD2 };//MOV X2, #0
 		private static readonly byte[] FeatureBytes2 = { 0x3, 0x0, 0x80, 0x52 };//MOV W3, #0
-		private ulong vmaddr;
+		private readonly List<MachoSection64Bit> sections = new();
+		private readonly ulong vmaddr;
 
 		public Macho64(Stream stream) : base(stream)
 		{
@@ -97,7 +97,7 @@ namespace Il2CppToolkit.Model
 			if (Version < 23)
 			{
 				var __mod_init_func = sections.First(x => x.sectname == "__mod_init_func");
-				var addrs = ReadClassArray<ulong>(__mod_init_func.offset, (long)__mod_init_func.size / 8);
+				var addrs = ReadClassArray<ulong>(__mod_init_func.offset, __mod_init_func.size / 8);
 				foreach (var i in addrs)
 				{
 					if (i > 0)
@@ -163,7 +163,7 @@ namespace Il2CppToolkit.Model
                  * B sub
                  */
 				var __mod_init_func = sections.First(x => x.sectname == "__mod_init_func");
-				var addrs = ReadClassArray<ulong>(__mod_init_func.offset, (long)__mod_init_func.size / 8);
+				var addrs = ReadClassArray<ulong>(__mod_init_func.offset, __mod_init_func.size / 8);
 				foreach (var i in addrs)
 				{
 					if (i > 0)
@@ -200,7 +200,7 @@ namespace Il2CppToolkit.Model
                  * B sub
                  */
 				var __mod_init_func = sections.First(x => x.sectname == "__mod_init_func");
-				var addrs = ReadClassArray<ulong>(__mod_init_func.offset, (long)__mod_init_func.size / 8);
+				var addrs = ReadClassArray<ulong>(__mod_init_func.offset, __mod_init_func.size / 8);
 				foreach (var i in addrs)
 				{
 					if (i > 0)
@@ -259,11 +259,30 @@ namespace Il2CppToolkit.Model
 			var data = sections.Where(x => x.sectname == "__const" || x.sectname == "__cstring" || x.sectname == "__data").ToArray();
 			var code = sections.Where(x => x.flags == 0x80000400).ToArray();
 			var bss = sections.Where(x => x.flags == 1u).ToArray();
-			var sectionHelper = new SectionHelper(this, methodCount, typeDefinitionsCount, m_maxMetadataUsages, imageCount);
+			var sectionHelper = new SectionHelper(this, methodCount, typeDefinitionsCount, metadataUsagesCount, imageCount);
 			sectionHelper.SetSection(SearchSectionType.Exec, code);
 			sectionHelper.SetSection(SearchSectionType.Data, data);
 			sectionHelper.SetSection(SearchSectionType.Bss, bss);
 			return sectionHelper;
+		}
+
+		public override bool CheckDump() => false;
+
+		public override ulong ReadUIntPtr()
+		{
+			var pointer = ReadUInt64();
+			if (pointer > vmaddr + 0xFFFFFFFF)
+			{
+				var addr = Position;
+				var section = sections.First(x => addr >= x.offset && addr <= x.offset + x.size);
+				if (section.sectname == "__const" || section.sectname == "__data")
+				{
+					var rva = pointer - vmaddr;
+					rva &= 0xFFFFFFFF;
+					pointer = rva + vmaddr;
+				}
+			}
+			return pointer;
 		}
 	}
 }

@@ -13,7 +13,7 @@
   </ItemGroup>
 
   <PropertyGroup>
-    <TargetFrameworks>net472;net5.0;net6.0</TargetFrameworks>
+    <TargetFrameworks>net472;net6.0</TargetFrameworks>
     <LangVersion>9.0</LangVersion>
     <RepositoryUrl>https://github.com/IL2CPP-Toolkit/Core</RepositoryUrl>
     <OutputType>Library</OutputType>

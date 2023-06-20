@@ -8,7 +8,7 @@ export function build(opts: BuildOptions) {
     "-m:1",
     `-p:Configuration=${opts.flavor}`,
     `-p:Platform=${opts.platform}`,
-    "-p:TargetFramework=net5.0",
+    "-p:TargetFramework=net6.0",
     `-t:${opts.targets.join(";")}`,
     "-p:IncludeSymbols=true",
     "-p:SymbolPackageFormat=snupkg",

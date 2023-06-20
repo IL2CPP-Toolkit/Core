@@ -10,22 +10,24 @@ namespace Il2CppToolkit.Model
 	{
 		public Il2CppGlobalMetadataHeader header;
 		public Il2CppImageDefinition[] imageDefs;
+		public Il2CppAssemblyDefinition[] assemblyDefs;
 		public Il2CppTypeDefinition[] typeDefs;
 		public Il2CppMethodDefinition[] methodDefs;
 		public Il2CppParameterDefinition[] parameterDefs;
 		public Il2CppFieldDefinition[] fieldDefs;
-		private Dictionary<int, Il2CppFieldDefaultValue> fieldDefaultValuesDic;
-		private Dictionary<int, Il2CppParameterDefaultValue> parameterDefaultValuesDic;
+		private readonly Dictionary<int, Il2CppFieldDefaultValue> fieldDefaultValuesDic;
+		private readonly Dictionary<int, Il2CppParameterDefaultValue> parameterDefaultValuesDic;
 		public Il2CppPropertyDefinition[] propertyDefs;
 		public Il2CppCustomAttributeTypeRange[] attributeTypeRanges;
-		private Dictionary<Il2CppImageDefinition, Dictionary<uint, int>> attributeTypeRangesDic;
+		public Il2CppCustomAttributeDataRange[] attributeDataRanges;
+		private readonly Dictionary<Il2CppImageDefinition, Dictionary<uint, int>> attributeTypeRangesDic;
 		public Il2CppStringLiteral[] stringLiterals;
-		private Il2CppMetadataUsageList[] metadataUsageLists;
-		private Il2CppMetadataUsagePair[] metadataUsagePairs;
+		private readonly Il2CppMetadataUsageList[] metadataUsageLists;
+		private readonly Il2CppMetadataUsagePair[] metadataUsagePairs;
 		public int[] attributeTypes;
 		public int[] interfaceIndices;
 		public Dictionary<Il2CppMetadataUsage, SortedDictionary<uint, uint>> metadataUsageDic;
-		public long maxMetadataUsages;
+		public long metadataUsagesCount;
 		public int[] nestedTypeIndices;
 		public Il2CppEventDefinition[] eventDefs;
 		public Il2CppGenericContainer[] genericContainers;
@@ -35,8 +37,7 @@ namespace Il2CppToolkit.Model
 		public uint[] vtableMethods;
 		public Il2CppRGCTXDefinition[] rgctxEntries;
 
-		private Dictionary<uint, string> stringCache = new Dictionary<uint, string>();
-		public ulong Address;
+		private readonly Dictionary<uint, string> stringCache = new();
 
 		public Metadata(Stream stream) : base(stream)
 		{
@@ -46,7 +47,11 @@ namespace Il2CppToolkit.Model
 				throw new InvalidDataException("ERROR: Metadata file supplied is not valid metadata file.");
 			}
 			var version = ReadInt32();
-			if (version < 16 || version > 27)
+			if (version < 0 || version > 1000)
+			{
+				throw new InvalidDataException("ERROR: Metadata file supplied is not valid metadata file.");
+			}
+			if (version < 16 || version > 29)
 			{
 				throw new NotSupportedException($"ERROR: Metadata file supplied is not a supported version[{version}].");
 			}
@@ -61,34 +66,52 @@ namespace Il2CppToolkit.Model
 				}
 				else
 				{
-					imageDefs = ReadMetadataClassArray<Il2CppImageDefinition>(header.imagesOffset, header.imagesCount);
+					imageDefs = ReadMetadataClassArray<Il2CppImageDefinition>(header.imagesOffset, header.imagesSize);
 					if (imageDefs.Any(x => x.token != 1))
 					{
 						Version = 24.1;
 					}
 				}
 			}
-			imageDefs = ReadMetadataClassArray<Il2CppImageDefinition>(header.imagesOffset, header.imagesCount);
-			typeDefs = ReadMetadataClassArray<Il2CppTypeDefinition>(header.typeDefinitionsOffset, header.typeDefinitionsCount);
-			methodDefs = ReadMetadataClassArray<Il2CppMethodDefinition>(header.methodsOffset, header.methodsCount);
-			parameterDefs = ReadMetadataClassArray<Il2CppParameterDefinition>(header.parametersOffset, header.parametersCount);
-			fieldDefs = ReadMetadataClassArray<Il2CppFieldDefinition>(header.fieldsOffset, header.fieldsCount);
-			var fieldDefaultValues = ReadMetadataClassArray<Il2CppFieldDefaultValue>(header.fieldDefaultValuesOffset, header.fieldDefaultValuesCount);
-			var parameterDefaultValues = ReadMetadataClassArray<Il2CppParameterDefaultValue>(header.parameterDefaultValuesOffset, header.parameterDefaultValuesCount);
+			imageDefs = ReadMetadataClassArray<Il2CppImageDefinition>(header.imagesOffset, header.imagesSize);
+			if (Version == 24.2 && header.assembliesSize / 68 < imageDefs.Length)
+			{
+				Version = 24.4;
+			}
+			var v241Plus = false;
+			if (Version == 24.1 && header.assembliesSize / 64 == imageDefs.Length)
+			{
+				v241Plus = true;
+			}
+			if (v241Plus)
+			{
+				Version = 24.4;
+			}
+			assemblyDefs = ReadMetadataClassArray<Il2CppAssemblyDefinition>(header.assembliesOffset, header.assembliesSize);
+			if (v241Plus)
+			{
+				Version = 24.1;
+			}
+			typeDefs = ReadMetadataClassArray<Il2CppTypeDefinition>(header.typeDefinitionsOffset, header.typeDefinitionsSize);
+			methodDefs = ReadMetadataClassArray<Il2CppMethodDefinition>(header.methodsOffset, header.methodsSize);
+			parameterDefs = ReadMetadataClassArray<Il2CppParameterDefinition>(header.parametersOffset, header.parametersSize);
+			fieldDefs = ReadMetadataClassArray<Il2CppFieldDefinition>(header.fieldsOffset, header.fieldsSize);
+			var fieldDefaultValues = ReadMetadataClassArray<Il2CppFieldDefaultValue>(header.fieldDefaultValuesOffset, header.fieldDefaultValuesSize);
+			var parameterDefaultValues = ReadMetadataClassArray<Il2CppParameterDefaultValue>(header.parameterDefaultValuesOffset, header.parameterDefaultValuesSize);
 			fieldDefaultValuesDic = fieldDefaultValues.ToDictionary(x => x.fieldIndex);
 			parameterDefaultValuesDic = parameterDefaultValues.ToDictionary(x => x.parameterIndex);
-			propertyDefs = ReadMetadataClassArray<Il2CppPropertyDefinition>(header.propertiesOffset, header.propertiesCount);
-			interfaceIndices = ReadClassArray<int>(header.interfacesOffset, header.interfacesCount / 4);
-			nestedTypeIndices = ReadClassArray<int>(header.nestedTypesOffset, header.nestedTypesCount / 4);
-			eventDefs = ReadMetadataClassArray<Il2CppEventDefinition>(header.eventsOffset, header.eventsCount);
-			genericContainers = ReadMetadataClassArray<Il2CppGenericContainer>(header.genericContainersOffset, header.genericContainersCount);
-			genericParameters = ReadMetadataClassArray<Il2CppGenericParameter>(header.genericParametersOffset, header.genericParametersCount);
-			constraintIndices = ReadClassArray<int>(header.genericParameterConstraintsOffset, header.genericParameterConstraintsCount / 4);
-			vtableMethods = ReadClassArray<uint>(header.vtableMethodsOffset, header.vtableMethodsCount / 4);
-			stringLiterals = ReadMetadataClassArray<Il2CppStringLiteral>(header.stringLiteralOffset, header.stringLiteralCount);
+			propertyDefs = ReadMetadataClassArray<Il2CppPropertyDefinition>(header.propertiesOffset, header.propertiesSize);
+			interfaceIndices = ReadClassArray<int>(header.interfacesOffset, header.interfacesSize / 4);
+			nestedTypeIndices = ReadClassArray<int>(header.nestedTypesOffset, header.nestedTypesSize / 4);
+			eventDefs = ReadMetadataClassArray<Il2CppEventDefinition>(header.eventsOffset, header.eventsSize);
+			genericContainers = ReadMetadataClassArray<Il2CppGenericContainer>(header.genericContainersOffset, header.genericContainersSize);
+			genericParameters = ReadMetadataClassArray<Il2CppGenericParameter>(header.genericParametersOffset, header.genericParametersSize);
+			constraintIndices = ReadClassArray<int>(header.genericParameterConstraintsOffset, header.genericParameterConstraintsSize / 4);
+			vtableMethods = ReadClassArray<uint>(header.vtableMethodsOffset, header.vtableMethodsSize / 4);
+			stringLiterals = ReadMetadataClassArray<Il2CppStringLiteral>(header.stringLiteralOffset, header.stringLiteralSize);
 			if (Version > 16)
 			{
-				fieldRefs = ReadMetadataClassArray<Il2CppFieldRef>(header.fieldRefsOffset, header.fieldRefsCount);
+				fieldRefs = ReadMetadataClassArray<Il2CppFieldRef>(header.fieldRefsOffset, header.fieldRefsSize);
 				if (Version < 27)
 				{
 					metadataUsageLists = ReadMetadataClassArray<Il2CppMetadataUsageList>(header.metadataUsageListsOffset, header.metadataUsageListsCount);
@@ -97,10 +120,14 @@ namespace Il2CppToolkit.Model
 					ProcessingMetadataUsage();
 				}
 			}
-			if (Version > 20)
+			if (Version > 20 && Version < 29)
 			{
 				attributeTypeRanges = ReadMetadataClassArray<Il2CppCustomAttributeTypeRange>(header.attributesInfoOffset, header.attributesInfoCount);
 				attributeTypes = ReadClassArray<int>(header.attributeTypesOffset, header.attributeTypesCount / 4);
+			}
+			if (Version >= 29)
+			{
+				attributeDataRanges = ReadMetadataClassArray<Il2CppCustomAttributeDataRange>(header.attributeDataRangeOffset, header.attributeDataRangeSize);
 			}
 			if (Version > 24)
 			{
@@ -112,7 +139,14 @@ namespace Il2CppToolkit.Model
 					var end = imageDef.customAttributeStart + imageDef.customAttributeCount;
 					for (int i = imageDef.customAttributeStart; i < end; i++)
 					{
-						dic.Add(attributeTypeRanges[i].token, i);
+						if (Version >= 29)
+						{
+							dic.Add(attributeDataRanges[i].token, i);
+						}
+						else
+						{
+							dic.Add(attributeTypeRanges[i].token, i);
+						}
 					}
 				}
 			}
@@ -190,16 +224,21 @@ namespace Il2CppToolkit.Model
 				for (int i = 0; i < metadataUsageList.count; i++)
 				{
 					var offset = metadataUsageList.start + i;
+					if (offset >= metadataUsagePairs.Length)
+					{
+						continue;
+					}
 					var metadataUsagePair = metadataUsagePairs[offset];
 					var usage = GetEncodedIndexType(metadataUsagePair.encodedSourceIndex);
 					var decodedIndex = GetDecodedMethodIndex(metadataUsagePair.encodedSourceIndex);
 					metadataUsageDic[(Il2CppMetadataUsage)usage][metadataUsagePair.destinationIndex] = decodedIndex;
 				}
 			}
-			maxMetadataUsages = metadataUsageDic.Max(x => x.Value.Max(y => y.Key)) + 1;
+			//metadataUsagesCount = metadataUsagePairs.Max(x => x.destinationIndex) + 1;
+			metadataUsagesCount = metadataUsageDic.Max(x => x.Value.Select(y => y.Key).DefaultIfEmpty().Max()) + 1;
 		}
 
-		public uint GetEncodedIndexType(uint index)
+		public static uint GetEncodedIndexType(uint index)
 		{
 			return (index & 0xE0000000) >> 29;
 		}
@@ -234,6 +273,11 @@ namespace Il2CppToolkit.Model
 					var e = fieldType.GetField("value__").FieldType;
 					size += GetPrimitiveTypeSize(e.Name);
 				}
+				else if (fieldType.IsArray)
+				{
+					var arrayLengthAttribute = i.GetCustomAttribute<ArrayLengthAttribute>();
+					size += arrayLengthAttribute.Length;
+				}
 				else
 				{
 					size += SizeOf(fieldType);
@@ -241,31 +285,15 @@ namespace Il2CppToolkit.Model
 			}
 			return size;
 
-			int GetPrimitiveTypeSize(string name)
+			static int GetPrimitiveTypeSize(string name)
 			{
-				switch (name)
+				return name switch
 				{
-					case "Int32":
-					case "UInt32":
-						return 4;
-					case "Int16":
-					case "UInt16":
-						return 2;
-					default:
-						return 0;
-				}
+					"Int32" or "UInt32" => 4,
+					"Int16" or "UInt16" => 2,
+					_ => 0,
+				};
 			}
-		}
-
-		public string ReadString(int numChars)
-		{
-			var start = Position;
-			// UTF8 takes up to 4 bytes per character
-			var str = Encoding.UTF8.GetString(ReadBytes(numChars * 4)).Substring(0, numChars);
-			// make our position what it would have been if we'd known the exact number of bytes needed.
-			Position = start;
-			ReadBytes(Encoding.UTF8.GetByteCount(str));
-			return str;
 		}
 	}
 }

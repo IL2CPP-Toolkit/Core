@@ -33,7 +33,7 @@
             "request": "launch",
             "preLaunchTask": "build",
             // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/ReverseCompiler.Cli/bin/x64/Debug/net5.0/Il2CppToolkit.ReverseCompiler.Cli.dll",
+            "program": "${workspaceFolder}/ReverseCompiler.Cli/bin/x64/Debug/net6.0/Il2CppToolkit.ReverseCompiler.Cli.dll",
             "args": [],
             "justMyCode": false,
             "suppressJITOptimizations": true,
@@ -51,7 +51,7 @@
             "request": "launch",
             "preLaunchTask": "build:test",
             // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/Test/bin/x64/Debug/net5.0/Il2CppToolkit.Test.dll",
+            "program": "${workspaceFolder}/Test/bin/x64/Debug/net6.0/Il2CppToolkit.Test.dll",
             "args": [],
             "justMyCode": false,
             "suppressJITOptimizations": true,
