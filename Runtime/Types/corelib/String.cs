@@ -11,7 +11,7 @@ namespace Il2CppToolkit.Runtime.Types.corelib
 		public object ReadValue(IMemorySource source, ulong address)
 		{
 			UnknownObject obj = new(source, address);
-			int len = Il2CppTypeInfoLookup<string>.GetValue<int>(obj, "m_stringLength");
+			int len = Il2CppTypeInfoLookup<string>.GetValue<int>(obj, "_stringLength");
 
 			if (len <= 0)
 			{
@@ -21,7 +21,7 @@ namespace Il2CppToolkit.Runtime.Types.corelib
 
 			var typeInfo = Il2CppTypeCache.GetTypeInfo(source.ParentContext, typeof(string));
 			ReadOnlyMemory<byte> stringData = source.ReadMemory(
-				address + typeInfo.Fields.First(fld => fld.Name == "m_firstChar").Offset,
+				address + typeInfo.Fields.First(fld => fld.Name == "_firstChar").Offset,
 				(ulong)len * 2);
 
 #if NET472

@@ -8,7 +8,7 @@ namespace Il2CppToolkit.Runtime.Types.corelib
 		public object ReadValue(IMemorySource source, ulong address)
 		{
 			UnknownObject obj = new(source, address);
-			long dateData = Il2CppTypeInfoLookup<DateTime>.GetValue<long>(obj, "dateData");
+			long dateData = Il2CppTypeInfoLookup<DateTime>.GetValue<long>(obj, "_dateData");
 			return DateTime.FromBinary(dateData).ToLocalTime();
 		}
 
