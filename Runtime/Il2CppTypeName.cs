@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+
 using Il2CppToolkit.Injection.Client;
 
 namespace Il2CppToolkit.Runtime
@@ -8,7 +9,7 @@ namespace Il2CppToolkit.Runtime
 	{
 		public static ClassId GetKlass(Type type)
 		{
-			ClassId klass = new() { Name = GetTypeName(type, false), Namespaze = type.Namespace, IsValueType = type.IsValueType };
+			ClassId klass = new() { Name = GetTypeName(type, false), Namespaze = type.Namespace, IsValueType = type.IsValueType, IsNullable = type.BaseType == typeof(Nullable<>) };
 			Type declaringType = type;
 			ClassId currentKlass = klass;
 			while ((declaringType = declaringType.DeclaringType) != null)

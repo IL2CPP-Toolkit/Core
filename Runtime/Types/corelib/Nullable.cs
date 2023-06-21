@@ -8,7 +8,7 @@ namespace Il2CppToolkit.Runtime.Types.corelib
 		public object ReadValue(IMemorySource source, ulong address)
 		{
 			UnknownObject obj = new(source, address);
-			bool hasValue = Il2CppTypeInfoLookup<Nullable<T>>.GetValue<bool>(obj, "has_value");
+			bool hasValue = Il2CppTypeInfoLookup<Nullable<T>>.GetValue<bool>(obj, "hasValue");
 			T value = hasValue ? Il2CppTypeInfoLookup<Nullable<T>>.GetValue<T>(obj, "value") : default;
 			return hasValue ? new Nullable<T>(value) : new Nullable<T>();
 		}

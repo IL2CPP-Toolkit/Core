@@ -24,6 +24,44 @@ Il2CppContext::Il2CppContext() noexcept
 	BuildTypeCache();
 }
 
+const Il2CppClassInfo* Il2CppContext::FindNullableClass(const std::string& namespaze, const std::string& name) const noexcept
+{
+	std::string fullName{namespaze};
+	if (!fullName.empty())
+	{
+		fullName.append(".");
+		fullName.append(name);
+	}
+	const Il2CppClassInfo* pClassInfo{FindClass(fullName)};
+	if (pClassInfo)
+	{
+		return pClassInfo;
+	}
+	const Il2CppDomain* pAppDomain{il2cpp_domain_get()};
+	size_t casm{};
+	const Il2CppAssembly** ppAssemblies{il2cpp_domain_get_assemblies(pAppDomain, &casm)};
+
+	for (size_t n{0}; n < casm; ++n)
+	{
+		const Il2CppAssembly* pAssembly{*(ppAssemblies++)};
+		const Il2CppImage* pImage{il2cpp_assembly_get_image(pAssembly)};
+		const size_t nClass{il2cpp_image_get_class_count(pImage)};
+		for (size_t c{0}; c < nClass; ++c)
+		{
+			Il2CppClass* pClass{const_cast<Il2CppClass*>(il2cpp_image_get_class(pImage, c))};
+			const char* pcszName{il2cpp_class_get_name(pClass)};
+			const char* pcszNamespase{il2cpp_class_get_namespace(pClass)};
+			if (pcszName && pcszNamespase && namespaze == pcszName && pcszNamespase == pcszNamespase)
+			{
+				CacheClass(pClass);
+				pClassInfo = FindClass(fullName);
+				return pClassInfo;
+			}
+		}
+	}
+	return nullptr;
+}
+
 const Il2CppClassInfo* Il2CppContext::FindClass(const std::string& namespaze, const std::string& name) const noexcept
 {
 	std::string fullName{namespaze};
@@ -52,6 +90,7 @@ const Il2CppClassInfo* Il2CppContext::FindClass(const std::string& namespaze, co
 			pClassInfo = FindClass(fullName);
 			return pClassInfo;
 		}
+		// TODO: If nullable, do a hard scan for the type name, since it isn't added to the type name->type cache
 	}
 	return nullptr;
 }
