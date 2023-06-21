@@ -76,7 +76,7 @@ Il2CppObject* Il2CppContext::GetCppObject(const std::string& namespaze, const st
 	if (!pObj)
 		return nullptr;
 
-	if (pCls->klass()->valuetype)
+	if (il2cpp_class_is_valuetype(pCls->klass()))
 		return pObj;
 
 	if (pObj->klass == pCls->klass() || il2cpp_class_is_subclass_of(pObj->klass, pCls->klass(), true))
