@@ -321,7 +321,8 @@ struct ArgumentValueHolder
 					if (pCls == nullptr)
 					{
 						const Il2CppClassInfo* pDeclaringClassInfo{
-							Il2CppContext::instance().FindClass(pParent->namespaze(), pParent->name())};
+							pParent->isnullable() ? Il2CppContext::instance().FindNullableClass(pParent->namespaze(), pParent->name())
+												  : Il2CppContext::instance().FindClass(pParent->namespaze(), pParent->name())};
 						if (!pDeclaringClassInfo)
 							return ::grpc::Status{grpc::StatusCode::NOT_FOUND, "Could not find class"};
 						pCls = pDeclaringClassInfo->klass();

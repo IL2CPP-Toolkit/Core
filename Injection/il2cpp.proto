@@ -16,6 +16,7 @@ message ClassId
 	string name = 2;
 	optional uint64 address = 3;
 	bool isValueType = 4;
+	optional bool isNullable = 5;
 
 	optional ClassId declaringType = 8;
 }

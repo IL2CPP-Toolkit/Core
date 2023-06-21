@@ -16,6 +16,7 @@ public:
 
 	const Il2CppClassInfo* FindClass(const std::string& name) const noexcept;
 	const Il2CppClassInfo* FindClass(const std::string& namespaze, const std::string& name) const noexcept;
+	const Il2CppClassInfo* FindNullableClass(const std::string& namespaze, const std::string& name) const noexcept;
 
 	Il2CppObject* GetCppObject(const std::string& namespaze, const std::string& name, void* instancePtr) const noexcept;
 
