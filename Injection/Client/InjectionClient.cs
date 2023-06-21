@@ -1,4 +1,5 @@
 ﻿using Grpc.Net.Client;
+
 using System;
 using System.Diagnostics;
 
@@ -11,13 +12,16 @@ namespace Il2CppToolkit.Injection.Client
 		private GrpcChannel Channel;
 		private ProcessHook Hook;
 		public Il2CppService.Il2CppServiceClient Il2Cpp { get; private set; }
+		public InjectionService.InjectionServiceClient Injection { get; private set; }
 
 		public InjectionClient(Process process)
 		{
 			Pid = (uint)process.Id;
 			Hook = new(Pid);
 			Channel = GrpcChannel.ForAddress($"http://localhost:{Hook.State.port}", new GrpcChannelOptions());
-			Il2Cpp = new Il2CppService.Il2CppServiceClient(Channel);
+			Il2Cpp = new(Channel);
+			Injection = new(Channel);
+			Injection.RegisterProcess(new RegisterProcessRequest { Pid = (uint)Environment.ProcessId });
 		}
 
 		protected virtual void Dispose(bool disposing)
@@ -26,6 +30,7 @@ namespace Il2CppToolkit.Injection.Client
 			{
 				if (disposing)
 				{
+					Injection.DeregisterProcess(new RegisterProcessRequest { Pid = (uint)Environment.ProcessId });
 					Channel.Dispose();
 					Hook.Dispose();
 				}

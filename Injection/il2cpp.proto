@@ -99,6 +99,23 @@ message FreeObjectRequest
 
 message FreeObjectResponse {}
 
+message RegisterProcessRequest
+{
+	uint32 pid = 1;
+}
+
+message RegisterProcessResponse {}
+
+message DetachRequest {}
+message DetachResponse {}
+
+service InjectionService
+{
+	rpc RegisterProcess(RegisterProcessRequest) returns (RegisterProcessResponse);
+	rpc DeregisterProcess(RegisterProcessRequest) returns (RegisterProcessResponse);
+	rpc Detach(DetachRequest) returns (DetachResponse);
+}
+
 service Il2CppService
 {
 	rpc CallMethod(CallMethodRequest) returns (CallMethodResponse);
