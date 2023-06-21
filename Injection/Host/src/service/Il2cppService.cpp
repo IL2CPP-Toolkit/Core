@@ -45,7 +45,7 @@ void SetClassId(::il2cppservice::ClassId* pClassId, const Il2CppClass* pClass) n
 	pClassId->set_name(pClass->name);
 	pClassId->set_namespaze(pClass->namespaze);
 	pClassId->set_address(reinterpret_cast<uint64_t>(pClass));
-	pClassId->set_isvaluetype(pClass->valuetype);
+	pClassId->set_isvaluetype(il2cpp_class_is_valuetype(pClass));
 	const Il2CppClass* pDeclaringType = pClass;
 	::il2cppservice::ClassId* pCurrentClass = pClassId;
 	while ((pDeclaringType = pDeclaringType->declaringType) != nullptr)
@@ -369,7 +369,7 @@ struct ArgumentValueHolder
 
 				const bool isStatic{(pFieldInfo->type->attrs & FIELD_ATTRIBUTE_STATIC) == FIELD_ATTRIBUTE_STATIC};
 				int32_t offset{pFieldInfo->offset};
-				if (!!pCls->valuetype && !isStatic)
+				if (!!il2cpp_class_is_valuetype(pCls) && !isStatic)
 					offset -= sizeof(Il2CppObject); // valueType field metadata incorrectly considers object header in member field offsets
 
 				pFld->set_name(pFieldInfo->name);

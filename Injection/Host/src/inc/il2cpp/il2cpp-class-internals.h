@@ -459,9 +459,9 @@ typedef struct Il2CppClass
     // Use Class::UpdateInitializedAndNoError to update
     uint8_t initialized_and_no_error : 1;
 
-    uint8_t valuetype : 1;
     uint8_t initialized : 1;
     uint8_t enumtype : 1;
+    uint8_t nullabletype : 1;
     uint8_t is_generic : 1;
     uint8_t has_references : 1; // valid when size_inited is true
     uint8_t init_pending : 1;
@@ -472,7 +472,7 @@ typedef struct Il2CppClass
     uint8_t is_blittable : 1;
     uint8_t is_import_or_windows_runtime : 1;
     uint8_t is_vtable_initialized : 1;
-    uint8_t has_initialization_error : 1;
+    uint8_t is_byref_like : 1;
     VirtualInvokeData vtable[IL2CPP_ZERO_LEN_ARRAY];
 } Il2CppClass;
 
