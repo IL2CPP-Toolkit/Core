@@ -57,28 +57,35 @@ InjectionHost* InjectionHostHandle::operator->() const noexcept
 
 void InjectionHost::RegisterProcess(uint32_t pid) noexcept
 {
-	const std::lock_guard<std::recursive_mutex> lock(GetLock());
-	m_hasSetActivePid = true;
-	m_activePids.insert(pid);
+	{
+		const std::lock_guard<std::recursive_mutex> lock(GetLock());
+		m_hasSetActivePid = true;
+		m_activePids.insert(pid);
+	}
 }
 
 void InjectionHost::DeregisterProcess(uint32_t pid) noexcept
 {
-	const std::lock_guard<std::recursive_mutex> lock(GetLock());
-	m_activePids.erase(pid);
+	{
+		const std::lock_guard<std::recursive_mutex> lock(GetLock());
+		m_activePids.erase(pid);
+	}
 }
 
 void InjectionHost::Detach() noexcept
 {
 	InjectionHostHandle self{GetInstance()};
-	self->Shutdown();
+	if (self)
+		self->Shutdown();
 	FreeGlobalInstance();
 }
 
 std::set<uint32_t> InjectionHost::ActivePidsSnapshot() const noexcept
 {
-	const std::lock_guard<std::recursive_mutex> lock(GetLock());
-	return std::set<uint32_t>(m_activePids);
+	{
+		const std::lock_guard<std::recursive_mutex> lock(GetLock());
+		return std::set<uint32_t>(m_activePids);
+	}
 }
 
 void InjectionHost::KeepAlive() noexcept
@@ -103,16 +110,15 @@ void InjectionHost::ProcessMessages() noexcept
 	while (true)
 	{
 		std::set<uint32_t> activePids = self->ActivePidsSnapshot();
+		if (self->m_hasSetActivePid && activePids.size() == 0)
+			break;
+
 		Snapshot snapshot{0};
 		for (const auto pid : activePids)
 		{
 			if (!snapshot.FindProcess(pid))
 				self->DeregisterProcess(pid);
 		}
-
-		activePids = self->ActivePidsSnapshot();
-		if (self->m_hasSetActivePid && activePids.size() == 0)
-			break;
 		std::this_thread::sleep_for(s_hookTTL);
 	}
 	self->Shutdown();
@@ -141,8 +147,10 @@ InjectionHost::~InjectionHost() noexcept
 
 void InjectionHost::Shutdown() noexcept
 {
-	const std::lock_guard<std::recursive_mutex> lock(GetLock());
-	m_activePids.clear();
+	{
+		const std::lock_guard<std::recursive_mutex> lock(GetLock());
+		m_activePids.clear();
+	}
 
 	if (m_spServer)
 	{
