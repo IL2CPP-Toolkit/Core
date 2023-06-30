@@ -8,27 +8,11 @@
 #include "../MessageHandler.h"
 #include "../InjectionHost.h"
 
-
-template<typename... Args>
-void DebugLog(std::string_view rt_fmt_str, Args&&... args)
-{
-	std::string line = std::vformat(rt_fmt_str, std::make_format_args(args...));
-	OutputDebugStringA(line.c_str());
-}
-
 bool IsUnityProcess() noexcept
 {
 	HMODULE hUnityPlayer{GetModuleHandleA("UnityPlayer.dll")};
 	return !!hUnityPlayer;
 }
-
-#define CHECKED_CALL(method, params)                                                                                                       \
-	if ((mhStatus = method params) != MH_STATUS::MH_OK)                                                                                    \
-	{                                                                                                                                      \
-		OutputDebugStringA("ERROR: " #method " returned an error:");                                                                       \
-		OutputDebugStringA(MH_StatusToString(mhStatus));                                                                                   \
-		return TRUE;                                                                                                                       \
-	}
 
 BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved)
 {
