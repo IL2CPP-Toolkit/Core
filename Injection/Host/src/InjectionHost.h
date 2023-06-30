@@ -7,6 +7,7 @@
 #include "ExecutionQueue.h"
 #include "service/Il2CppService.h"
 #include "service/InjectionService.h"
+#include "MessageHandler.h"
 
 // fwd decls
 namespace grpc {
@@ -25,7 +26,6 @@ public:
 
 	void KeepAlive() noexcept;
 	void ProcessMessages() noexcept;
-	uint32_t Port() const noexcept { return m_iPort; }
 
 	void Shutdown() noexcept;
 
@@ -37,6 +37,7 @@ private:
 	static void ServerThread() noexcept;
 	static void WatcherThread() noexcept;
 	static const std::chrono::milliseconds s_hookTTL;
+	std::recursive_mutex& GetLock() const noexcept;
 
 	std::set<uint32_t> ActivePidsSnapshot() const noexcept;
 
@@ -44,13 +45,14 @@ private:
 	std::unique_ptr<Il2CppServiceImpl> m_spIl2cppService;
 	std::unique_ptr<InjectionServiceImpl> m_spInjectionService;
 
+	MessageHandlerHook m_messageHandlerHook;
 	std::set<uint32_t> m_activePids;
 	bool m_hasSetActivePid{false};
 	std::thread m_thWatcher;
 	std::thread m_thServer;
 	std::chrono::system_clock::time_point m_tpKeepAliveExpiry;
+	std::recursive_mutex m_lock;
 	ExecutionQueue m_executionQueue;
-	uint32_t m_iPort;
 };
 
 class InjectionHostHandle
