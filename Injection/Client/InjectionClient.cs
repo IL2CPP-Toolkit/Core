@@ -34,7 +34,6 @@ namespace Il2CppToolkit.Injection.Client
 					Channel.Dispose();
 					Hook.Dispose();
 				}
-				NativeMethods.ReleaseHook(Pid);
 				Channel = null;
 				Hook = null;
 				Il2Cpp = null;

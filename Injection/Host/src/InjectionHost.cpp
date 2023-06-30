@@ -9,17 +9,12 @@
 #include "win/Snapshot.h"
 #include "PublicApi.h"
 #include "InjectionHost.h"
+#include "debug.h"
 
 using namespace grpc;
 using namespace std::chrono_literals;
 
 const std::chrono::milliseconds InjectionHost::s_hookTTL{std::chrono::milliseconds(100)};
-
-static std::recursive_mutex& GetLock() noexcept
-{
-	static std::recursive_mutex s_lock;
-	return s_lock;
-}
 
 static std::shared_ptr<InjectionHost>& GetInstancePtr() noexcept
 {
@@ -49,6 +44,11 @@ InjectionHost* InjectionHostHandle::operator->() const noexcept
 	return owned.get();
 }
 
+std::recursive_mutex& InjectionHost::GetLock() const noexcept
+{
+	return const_cast<std::recursive_mutex&>(m_lock);
+}
+
 /* static */ InjectionHostHandle InjectionHost::GetInstance() noexcept
 {
 	return InjectionHostHandle{GetInstancePtr()};
@@ -59,6 +59,7 @@ void InjectionHost::RegisterProcess(uint32_t pid) noexcept
 {
 	{
 		const std::lock_guard<std::recursive_mutex> lock(GetLock());
+		DebugLog("RegisterProcess {}\n", pid);
 		m_hasSetActivePid = true;
 		m_activePids.insert(pid);
 	}
@@ -68,6 +69,7 @@ void InjectionHost::DeregisterProcess(uint32_t pid) noexcept
 {
 	{
 		const std::lock_guard<std::recursive_mutex> lock(GetLock());
+		DebugLog("DeregisterProcess {}\n", pid);
 		m_activePids.erase(pid);
 	}
 }
@@ -111,7 +113,10 @@ void InjectionHost::ProcessMessages() noexcept
 	{
 		std::set<uint32_t> activePids = self->ActivePidsSnapshot();
 		if (self->m_hasSetActivePid && activePids.size() == 0)
+		{
+			DebugLog("No registered processes remain\n");
 			break;
+		}
 
 		Snapshot snapshot{0};
 		for (const auto pid : activePids)
@@ -121,7 +126,6 @@ void InjectionHost::ProcessMessages() noexcept
 		}
 		std::this_thread::sleep_for(s_hookTTL);
 	}
-	self->Shutdown();
 	FreeGlobalInstance();
 }
 
@@ -131,6 +135,7 @@ InjectionHost::InjectionHost() noexcept
 	, m_spInjectionService{std::make_unique<InjectionServiceImpl>()}
 	, m_spIl2cppService{std::make_unique<Il2CppServiceImpl>(m_executionQueue)}
 {
+	DebugLog("InjectionHost starting\n");
 	ServerBuilder builder;
 	builder.AddListeningPort("0.0.0.0:0", InsecureServerCredentials(), &PublicState::value.port);
 	builder.RegisterService(m_spInjectionService.get());
@@ -138,6 +143,7 @@ InjectionHost::InjectionHost() noexcept
 	m_spServer = builder.BuildAndStart();
 	m_thWatcher = std::thread{InjectionHost::WatcherThread};
 	m_thServer = std::thread{InjectionHost::ServerThread};
+	DebugLog("InjectionHost started on port {}!\n", PublicState::value.port);
 }
 
 InjectionHost::~InjectionHost() noexcept
@@ -147,6 +153,7 @@ InjectionHost::~InjectionHost() noexcept
 
 void InjectionHost::Shutdown() noexcept
 {
+	DebugLog("InjectionHost::Shutdown\n");
 	{
 		const std::lock_guard<std::recursive_mutex> lock(GetLock());
 		m_activePids.clear();
