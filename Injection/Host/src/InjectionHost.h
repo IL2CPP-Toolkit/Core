@@ -50,6 +50,8 @@ private:
 	bool m_hasSetActivePid{false};
 	std::thread m_thWatcher;
 	std::thread m_thServer;
+	std::string m_originalTitle;
+	HWND m_hwndMain{};
 	std::chrono::system_clock::time_point m_tpKeepAliveExpiry;
 	std::recursive_mutex m_lock;
 	ExecutionQueue m_executionQueue;
