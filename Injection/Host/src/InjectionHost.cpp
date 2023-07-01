@@ -144,10 +144,28 @@ InjectionHost::InjectionHost() noexcept
 	m_thWatcher = std::thread{InjectionHost::WatcherThread};
 	m_thServer = std::thread{InjectionHost::ServerThread};
 	DebugLog("InjectionHost started on port {}!\n", PublicState::value.port);
+
+	DWORD dwPid{GetCurrentProcessId()};
+	m_hwndMain = GetMainWindowForProcessId(dwPid, L"UnityWndClass");
+	if (m_hwndMain)
+	{
+		int len{GetWindowTextLengthA(m_hwndMain) + 1};
+		std::vector<char> buf(len);
+		GetWindowTextA(m_hwndMain, &buf[0], len);
+
+		std::string title(&buf[0]);
+		m_originalTitle = title;
+
+		title.append(" (Hooked)");
+		SetWindowTextA(m_hwndMain, title.c_str());
+	}
 }
 
 InjectionHost::~InjectionHost() noexcept
 {
+	if (m_hwndMain)
+		SetWindowTextA(m_hwndMain, m_originalTitle.c_str());
+
 	Shutdown();
 }
 
