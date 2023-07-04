@@ -25,7 +25,7 @@
             "args": [
                 "${workspaceFolder}\\Test.sln",
                 "-m:1",
-                "-p:Configuration=Release",
+                "-p:Configuration=Debug",
                 "-verbosity:m",
                 "-p:TargetFramework=net6.0"
             ],

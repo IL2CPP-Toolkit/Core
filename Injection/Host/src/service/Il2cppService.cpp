@@ -42,8 +42,8 @@ struct numeric_value
 
 void SetClassId(::il2cppservice::ClassId* pClassId, const Il2CppClass* pClass) noexcept
 {
-	pClassId->set_name(pClass->name);
-	pClassId->set_namespaze(pClass->namespaze);
+	pClassId->set_name(il2cpp_class_get_name(const_cast<Il2CppClass*>(pClass)));
+	pClassId->set_namespaze(il2cpp_class_get_namespace(const_cast<Il2CppClass*>(pClass)));
 	pClassId->set_address(reinterpret_cast<uint64_t>(pClass));
 	pClassId->set_isvaluetype(il2cpp_class_is_valuetype(pClass));
 	const Il2CppClass* pDeclaringType = pClass;
@@ -187,7 +187,6 @@ struct ArgumentValueHolder
 
 		if (!pClass)
 		{
-			assert(request->klass().isvaluetype());
 			const Il2CppClassInfo* pClsInfo{Il2CppContext::instance().FindClass(request->klass().namespaze(), request->klass().name())};
 			if (!pClsInfo)
 				return ::grpc::Status{::grpc::StatusCode::FAILED_PRECONDITION, "Class not found"};
@@ -202,7 +201,7 @@ struct ArgumentValueHolder
 		if (!pMethod)
 			return ::grpc::Status{::grpc::StatusCode::NOT_FOUND, "Method not found"};
 
-		if (pMethod->flags & METHOD_ATTRIBUTE_STATIC)
+		if (il2cpp_method_get_flags(pMethod, /*iFlags*/ 0) & METHOD_ATTRIBUTE_STATIC)
 		{
 			assert(!pObj); // Method call does not expect an instance
 		}
@@ -279,7 +278,7 @@ struct ArgumentValueHolder
 			if (pResult)
 			{
 				::il2cppservice::Value* pRetVal{response->mutable_returnvalue()};
-				ObjectToValue(pResult, *pMethod->return_type, *pRetVal);
+				ObjectToValue(pResult, *il2cpp_method_get_return_type(pMethod), *pRetVal);
 			}
 		}
 		catch (...)
@@ -333,7 +332,7 @@ struct ArgumentValueHolder
 						bool found{false};
 						while (Il2CppClass* pNestedClass = il2cpp_class_get_nested_types(pCls, &iter))
 						{
-							if (pParent->name() == pNestedClass->name)
+							if (pParent->name() == il2cpp_class_get_name(pNestedClass))
 							{
 								pCls = pNestedClass;
 								found = true;
@@ -364,17 +363,17 @@ struct ArgumentValueHolder
 			for (int n{0}, m{pCls->field_count}; n < m; ++n)
 			{
 				::il2cppservice::Il2CppField* pFld{response->mutable_typeinfo()->mutable_fields()->Add()};
-				const FieldInfo* pFieldInfo{&pCls->fields[n]};
+				FieldInfo* pFieldInfo{const_cast<FieldInfo*>(&pCls->fields[n])};
+				const Il2CppType* pFieldType{il2cpp_field_get_type(pFieldInfo)};
+				Il2CppClass* pFieldClassType{il2cpp_class_from_il2cpp_type(pFieldType)};
 
-				Il2CppClass* pFieldClassType{il2cpp_class_from_il2cpp_type(pFieldInfo->type)};
-
-				const bool isStatic{(pFieldInfo->type->attrs & FIELD_ATTRIBUTE_STATIC) == FIELD_ATTRIBUTE_STATIC};
-				int32_t offset{pFieldInfo->offset};
+				const bool isStatic{(il2cpp_type_get_attrs(pFieldType) & FIELD_ATTRIBUTE_STATIC) == FIELD_ATTRIBUTE_STATIC};
+				size_t offset{il2cpp_field_get_offset(pFieldInfo)};
 				if (!!il2cpp_class_is_valuetype(pCls) && !isStatic)
 					offset -= sizeof(Il2CppObject); // valueType field metadata incorrectly considers object header in member field offsets
 
-				pFld->set_name(pFieldInfo->name);
-				pFld->set_offset(offset);
+				pFld->set_name(il2cpp_field_get_name(pFieldInfo));
+				pFld->set_offset(static_cast<uint32_t>(offset));
 				pFld->set_klassaddr(reinterpret_cast<uint64_t>(pFieldClassType));
 				pFld->set_static_(isStatic);
 			}

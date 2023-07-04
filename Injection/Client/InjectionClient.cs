@@ -24,7 +24,10 @@ namespace Il2CppToolkit.Injection.Client
 			CurrentPid = (uint)Process.GetCurrentProcess().Id;
 #endif
 			Hook = new(TargetPid);
-			Channel = GrpcChannel.ForAddress($"http://localhost:{Hook.State.port}", new GrpcChannelOptions());
+			Channel = GrpcChannel.ForAddress($"http://localhost:{Hook.State.port}", new GrpcChannelOptions()
+			{
+				MaxReceiveMessageSize = 1024 * 1024 * 256,
+			});
 			Il2Cpp = new(Channel);
 			Injection = new(Channel);
 			Injection.RegisterProcess(new RegisterProcessRequest { Pid = (uint)CurrentPid });
