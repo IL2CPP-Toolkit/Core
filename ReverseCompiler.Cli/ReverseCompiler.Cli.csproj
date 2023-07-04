@@ -21,7 +21,7 @@
 
   <PropertyGroup>
     <TargetFrameworks>net6.0;net7.0</TargetFrameworks>
-    <LangVersion>9.0</LangVersion>
+    <LangVersion>10.0</LangVersion>
     <OutputType>Exe</OutputType>
     <AssemblyName>Il2CppToolkit.ReverseCompiler.Cli</AssemblyName>
     <RootNamespace>Il2CppToolkit.ReverseCompiler.Cli</RootNamespace>
