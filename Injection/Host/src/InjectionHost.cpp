@@ -137,6 +137,8 @@ InjectionHost::InjectionHost() noexcept
 {
 	DebugLog("InjectionHost starting\n");
 	ServerBuilder builder;
+	builder.SetMaxSendMessageSize(-1);
+	builder.SetMaxReceiveMessageSize(-1);
 	builder.AddListeningPort("0.0.0.0:0", InsecureServerCredentials(), &PublicState::value.port);
 	builder.RegisterService(m_spInjectionService.get());
 	builder.RegisterService(m_spIl2cppService.get());

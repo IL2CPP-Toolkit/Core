@@ -17,7 +17,7 @@
             "processId": "${input:MatchRaidExe}",
             "symbolOptions": {
                 "searchPaths": [
-                    "D:\\git\\github\\IL2Cpp-Toolkit\\Core\\Test\\x64\\Release",
+                    "D:\\git\\github\\IL2Cpp-Toolkit\\Core\\Test\\x64\\Debug",
                     "http://symbolserver.unity3d.com"
                 ],
                 "searchMicrosoftSymbolServer": true,
@@ -51,7 +51,7 @@
             "request": "launch",
             "preLaunchTask": "build:test",
             // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/Test/bin/x64/Release/net6.0/Il2CppToolkit.Test.dll",
+            "program": "${workspaceFolder}/Test/bin/x64/Debug/net6.0/Il2CppToolkit.Test.dll",
             "args": [],
             "justMyCode": false,
             "suppressJITOptimizations": true,
