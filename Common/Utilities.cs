@@ -20,6 +20,7 @@ namespace Il2CppToolkit.Common
             return $"{nameIndex}.{namespaceIndex}.{typeToken}";
         }
     }
+
     public class MutableTypeListIterator<T> : IEnumerable<T>
     {
         private IList<T> Owner;
