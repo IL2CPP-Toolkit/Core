@@ -105,6 +105,12 @@ namespace Il2CppToolkit.Injection.Client
 			Dispose(disposing: true);
 			GC.SuppressFinalize(this);
 		}
+
+		~AsyncHookThread()
+		{
+			// Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+			Dispose(disposing: false);
+		}
 	}
 
 	public class AsyncHookThreadDispatcher : IDisposable
@@ -133,12 +139,11 @@ namespace Il2CppToolkit.Injection.Client
 			}
 		}
 
-		// // TODO: override finalizer only if 'Dispose(bool disposing)' has code to free unmanaged resources
-		// ~AsyncHookThreadDispatcher()
-		// {
-		//     // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-		//     Dispose(disposing: false);
-		// }
+		~AsyncHookThreadDispatcher()
+		{
+			// Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+			Dispose(disposing: false);
+		}
 
 		public void Dispose()
 		{
@@ -152,7 +157,7 @@ namespace Il2CppToolkit.Injection.Client
 	{
 		private static AsyncHookThread s_currentThread;
 		private static volatile int m_refCount;
-		private static object m_lock = new();
+		private static readonly object m_lock = new();
 
 		public static AsyncHookThread AddRef()
 		{
