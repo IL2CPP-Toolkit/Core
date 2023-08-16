@@ -39,8 +39,12 @@ namespace Il2CppToolkit.Injection.Client
 			{
 				if (disposing)
 				{
-					Injection.DeregisterProcess(new RegisterProcessRequest { Pid = (uint)CurrentPid });
-					Channel.Dispose();
+					try
+					{
+						Injection.DeregisterProcess(new RegisterProcessRequest { Pid = (uint)CurrentPid });
+						Channel.Dispose();
+					}
+					catch { }
 					Hook.Dispose();
 				}
 				Channel = null;
