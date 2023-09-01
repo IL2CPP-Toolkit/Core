@@ -18,6 +18,11 @@ public:
 		const ::il2cppservice::CallMethodRequest* request,
 		::il2cppservice::CallMethodResponse* response) noexcept override;
 
+	::grpc::Status CreateObject(
+		::grpc::ServerContext* context,
+		const ::il2cppservice::CreateObjectRequest* request,
+		::il2cppservice::CreateObjectResponse* response) noexcept override;
+
 	::grpc::Status GetTypeInfo(
 		::grpc::ServerContext* context,
 		const ::il2cppservice::GetTypeInfoRequest* request,
