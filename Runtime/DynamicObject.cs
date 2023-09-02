@@ -47,6 +47,11 @@ namespace Il2CppToolkit.Runtime
 			PinnedRef = new(Pointer, response.ReturnValue.Obj.Handle);
 		}
 
+		public T Hydrate()
+		{
+			return (T)Activator.CreateInstance(typeof(T), Runtime, Pointer.Address);
+		}
+
 		public U Call<U>(string name, params object[] arguments)
 		{
 			return Il2CppTypeInfoLookup<T>.CallMethod<U>(Pointer, name, arguments);

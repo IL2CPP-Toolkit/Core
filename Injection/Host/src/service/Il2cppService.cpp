@@ -251,7 +251,7 @@ struct ArgumentValueHolder
 			if (pObj)
 			{
 				::il2cppservice::Value* pRetVal{response->mutable_returnvalue()};
-				ObjectToValue(pObj, *il2cpp_method_get_return_type(pMethod), *pRetVal, true);
+				ObjectToValue(pObj, *il2cpp_class_get_type(pClass), *pRetVal, true);
 			}
 		}
 		catch (...)
