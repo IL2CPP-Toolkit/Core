@@ -66,8 +66,28 @@ namespace Il2CppToolkit.Runtime
 
 	public class Il2CppTypeInfoLookup<TClass>
 	{
+		public static TValue FromValue<TValue>(IRuntimeObject obj, Value returnValue)
+		{
+			return returnValue.ValueCase switch
+			{
+				ValueOneofCase.Bit => (TValue)(object)returnValue.Bit,
+				ValueOneofCase.Double => (TValue)(object)returnValue.Double,
+				ValueOneofCase.Float => (TValue)(object)returnValue.Float,
+				ValueOneofCase.Int32 => (TValue)(object)returnValue.Int32,
+				ValueOneofCase.Int64 => (TValue)(object)returnValue.Int64,
+				ValueOneofCase.Obj => HydrateObject<TValue>(obj.Source.ParentContext, returnValue.Obj),
+				ValueOneofCase.Str => (TValue)(object)returnValue.Str,
+				ValueOneofCase.Uint32 => (TValue)(object)returnValue.Uint32,
+				ValueOneofCase.Uint64 => (TValue)(object)returnValue.Uint64,
+				_ => default,
+			};
+		}
+
 		public static Value ValueFrom(object value)
 		{
+			if (value == null)
+				return new Value() { Obj = new Il2CppObject() { Address = 0 } };
+
 			return value switch
 			{
 				NullableArg nullable => ValueFromNullable(nullable),
@@ -128,20 +148,7 @@ namespace Il2CppToolkit.Runtime
 
 			if (returnValue == null)
 				return default;
-
-			return returnValue.ValueCase switch
-			{
-				ValueOneofCase.Bit => (TValue)(object)returnValue.Bit,
-				ValueOneofCase.Double => (TValue)(object)returnValue.Double,
-				ValueOneofCase.Float => (TValue)(object)returnValue.Float,
-				ValueOneofCase.Int32 => (TValue)(object)returnValue.Int32,
-				ValueOneofCase.Int64 => (TValue)(object)returnValue.Int64,
-				ValueOneofCase.Obj => HydrateObject<TValue>(obj.Source.ParentContext, returnValue.Obj),
-				ValueOneofCase.Str => (TValue)(object)returnValue.Str,
-				ValueOneofCase.Uint32 => (TValue)(object)returnValue.Uint32,
-				ValueOneofCase.Uint64 => (TValue)(object)returnValue.Uint64,
-				_ => default,
-			};
+			return FromValue<TValue>(obj, returnValue);
 		}
 
 		public static TValue CallStaticMethod<TValue>(IMemorySource source, [CallerMemberName] string name = "", object[] arguments = null)
@@ -204,7 +211,7 @@ namespace Il2CppToolkit.Runtime
 			Il2CppField fld = typeInfo.Fields.First(fld => fld.Name == name);
 			Il2CppTypeCache.GetTypeInfo(context, typeof(TValue), fld.KlassAddr);
 			return context.ReadValue<TValue>(
-				typeInfo.StaticFieldsAddress + fld.Offset, 
+				typeInfo.StaticFieldsAddress + fld.Offset,
 				indirection);
 		}
 	}

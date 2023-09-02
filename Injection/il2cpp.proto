@@ -74,6 +74,17 @@ message GetTypeInfoResponse
 	Il2CppTypeInfo typeInfo = 1;
 }
 
+message CreateObjectRequest
+{
+	ClassId klass = 1;
+	repeated Value arguments = 2;
+}
+
+message CreateObjectResponse
+{
+	optional Value returnValue = 1;
+}
+
 message CallMethodRequest
 {
 	string methodName = 1;
@@ -85,6 +96,7 @@ message CallMethodRequest
 message CallMethodResponse
 {
 	optional Value returnValue = 1;
+	optional uint32 handle = 2;
 }
 
 message PinObjectMessage
@@ -119,6 +131,7 @@ service InjectionService
 service Il2CppService
 {
 	rpc CallMethod(CallMethodRequest) returns (CallMethodResponse);
+	rpc CreateObject(CreateObjectRequest) returns (CreateObjectResponse);
 	rpc GetTypeInfo(GetTypeInfoRequest) returns (GetTypeInfoResponse);
 	rpc PinObject(PinObjectMessage) returns (PinObjectMessage);
 	rpc FreeObject(FreeObjectRequest) returns (FreeObjectResponse);

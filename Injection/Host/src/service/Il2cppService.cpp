@@ -55,7 +55,7 @@ void SetClassId(::il2cppservice::ClassId* pClassId, const Il2CppClass* pClass) n
 	}
 }
 
-static void ObjectToValue(Il2CppObject* pObj, const Il2CppType& cppType, ::il2cppservice::Value& value) noexcept
+static void ObjectToValue(Il2CppObject* pObj, const Il2CppType& cppType, ::il2cppservice::Value& value, bool pin = false) noexcept
 {
 	switch (cppType.type)
 	{
@@ -119,6 +119,11 @@ static void ObjectToValue(Il2CppObject* pObj, const Il2CppType& cppType, ::il2cp
 		case Il2CppTypeEnum::IL2CPP_TYPE_CLASS: {
 			const auto& pReturnObj = value.mutable_obj_();
 			pReturnObj->set_address(reinterpret_cast<uint64_t>(pObj));
+			if (pin)
+			{
+				uint32_t handle{il2cpp_gchandle_new(pObj, true)};
+				pReturnObj->set_handle(handle);
+			}
 			SetClassId(pReturnObj->mutable_klass(), pObj->klass);
 			break;
 		}
@@ -157,6 +162,108 @@ struct ArgumentValueHolder
 	}
 };
 
+::grpc::Status Il2CppServiceImpl::CreateObject(
+	::grpc::ServerContext* context,
+	const ::il2cppservice::CreateObjectRequest* request,
+	::il2cppservice::CreateObjectResponse* response) noexcept
+{
+	std::optional<::grpc::Status> result{m_executionQueue.Invoke<::grpc::Status>([&]() mutable {
+		const Il2CppClassInfo* pClsInfo{Il2CppContext::instance().FindClass(request->klass().namespaze(), request->klass().name())};
+		if (!pClsInfo)
+			return ::grpc::Status{::grpc::StatusCode::FAILED_PRECONDITION, "Class not found"};
+		Il2CppClass* pClass{pClsInfo->klass()};
+
+		if (!pClass)
+			return ::grpc::Status{::grpc::StatusCode::FAILED_PRECONDITION, "Class not found"};
+
+		Il2CppObject* pObj{il2cpp_object_new(pClass)};
+
+		const int nArgs{request->arguments_size()};
+		const MethodInfo* pMethod{il2cpp_class_get_method_from_name(pClass, ".ctor", nArgs)};
+		if (!pMethod)
+			return ::grpc::Status{::grpc::StatusCode::NOT_FOUND, "Method not found"};
+
+		void** pArgs{reinterpret_cast<void**>(il2cpp_alloc(sizeof(void*) * nArgs))};
+		if (!pArgs)
+			return ::grpc::Status{::grpc::StatusCode::RESOURCE_EXHAUSTED, "Out of memory"};
+
+		try
+		{
+			std::vector<ArgumentValueHolder> argHolders{};
+			for (int n{0}, m{request->arguments_size()}; n < m; ++n)
+			{
+				const ::il2cppservice::Value& arg{request->arguments().at(n)};
+				if (arg.has_bit_())
+				{
+					ArgumentValueHolder& argHolder{argHolders.emplace_back(arg.bit_(), arg.nullstate())};
+					pArgs[n] = reinterpret_cast<void*>(&argHolder);
+				}
+				else if (arg.has_double_())
+				{
+					ArgumentValueHolder& argHolder{argHolders.emplace_back(arg.double_(), arg.nullstate())};
+					pArgs[n] = reinterpret_cast<void*>(&argHolder);
+				}
+				else if (arg.has_float_())
+				{
+					ArgumentValueHolder& argHolder{argHolders.emplace_back(static_cast<float>(arg.float_()), arg.nullstate())};
+					pArgs[n] = reinterpret_cast<void*>(&argHolder);
+				}
+				else if (arg.has_int32_())
+				{
+					ArgumentValueHolder& argHolder{argHolders.emplace_back(arg.int32_(), arg.nullstate())};
+					pArgs[n] = reinterpret_cast<void*>(&argHolder);
+				}
+				else if (arg.has_uint32_())
+				{
+					ArgumentValueHolder& argHolder{argHolders.emplace_back(arg.uint32_(), arg.nullstate())};
+					pArgs[n] = reinterpret_cast<void*>(&argHolder);
+				}
+				else if (arg.has_int64_())
+				{
+					ArgumentValueHolder& argHolder{argHolders.emplace_back(arg.int64_(), arg.nullstate())};
+					pArgs[n] = reinterpret_cast<void*>(&argHolder);
+				}
+				else if (arg.has_uint64_())
+				{
+					ArgumentValueHolder& argHolder{argHolders.emplace_back(arg.uint64_(), arg.nullstate())};
+					pArgs[n] = reinterpret_cast<void*>(&argHolder);
+				}
+				else if (arg.has_str_())
+				{
+					ArgumentValueHolder& argHolder{argHolders.emplace_back(il2cpp_string_new(arg.str_().c_str()), arg.nullstate())};
+					pArgs[n] = reinterpret_cast<void*>(&argHolder);
+				}
+				else if (arg.has_obj_())
+				{
+					Il2CppObject* pArg{il2cpp_object_from_ptr(reinterpret_cast<void*>(arg.obj_().address()))};
+					// ArgumentValueHolder& argHolder{argHolders.emplace_back(pArg, arg.nullstate())};
+					pArgs[n] = reinterpret_cast<void*>(pArg);
+				}
+			}
+
+			Il2CppException* pEx{};
+			Il2CppObject* pResult{il2cpp_runtime_invoke(pMethod, pObj, pArgs, &pEx)};
+			if (pEx)
+			{
+				std::string exceptionMessage{il2cpp_format_exception_to_string(pEx) + ' ' + il2cpp_format_stack_trace_to_string(pEx)};
+				return ::grpc::Status{::grpc::StatusCode::UNKNOWN, "Exception occurred"};
+			}
+			if (pObj)
+			{
+				::il2cppservice::Value* pRetVal{response->mutable_returnvalue()};
+				ObjectToValue(pObj, *il2cpp_class_get_type(pClass), *pRetVal, true);
+			}
+		}
+		catch (...)
+		{
+			il2cpp_free(pArgs);
+			return ::grpc::Status{::grpc::StatusCode::UNKNOWN, "Exception occurred"};
+		}
+
+		return ::grpc::Status::OK;
+	})};
+	return result.value_or(::grpc::Status::CANCELLED);
+}
 
 ::grpc::Status Il2CppServiceImpl::CallMethod(
 	::grpc::ServerContext* context,

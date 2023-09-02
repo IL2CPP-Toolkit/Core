@@ -20,17 +20,23 @@ namespace Il2CppToolkit.Runtime
 			}
 		}
 
-		public PinnedReference(T reference, uint handle)
+		public PinnedReference(T reference)
 		{
 			Reference = reference;
-			Handle = handle;
-			Reference.Source.ParentContext.InjectionClient.Il2Cpp.PinObject(new()
+			PinObjectMessage response = Reference.Source.ParentContext.InjectionClient.Il2Cpp.PinObject(new()
 			{
 				Obj = new Il2CppObject()
 				{
 					Address = Reference.Address
 				}
 			});
+			Handle = response.Obj.Handle;
+		}
+
+		public PinnedReference(T reference, uint handle)
+		{
+			Reference = reference;
+			Handle = handle;
 		}
 
 		protected virtual void Dispose(bool disposing)
