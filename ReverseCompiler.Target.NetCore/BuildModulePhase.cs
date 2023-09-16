@@ -83,11 +83,29 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 #endif
 
 			assemblyDefinition.Write(outputFile, new WriterParameters() { });
-			// set file version
-			VersionResource vi = new();
+			try
 			{
-				vi.FileVersion = m_asmVersion.ToString();
-				vi.SaveTo(outputFile);
+				// set file version
+				VersionResource vi = new();
+				{
+					vi.FileVersion = m_asmVersion.ToString();
+					vi.SaveTo(outputFile);
+				}
+			}
+			catch (Exception e)
+			{
+				OnProgressUpdated(0, 99, "Failed to set file version, retrying in 1s...");
+				Thread.Sleep(1000);
+				try
+				{
+					// retry set file version
+					VersionResource vi = new();
+					{
+						vi.FileVersion = m_asmVersion.ToString();
+						vi.SaveTo(outputFile);
+					}
+				}
+				catch { }
 			}
 		}
 
