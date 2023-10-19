@@ -26,8 +26,8 @@ namespace Il2CppToolkit.Runtime.Types.corelib.Collections.Generic
 				Address = address;
 			}
 
-			public UInt32 HashCode => Source.ReadValue<UInt32>(Address, 1);
-			public UInt32 Next => Source.ReadValue<UInt32>(Address + 0x04, 1);
+			public Int32 HashCode => Source.ReadValue<Int32>(Address, 1);
+			public Int32 Next => Source.ReadValue<Int32>(Address + 0x04, 1);
 			public TKey Key => Source.ReadValue<TKey>(Address + 0x08, 1);
 			public TValue Value => Source.ReadValue<TValue>(Address + (IsNarrow ? 0x0Cul : 0x10ul), 1);
 		}
@@ -40,10 +40,14 @@ namespace Il2CppToolkit.Runtime.Types.corelib.Collections.Generic
 				return;
 
 			m_isLoaded = true;
-			uint count = Source.ReadValue<uint>(Address + 0x20);
-			Native__Array<Entry> entries = new(Source, Source.ReadPointer(Address + 0x18ul), count, Entry.ElementSize);
+			uint size = Source.ReadValue<uint>(Address + 0x20);
+			// uint free = Source.ReadValue<uint>(Address + 0x28);
+			// uint count = size - free;
+			Native__Array<Entry> entries = new(Source, Source.ReadPointer(Address + 0x18ul), size, Entry.ElementSize);
 			foreach (Entry entry in entries)
 			{
+				if (entry.HashCode == -1)
+					continue;
 				m_dict.Add(entry.Key, entry.Value);
 			}
 		}
