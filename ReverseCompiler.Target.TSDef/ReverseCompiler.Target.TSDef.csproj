@@ -9,7 +9,6 @@
     <ProjectReference Include="..\Common\Common.csproj" />
     <ProjectReference Include="..\Metadata\Metadata.csproj" />
     <ProjectReference Include="..\ReverseCompiler.Target.NetCore\ReverseCompiler.Target.NetCore.csproj" />
-    <ProjectReference Include="..\Runtime\Runtime.csproj" />
     <ProjectReference Include="..\ReverseCompiler\ReverseCompiler.csproj" />
   </ItemGroup>
 
@@ -21,6 +20,7 @@
     <AssemblyName>Il2CppToolkit.Target.TSDef</AssemblyName>
     <RootNamespace>Il2CppToolkit.Target.TSDef</RootNamespace>
     <Platforms>x64</Platforms>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
 
 </Project>

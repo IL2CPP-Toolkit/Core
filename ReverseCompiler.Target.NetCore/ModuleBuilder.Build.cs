@@ -11,12 +11,12 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 {
 	public partial class ModuleBuilder
 	{
+		private readonly HashSet<Il2CppTypeDefinition> EnqueuedTypes = new();
+		private Queue<Il2CppTypeDefinition> TypeDefinitionQueue = new();
 		private int Completed = 0;
 		private int Total = 0;
 		private int UpdateCounter = 0;
 		private string CurrentAction;
-		private readonly HashSet<Il2CppTypeDefinition> EnqueuedTypes = new();
-		private Queue<Il2CppTypeDefinition> TypeDefinitionQueue = new();
 		public event EventHandler<ProgressUpdatedEventArgs> ProgressUpdated;
 
 		private void AddWork(int count = 1)
