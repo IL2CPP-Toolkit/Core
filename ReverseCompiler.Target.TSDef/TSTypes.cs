@@ -175,6 +175,21 @@ public class TSInterface : TSTypeDefinition
 	public override void Emit(StringBuilder sb)
 	{
 		sb.Append($"export interface {Name}");
+		if (TypeParameters.Count > 0)
+		{
+			sb.Append('<');
+			bool first = true;
+			foreach(string param in TypeParameters)
+			{
+				if (!first)
+				{
+					sb.Append(", ");
+				}
+				first = true;
+				sb.Append(param);
+			}
+			sb.Append('>');
+		}
 		if (Parent != null)
 		{
 			sb.Append(" extends");
@@ -261,13 +276,21 @@ public class TSField
 		Type = type;
 	}
 	public string Name { get; set; }
-	public TSType Type { get; set; }
+	public TSTypeReference Type { get; set; }
 
 	public void Emit(StringBuilder sb)
 	{
 		string localName = Name.Split('.').Last();
-		sb.Append($"  {localName}: ");
-		Type.Emit(sb);
+		TSTypeReference fieldType = Type;
+		sb.Append($"  {localName}");
+		// nullable?
+		if (fieldType is TSGenericInstance genericInst && fieldType.Name.Name == "Nullable")
+		{
+			sb.Append('?');
+			fieldType = genericInst.GenericArguments[0];
+		}
+		sb.Append($": ");
+		fieldType.Emit(sb);
 		sb.AppendLine(";");
 	}
 }
