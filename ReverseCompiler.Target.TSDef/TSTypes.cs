@@ -1,19 +1,40 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace Il2CppToolkit.Target.TSDef;
 
-public abstract class TSType
+public class TSTypeName
 {
-	public TSType(string name)
+	public TSTypeName(string name)
 	{
-		Name = name;
+		Name = name.Split('`').First();
 	}
 	public string Name { get; set; }
 	public override string ToString()
 	{
 		return Name;
+	}
+
+	public void Emit(StringBuilder sb)
+	{
+		sb.Append(Name);
+	}
+
+	public static implicit operator TSTypeName(string name) => new(name);
+}
+
+public abstract class TSType
+{
+	public TSType(TSTypeName name)
+	{
+		Name = name;
+	}
+	public TSTypeName Name { get; set; }
+	public override string ToString()
+	{
+		return Name.ToString();
 	}
 
 	public abstract void Emit(StringBuilder sb);
@@ -33,11 +54,53 @@ public class TSTypeReference : TSType
 		Definition = tsTypeRef;
 	}
 
+	protected TSTypeReference(TSTypeName name)
+		: base(name)
+	{
+	}
+
 	public TSTypeReference? Definition { get; }
 
 	public override void Emit(StringBuilder sb)
 	{
 		sb.Append(Name);
+	}
+}
+
+public class TSExternalReference : TSTypeReference
+{
+	public TSExternalReference(TSTypeName name)
+		: base(name)
+	{ }
+}
+
+public class TSTemplateReference : TSTypeReference
+{
+	public TSTypeReference[] Parameters { get; }
+	public TSTemplateReference(TSTypeName name, params TSTypeReference[] parameters)
+		: base(name)
+	{
+		Parameters = parameters;
+	}
+
+	public override string ToString()
+	{
+		return $"{Name}<{string.Join<TSTypeReference>(", ", Parameters)}>";
+	}
+
+	public override void Emit(StringBuilder sb)
+	{
+		sb.Append(Name);
+		sb.Append('<');
+		bool first = true;
+		foreach (TSTypeReference p in Parameters)
+		{
+			if (!first)
+				sb.Append(", ");
+			first = false;
+			p.Emit(sb);
+		}
+		sb.Append('>');
 	}
 }
 
@@ -58,9 +121,21 @@ public class TSArrayTypeReference : TSTypeReference
 	}
 }
 
+public class TSDictionaryTypeReference : TSTemplateReference
+{
+	public TSTypeReference KeyType { get; }
+	public TSTypeReference ValueType { get; }
+	public TSDictionaryTypeReference(TSTypeReference keyType, TSTypeReference valueType)
+		: base("Record", keyType, valueType)
+	{
+		KeyType = keyType;
+		ValueType = valueType;
+	}
+}
+
 public abstract class TSTypeDefinition : TSType
 {
-	protected TSTypeDefinition(string name)
+	protected TSTypeDefinition(TSTypeName name)
 		: base(name)
 	{
 		_ref = new(this);
@@ -87,7 +162,7 @@ public class TSValueType : TSTypeDefinition
 
 public class TSInterface : TSTypeDefinition
 {
-	public TSInterface(string name)
+	public TSInterface(TSTypeName name)
 		: base(name)
 	{
 		Fields = new();
@@ -102,15 +177,13 @@ public class TSInterface : TSTypeDefinition
 		sb.Append($"export interface {Name}");
 		if (Parent != null)
 		{
-			sb.Append(" extends ");
+			sb.Append(" extends");
 			Parent.AsReference().Emit(sb);
 		}
-		sb.AppendLine("{");
+		sb.AppendLine(" {");
 		foreach (TSField field in Fields)
 		{
-			sb.Append($"  {field.Name}: ");
-			field.Type.Emit(sb);
-			sb.AppendLine(";");
+			field.Emit(sb);
 		}
 		sb.AppendLine("}");
 	}
@@ -118,29 +191,40 @@ public class TSInterface : TSTypeDefinition
 
 public class TSGenericInstance : TSTypeReference
 {
-	public TSGenericInstance(TSInterface genericType, List<TSTypeReference> genericArguments)
+	public TSGenericInstance(TSTypeReference genericType, List<TSTypeReference> genericArguments)
 		: base(genericType)
 	{
 		GenericType = genericType;
 		GenericArguments = genericArguments;
 	}
 
-	public TSInterface GenericType { get; }
+	public TSTypeReference GenericType { get; }
 	public List<TSTypeReference> GenericArguments { get; }
+
 	override public string ToString()
 	{
 		return $"{GenericType.Name}<{string.Join(", ", GenericArguments)}>";
 	}
-
+	
 	public override void Emit(StringBuilder sb)
 	{
-		sb.Append(ToString());
+		sb.Append(Name);
+		sb.Append('<');
+		bool first = true;
+		foreach (TSTypeReference p in GenericArguments)
+		{
+			if (!first)
+				sb.Append(", ");
+			first = false;
+			p.Emit(sb);
+		}
+		sb.Append('>');
 	}
 }
 
 public class TSEnum : TSTypeDefinition
 {
-	public TSEnum(string name)
+	public TSEnum(TSTypeName name)
 		: base(name)
 	{
 		Values = new();
@@ -178,4 +262,12 @@ public class TSField
 	}
 	public string Name { get; set; }
 	public TSType Type { get; set; }
+
+	public void Emit(StringBuilder sb)
+	{
+		string localName = Name.Split('.').Last();
+		sb.Append($"  {localName}: ");
+		Type.Emit(sb);
+		sb.AppendLine(";");
+	}
 }

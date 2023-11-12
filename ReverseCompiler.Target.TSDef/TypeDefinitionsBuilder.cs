@@ -26,6 +26,7 @@ public class TypeDefinitionsBuilder
 	private readonly IReadOnlyDictionary<Il2CppTypeDefinition, ArtifactSpecs.TypeSelectorResult> IncludedDescriptors;
 	private readonly Dictionary<Il2CppTypeEnum, TSValueType> BuiltInTypes = new();
 	private readonly Queue<TSTypeDefinition> TypesToEmit = new();
+	private readonly ReplacementTypes ReplacementTypes = new();
 
 	private Il2Cpp Il2Cpp => Context.Model.Il2Cpp;
 	private Metadata Metadata => Context.Model.Metadata;
@@ -75,14 +76,15 @@ public class TypeDefinitionsBuilder
 	protected IReadOnlyDictionary<Il2CppTypeDefinition, ArtifactSpecs.TypeSelectorResult> FilterTypes(IReadOnlyList<Func<TypeDescriptor, ArtifactSpecs.TypeSelectorResult>> typeSelectors)
 	{
 		return Context.Model.TypeDescriptors.GroupBy(
-			descriptor => descriptor.TypeDef, descriptor => typeSelectors.Select(selector => selector(descriptor)).Max())
+			descriptor => descriptor.TypeDef, 
+			descriptor => typeSelectors.Select(selector => selector(descriptor)).Max())
 			.ToDictionary(group => group.Key, group => group.Max());
 	}
 
 	public string Generate()
 	{
 		StringBuilder sb = new();
-		while (TypesToEmit.TryDequeue(out TSTypeDefinition tsDef))
+		while (TypesToEmit.TryDequeue(out TSTypeDefinition? tsDef))
 		{
 			CompleteWork();
 			Context.Logger?.LogInfo($"[{tsDef}] Emitting");
@@ -119,7 +121,7 @@ public class TypeDefinitionsBuilder
 			{
 				Queue<Il2CppTypeDefinition> currentQueue = TypeDefinitionQueue;
 				TypeDefinitionQueue = new();
-				while (currentQueue.TryDequeue(out Il2CppTypeDefinition cppTypeDef))
+				while (currentQueue.TryDequeue(out Il2CppTypeDefinition? cppTypeDef))
 				{
 					CompleteWork();
 					if (TryUseTypeDefinition(cppTypeDef, out TSTypeDefinition? tsDef) == TypeDefinitionState.Excluded)
@@ -142,7 +144,7 @@ public class TypeDefinitionsBuilder
 
 			Context.Logger?.LogInfo($"Building marked types");
 			SetAction("Compiling");
-			while (typesToBuild.TryDequeue(out Il2CppTypeDefinition cppTypeDef))
+			while (typesToBuild.TryDequeue(out Il2CppTypeDefinition? cppTypeDef))
 			{
 				CompleteWork();
 				if (TryUseTypeDefinition(cppTypeDef, out TSTypeDefinition? tsDef) == TypeDefinitionState.Excluded || tsDef == null)
@@ -200,12 +202,16 @@ public class TypeDefinitionsBuilder
 			tsDef = new TSInterface(typeName) { Parent = parentType as TSInterface };
 		}
 		TypesToEmit.Enqueue(tsDef);
-		TypeDefinitions.Add(cppTypeDef, tsDef);
 		return tsDef;
 	}
 
 	protected TypeDefinitionState TryUseTypeDefinition(Il2CppTypeDefinition cppTypeDef, out TSTypeDefinition? tsDef)
 	{
+		if (Context.Model.TryGetTypeDescriptor(cppTypeDef, out TypeDescriptor? typeDescriptor)
+			&& ReplacementTypes.TryReplaceType(typeDescriptor, out TSTypeReference? typeRef))
+		{
+			
+		}
 		if (!IncludedDescriptors.TryGetValue(cppTypeDef, out var typeSelectorResult) || typeSelectorResult == ArtifactSpecs.TypeSelectorResult.Exclude)
 		{
 			string typeName = Metadata.GetStringFromIndex(cppTypeDef.nameIndex);
@@ -284,7 +290,7 @@ public class TypeDefinitionsBuilder
 						}
 						genericArguments.Add(tsArgRef);
 					}
-					tsRef = new TSGenericInstance(tsGeneric, genericArguments);
+					tsRef = new TSGenericInstance(tsGeneric.AsReference(), genericArguments);
 					return true;
 				}
 			case Il2CppTypeEnum.IL2CPP_TYPE_SZARRAY:
@@ -341,7 +347,8 @@ public class TypeDefinitionsBuilder
 			if ((fieldAttrs.HasFlag(FieldAttributes.Literal) || fieldAttrs.HasFlag(FieldAttributes.HasDefault))
 				&& Metadata.GetFieldDefaultValueFromIndex(i, out Il2CppFieldDefaultValue cppDefaultValue)
 				&& cppDefaultValue.dataIndex != -1
-				&& Context.Model.TryGetDefaultValue(cppDefaultValue, out object defaultValue))
+				&& Context.Model.TryGetDefaultValue(cppDefaultValue, out object defaultValue)
+				&& defaultValue != null)
 			{
 				tsEnum.Values.Add(new(name, defaultValue.ToString()));
 			}

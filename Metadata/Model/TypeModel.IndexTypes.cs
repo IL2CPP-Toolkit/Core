@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -19,6 +20,7 @@ namespace Il2CppToolkit.Model
 		private readonly Dictionary<Il2CppType, ulong> m_typeToAddress = new();
 		private readonly Dictionary<int, TypeDescriptor> m_parentTypeIndexToTypeInstDescriptor = new();
 		private readonly Dictionary<int, TypeDescriptor> m_typeCache = new();
+		private readonly Dictionary<Il2CppTypeDefinition, TypeDescriptor> m_cppTypeToDescriptor = new();
 		private Dictionary<Il2CppTypeDefinition, Il2CppType[]> m_genericClassList = new();
 		private readonly List<TypeDescriptor> m_typeDescriptors = new();
 
@@ -341,6 +343,7 @@ namespace Il2CppToolkit.Model
 			}
 
 			m_typeCache.Add(typeIndex, td);
+			m_cppTypeToDescriptor.Add(typeDef, td);
 			return td;
 		}
 
@@ -407,6 +410,11 @@ namespace Il2CppToolkit.Model
 				case Il2CppTypeEnum.IL2CPP_TYPE_STRING: value = m_loader.Metadata.ReadBytes(m_loader.Metadata.ReadInt32()); return true;
 				default: value = null; return false;
 			}
+		}
+
+		public bool TryGetTypeDescriptor(Il2CppTypeDefinition cppTypeDefinition, [NotNullWhen(true)] out TypeDescriptor? typeDescriptor)
+		{
+			return m_cppTypeToDescriptor.TryGetValue(cppTypeDefinition, out typeDescriptor);
 		}
 
 		public bool TryGetDefaultValue(Il2CppFieldDefaultValue cppDefaultValue, out object value)

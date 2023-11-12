@@ -3,7 +3,6 @@
   <ItemGroup>
     <ProjectReference Include="..\Common\Common.csproj" />
     <ProjectReference Include="..\Metadata\Metadata.csproj" />
-    <ProjectReference Include="..\Runtime\Runtime.csproj" />
   </ItemGroup>
 
   <PropertyGroup>
