@@ -85,8 +85,8 @@ public class TypeDefinitionsBuilder
 	{
 		return Context.Model.TypeDescriptors.GroupBy(
 			descriptor => descriptor.TypeDef,
-			descriptor => typeSelectors.Select(selector => selector(descriptor)).Max())
-			.ToDictionary(group => group.Key, group => group.Max());
+			descriptor => typeSelectors.Select(selector => selector(descriptor)).Aggregate((a, b) => a | b))
+			.ToDictionary(group => group.Key, group => group.Aggregate((a, b) => a | b));
 	}
 
 	public string Generate()
@@ -106,7 +106,7 @@ public class TypeDefinitionsBuilder
 	{
 		foreach (var kvp in IncludedDescriptors)
 		{
-			if (kvp.Value != ArtifactSpecs.TypeSelectorResult.Include)
+			if (!kvp.Value.HasFlag(ArtifactSpecs.TypeSelectorResult.Include))
 				continue;
 			IncludeTypeDefinition(kvp.Key);
 		}
@@ -194,12 +194,6 @@ public class TypeDefinitionsBuilder
 		if (TypeDefinitions.ContainsKey(cppTypeDef))
 			throw new Exception("Type already defined");
 
-		TSTypeDefinition? parentType = null;
-		if (cppTypeDef.parentIndex != -1 && cppTypeDef.parentIndex < Metadata.typeDefs.Length)
-		{
-			TryUseTypeDefinition(Metadata.typeDefs[cppTypeDef.parentIndex], out parentType);
-		}
-
 		string typeName = Metadata.GetStringFromIndex(cppTypeDef.nameIndex);
 		int nName = 0;
 		while (UsedTypeNames.Contains(typeName))
@@ -207,13 +201,26 @@ public class TypeDefinitionsBuilder
 		UsedTypeNames.Add(typeName);
 
 		TSTypeDefinition tsDef;
-		if (cppTypeDef.IsEnum)
+		if (IncludedDescriptors.TryGetValue(cppTypeDef, out var typeSelectorResult) && typeSelectorResult.HasFlag(ArtifactSpecs.TypeSelectorResult.Nominal))
 		{
-			tsDef = new TSEnum(typeName);
+			tsDef = new TSNominalType(typeName);
 		}
 		else
 		{
-			tsDef = new TSInterface(typeName) { Parent = parentType as TSInterface };
+			TSTypeDefinition? parentType = null;
+			if (cppTypeDef.parentIndex != -1 && cppTypeDef.parentIndex < Metadata.typeDefs.Length)
+			{
+				TryUseTypeDefinition(Metadata.typeDefs[cppTypeDef.parentIndex], out parentType);
+			}
+
+			if (cppTypeDef.IsEnum)
+			{
+				tsDef = new TSEnum(typeName);
+			}
+			else
+			{
+				tsDef = new TSInterface(typeName) { Parent = parentType as TSInterface };
+			}
 		}
 		TypesToEmit.Enqueue(tsDef);
 		return tsDef;
@@ -228,7 +235,7 @@ public class TypeDefinitionsBuilder
 			return TypeDefinitionState.Excluded;
 		}
 
-		if (!IncludedDescriptors.TryGetValue(cppTypeDef, out var typeSelectorResult) || typeSelectorResult == ArtifactSpecs.TypeSelectorResult.Exclude)
+		if (!IncludedDescriptors.TryGetValue(cppTypeDef, out var typeSelectorResult) || typeSelectorResult.HasFlag(ArtifactSpecs.TypeSelectorResult.Exclude))
 		{
 			string typeName = Metadata.GetStringFromIndex(cppTypeDef.nameIndex);
 			Metadata.GetStringFromIndex(cppTypeDef.nameIndex);
@@ -457,11 +464,6 @@ public class TypeDefinitionsBuilder
 			td.Name == "System.Collections.Generic.IReadOnlyDictionary`2")
 		{
 			typeRef = Record;
-			return true;
-		}
-		if (td.Name == "Plarium.Common.Numerics.Fixed")
-		{
-			typeRef = Number;
 			return true;
 		}
 		if (td.Name == "System.Nullable`1")

@@ -112,8 +112,8 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 
 		private IReadOnlyDictionary<Il2CppTypeDefinition, ArtifactSpecs.TypeSelectorResult> FilterTypes(IReadOnlyList<Func<TypeDescriptor, ArtifactSpecs.TypeSelectorResult>> typeSelectors)
 		{
-			return m_context.Model.TypeDescriptors.GroupBy(descriptor => descriptor.TypeDef, descriptor => typeSelectors.Select(selector => selector(descriptor)).Max())
-				.ToDictionary(group => group.Key, group => group.Max());
+			return m_context.Model.TypeDescriptors.GroupBy(descriptor => descriptor.TypeDef, descriptor => typeSelectors.Select(selector => selector(descriptor)).Aggregate((a, b) => a | b))
+				.ToDictionary(group => group.Key, group => group.Aggregate((a, b) => a | b));
 		}
 	}
 }

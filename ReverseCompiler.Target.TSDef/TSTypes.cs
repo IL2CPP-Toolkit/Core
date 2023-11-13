@@ -160,6 +160,18 @@ public class TSValueType : TSTypeDefinition
 	}
 }
 
+public class TSNominalType : TSTypeDefinition
+{
+	public TSNominalType(TSTypeName name)
+		: base(name)
+	{ }
+
+	public override void Emit(StringBuilder sb)
+	{
+		sb.AppendLine($"export enum {Name} {{}} // nominal type");
+	}
+}
+
 public class TSInterface : TSTypeDefinition
 {
 	public TSInterface(TSTypeName name)
