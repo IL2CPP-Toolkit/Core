@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build"
-  xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|x64">
       <Configuration>Debug</Configuration>
@@ -48,6 +47,7 @@
     <ClInclude Include="src\MessageHandler.h" />
     <ClInclude Include="src\service\Il2CppService.h" />
     <ClInclude Include="src\service\InjectionService.h" />
+    <ClInclude Include="src\win\GlobalState.h" />
     <ClInclude Include="src\win\InjectionHook.h" />
     <ClInclude Include="src\win\Snapshot.h" />
     <ClInclude Include="src\win\WindowHelpers.h" />
@@ -68,6 +68,7 @@
     <ClCompile Include="src\service\Il2CppService.cpp" />
     <ClCompile Include="src\service\InjectionService.cpp" />
     <ClCompile Include="src\win\dllmain.cpp" />
+    <ClCompile Include="src\win\GlobalState.cpp" />
     <ClCompile Include="src\win\InjectionHook.cpp" />
     <ClCompile Include="src\win\Snapshot.cpp" />
     <ClCompile Include="src\win\WindowHelpers.cpp" />

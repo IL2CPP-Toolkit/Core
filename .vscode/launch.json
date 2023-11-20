@@ -11,6 +11,19 @@
     ],
     "configurations": [
         {
+            "name": "UnhookAll (rundll32)",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "C:\\Windows\\System32\\rundll32.exe",
+            "args": [
+                "D:\\git\\github\\IL2Cpp-Toolkit\\Core\\x64\\Debug\\Il2CppToolkit.Injection.Host.dll,UnhookAll"
+            ],
+            "stopAtEntry": false,
+            "cwd": "${fileDirname}",
+            "environment": [],
+            "console": "externalTerminal"
+        },
+        {
             "name": "Attach to Raid.exe",
             "type": "cppvsdbg",
             "request": "attach",
@@ -49,7 +62,7 @@
             "name": "Launch:Test",
             "type": "coreclr",
             "request": "launch",
-            "preLaunchTask": "build:test",
+            // "preLaunchTask": "build:test",
             // If you have changed target frameworks, make sure to update the program path.
             "program": "${workspaceFolder}/Test/bin/x64/Debug/net6.0/Il2CppToolkit.Test.dll",
             "args": [],

@@ -7,6 +7,7 @@
 #include <winapifamily.h>
 #include "win/WindowHelpers.h"
 #include "win/Snapshot.h"
+#include "win/GlobalState.h"
 #include "PublicApi.h"
 #include "InjectionHost.h"
 #include "debug.h"
@@ -54,46 +55,21 @@ std::recursive_mutex& InjectionHost::GetLock() const noexcept
 	return InjectionHostHandle{GetInstancePtr()};
 }
 
-
-void InjectionHost::RegisterProcess(uint32_t pid) noexcept
-{
-	{
-		const std::lock_guard<std::recursive_mutex> lock(GetLock());
-		DebugLog("RegisterProcess {}\n", pid);
-		m_hasSetActivePid = true;
-		m_activePids.insert(pid);
-	}
-}
-
-void InjectionHost::DeregisterProcess(uint32_t pid) noexcept
-{
-	{
-		const std::lock_guard<std::recursive_mutex> lock(GetLock());
-		DebugLog("DeregisterProcess {}\n", pid);
-		m_activePids.erase(pid);
-	}
-}
-
 void InjectionHost::Detach() noexcept
 {
+	std::thread{InjectionHost::DetachThread}.detach();
+}
+
+void InjectionHost::DetachThread() noexcept
+{
+	DebugLog("Detaching host\n");
 	InjectionHostHandle self{GetInstance()};
 	if (self)
 		self->Shutdown();
 	FreeGlobalInstance();
 }
 
-std::set<uint32_t> InjectionHost::ActivePidsSnapshot() const noexcept
-{
-	{
-		const std::lock_guard<std::recursive_mutex> lock(GetLock());
-		return std::set<uint32_t>(m_activePids);
-	}
-}
-
-void InjectionHost::KeepAlive() noexcept
-{
-	m_tpKeepAliveExpiry = std::chrono::system_clock::now() + s_hookTTL;
-}
+void InjectionHost::KeepAlive() noexcept {}
 
 void InjectionHost::ProcessMessages() noexcept
 {
@@ -106,48 +82,26 @@ void InjectionHost::ProcessMessages() noexcept
 	GetInstancePtr()->m_spServer->Wait();
 }
 
-/* static */ void InjectionHost::WatcherThread() noexcept
-{
-	InjectionHostHandle self{GetInstance()};
-	while (true)
-	{
-		std::set<uint32_t> activePids = self->ActivePidsSnapshot();
-		if (self->m_hasSetActivePid && activePids.size() == 0)
-		{
-			DebugLog("No registered processes remain\n");
-			break;
-		}
-
-		Snapshot snapshot{0};
-		for (const auto pid : activePids)
-		{
-			if (!snapshot.FindProcess(pid))
-				self->DeregisterProcess(pid);
-		}
-		std::this_thread::sleep_for(s_hookTTL);
-	}
-	FreeGlobalInstance();
-}
-
 InjectionHost::InjectionHost() noexcept
-	: m_tpKeepAliveExpiry{std::chrono::system_clock::now() + s_hookTTL}
-	, m_executionQueue{}
+	: m_executionQueue{}
 	, m_spInjectionService{std::make_unique<InjectionServiceImpl>()}
 	, m_spIl2cppService{std::make_unique<Il2CppServiceImpl>(m_executionQueue)}
 {
+	PublicState state{};
 	DebugLog("InjectionHost starting\n");
 	ServerBuilder builder;
 	builder.SetMaxSendMessageSize(-1);
 	builder.SetMaxReceiveMessageSize(-1);
-	builder.AddListeningPort("0.0.0.0:0", InsecureServerCredentials(), &PublicState::value.port);
+	builder.AddListeningPort("0.0.0.0:0", InsecureServerCredentials(), &state.port);
 	builder.RegisterService(m_spInjectionService.get());
 	builder.RegisterService(m_spIl2cppService.get());
 	m_spServer = builder.BuildAndStart();
-	m_thWatcher = std::thread{InjectionHost::WatcherThread};
 	m_thServer = std::thread{InjectionHost::ServerThread};
-	DebugLog("InjectionHost started on port {}!\n", PublicState::value.port);
+	DebugLog("InjectionHost started on port {}!\n", state.port);
 
 	DWORD dwPid{GetCurrentProcessId()};
+	GlobalState::Instance()->SetGameProcessState(dwPid, state);
+
 	m_hwndMain = GetMainWindowForProcessId(dwPid, L"UnityWndClass");
 	if (m_hwndMain)
 	{
@@ -174,26 +128,17 @@ InjectionHost::~InjectionHost() noexcept
 void InjectionHost::Shutdown() noexcept
 {
 	DebugLog("InjectionHost::Shutdown\n");
-	{
-		const std::lock_guard<std::recursive_mutex> lock(GetLock());
-		m_activePids.clear();
-	}
 
 	if (m_spServer)
 	{
+		DWORD dwPid{GetCurrentProcessId()};
+		GlobalState::Instance()->ClearGameProcessState(dwPid);
+
 		const std::chrono::system_clock::time_point deadline{std::chrono::system_clock::now() + std::chrono::milliseconds(100)};
 		m_spServer->Shutdown(deadline);
 		m_executionQueue.Shutdown();
 		m_thServer.join();
-
-		// if shutting down on watcher thread, detach (to avoid `abort`)
-		if (std::this_thread::get_id() == m_thWatcher.get_id())
-			m_thWatcher.detach();
-		else
-			m_thWatcher.join();
-
 		m_spServer.reset();
-
 		m_spIl2cppService.reset();
 	}
 }
