@@ -7,7 +7,6 @@ namespace Il2CppToolkit.Injection.Client
 {
 	public class InjectionClient : IDisposable
 	{
-		private readonly uint CurrentPid;
 		private readonly uint TargetPid;
 		private bool IsDisposed;
 		private GrpcChannel Channel;
@@ -18,11 +17,6 @@ namespace Il2CppToolkit.Injection.Client
 		public InjectionClient(Process process)
 		{
 			TargetPid = (uint)process.Id;
-#if NET6_0_OR_GREATER
-			CurrentPid = (uint)Environment.ProcessId;
-#else
-			CurrentPid = (uint)Process.GetCurrentProcess().Id;
-#endif
 			Hook = new(TargetPid);
 			Channel = GrpcChannel.ForAddress($"http://localhost:{Hook.State.port}", new GrpcChannelOptions()
 			{
@@ -30,7 +24,6 @@ namespace Il2CppToolkit.Injection.Client
 			});
 			Il2Cpp = new(Channel);
 			Injection = new(Channel);
-			Injection.RegisterProcess(new RegisterProcessRequest { Pid = (uint)CurrentPid });
 		}
 
 		protected virtual void Dispose(bool disposing)
@@ -41,7 +34,6 @@ namespace Il2CppToolkit.Injection.Client
 				{
 					try
 					{
-						Injection.DeregisterProcess(new RegisterProcessRequest { Pid = (uint)CurrentPid });
 						Channel.Dispose();
 					}
 					catch { }

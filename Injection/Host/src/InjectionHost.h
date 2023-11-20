@@ -29,30 +29,22 @@ public:
 
 	void Shutdown() noexcept;
 
-	void RegisterProcess(uint32_t pid) noexcept;
-	void DeregisterProcess(uint32_t pid) noexcept;
 	void Detach() noexcept;
 
 private:
+	static void DetachThread() noexcept;
 	static void ServerThread() noexcept;
-	static void WatcherThread() noexcept;
 	static const std::chrono::milliseconds s_hookTTL;
 	std::recursive_mutex& GetLock() const noexcept;
-
-	std::set<uint32_t> ActivePidsSnapshot() const noexcept;
 
 	std::unique_ptr<grpc::Server> m_spServer;
 	std::unique_ptr<Il2CppServiceImpl> m_spIl2cppService;
 	std::unique_ptr<InjectionServiceImpl> m_spInjectionService;
 
 	MessageHandlerHook m_messageHandlerHook;
-	std::set<uint32_t> m_activePids;
-	bool m_hasSetActivePid{false};
-	std::thread m_thWatcher;
 	std::thread m_thServer;
 	std::string m_originalTitle;
 	HWND m_hwndMain{};
-	std::chrono::system_clock::time_point m_tpKeepAliveExpiry;
 	std::recursive_mutex m_lock;
 	ExecutionQueue m_executionQueue;
 };

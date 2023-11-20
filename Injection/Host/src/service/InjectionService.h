@@ -9,16 +9,6 @@ class InjectionServiceImpl : public il2cppservice::InjectionService::Service
 public:
 	InjectionServiceImpl() noexcept;
 
-	::grpc::Status RegisterProcess(
-		::grpc::ServerContext* context,
-		const ::il2cppservice::RegisterProcessRequest* request,
-		::il2cppservice::RegisterProcessResponse* response) noexcept override;
-
-	::grpc::Status DeregisterProcess(
-		::grpc::ServerContext* context,
-		const ::il2cppservice::RegisterProcessRequest* request,
-		::il2cppservice::RegisterProcessResponse* response) noexcept override;
-
 	::grpc::Status Detach(
 		::grpc::ServerContext* context,
 		const ::il2cppservice::DetachRequest* request,

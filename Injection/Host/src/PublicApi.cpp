@@ -7,58 +7,73 @@
 #include "win/Snapshot.h"
 #include "win/InjectionHook.h"
 #include "win/WindowHelpers.h"
+#include "win/GlobalState.h"
 #include "MessageHandler.h"
 #include "PublicApi.h"
 
+#include <grpc/grpc.h>
+#include <grpcpp/channel.h>
+#include <grpcpp/client_context.h>
+#include <grpcpp/create_channel.h>
+#include "il2cpp.pb.h"
+#include "il2cpp.grpc.pb.h"
+
 std::unordered_map<DWORD, std::unique_ptr<HookHandle>> g_hookMap;
 
-/*static*/ PublicState PublicState::value{0};
+void CALLBACK HookProcess(HWND hWnd, HINSTANCE hInst, LPWSTR lpszCmdLine, int nCmdShow)
+{
+	if (lstrlenW(lpszCmdLine) == 0)
+		return;
+	int pid = std::stoi(lpszCmdLine);
+	if (pid <= 0)
+		return;
+
+	InjectHook(pid);
+}
+
+void CALLBACK UnhookAll(HWND hWnd, HINSTANCE hInst, LPWSTR lpszCmdLine, int nCmdShow)
+{
+	GlobalState* pGlobal{GlobalState::Instance()};
+	if (!pGlobal)
+		return;
+
+	std::vector<GameProcessHook> hooks = pGlobal->GetSnapshot();
+	for (auto& hook : hooks)
+	{
+		std::string target{"localhost:"};
+		target.append(std::to_string(hook.state.port));
+		il2cppservice::InjectionService::Stub stub{::grpc::CreateChannel(target, grpc::InsecureChannelCredentials())};
+		::grpc::ClientContext context;
+		::il2cppservice::DetachRequest req;
+		::il2cppservice::DetachResponse res;
+		stub.Detach(&context, req, &res);
+	}
+}
 
 extern "C" __declspec(dllexport) HRESULT WINAPI GetState(DWORD procId, PublicState* pState, long timeoutMs) noexcept
 {
 	HMODULE thisModule{};
 
-	BOOL getHandleResult{GetModuleHandleEx(
-		GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
-		static_cast<LPCWSTR>(static_cast<void*>(&InjectHook)),
-		&thisModule)};
-	if (getHandleResult == 0)
-		return E_NOINTERFACE;
-
-	wchar_t wzModuleName[MAX_PATH + 1];
-	wzModuleName[0] = 0;
-	if (FAILED(GetModuleFileName(thisModule, &wzModuleName[0], MAX_PATH)))
-		return E_NOINTERFACE;
-
-	Snapshot snapshot{procId};
-	if (!snapshot.FindModule(procId, wzModuleName))
-		return E_NOINTERFACE;
-
-	const byte* baseAddr{snapshot.Module().modBaseAddr};
-	const size_t stateOffset{reinterpret_cast<size_t>(&PublicState::value) - reinterpret_cast<size_t>(thisModule)};
-	const byte* remoteAddr{baseAddr + stateOffset};
-	SmartHandle hProcess{OpenProcess(PROCESS_VM_READ | PROCESS_QUERY_INFORMATION, FALSE, procId)};
-	size_t readBytes{};
-
-	// scan for a port number until timeoutMs
+	HRESULT result{E_NOINTERFACE};
 	std::chrono::system_clock::time_point deadline{std::chrono::system_clock::now() + std::chrono::milliseconds{timeoutMs}};
-	int count{0};
-	bool lastResult{};
+	GlobalState* pGlobal{GlobalState::Instance()};
+	if (!pGlobal)
+		return E_NOINTERFACE;
+
 	do
 	{
-		++count;
-		lastResult = ReadProcessMemory(hProcess, remoteAddr, pState, sizeof(PublicState), &readBytes);
-		if (!lastResult || count > 1) // skip first wait if we were successful
-			std::this_thread::sleep_for(std::chrono::milliseconds{10});
-	} while (std::chrono::system_clock::now() < deadline && pState->port <= 0 && sizeof(PublicState) != readBytes);
+		PublicState state{pGlobal->GetGameProcessState(procId)};
+		if (state.port == -1)
+			continue;
 
-	if (!lastResult)
-	{
-		DWORD err{GetLastError()};
-		return err != 0 ? err : ERROR_TIMEOUT;
-	}
+		// found:
+		if (pState)
+			*pState = state; // copy state
 
-	return S_OK;
+		return S_OK;
+	} while (std::chrono::system_clock::now() < deadline);
+
+	return ERROR_TIMEOUT;
 }
 
 extern "C" __declspec(dllexport) HRESULT WINAPI InjectHook(DWORD procId) noexcept
@@ -87,7 +102,14 @@ extern "C" __declspec(dllexport) HRESULT WINAPI InjectHook(DWORD procId) noexcep
 	if (hwndMain)
 		SendMessage(hwndMain, WM_NULL, 0, 0);
 
-	return S_OK;
+	HRESULT getStateResult{};
+	do
+	{
+		PublicState state;
+		getStateResult = GetState(procId, &state, 30000);
+	} while (getStateResult != S_OK);
+
+	return getStateResult;
 }
 
 extern "C" __declspec(dllexport) HRESULT WINAPI ReleaseHook(DWORD procId) noexcept
