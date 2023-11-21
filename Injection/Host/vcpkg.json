@@ -4,12 +4,12 @@
   "dependencies": [
     {
       "name": "grpc",
-      "version>=": "1.51.1",
+      "version>=": "1.41.0",
       "platform": "windows & static & x64"
     },
     {
       "name": "protobuf",
-      "version>=": "3.21.12",
+      "version>=": "3.19.4",
       "platform": "windows & static & x64"
     },
     {
