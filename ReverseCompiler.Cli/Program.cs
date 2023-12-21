@@ -30,8 +30,14 @@ namespace Il2CppToolkit.ReverseCompiler.Cli
 			[Option('m', "metadata", Required = true, HelpText = "Path to global-metadata.dat")]
 			public string MetadataPath { get; set; }
 
-			[Option('i', "include", Required = false, Separator = ',', HelpText = "Types to include")]
+			[Option('i', "include", Required = false, Separator = ',', HelpText = "Types to include.")]
 			public IEnumerable<string> IncludeTypes { get; set; }
+
+			[Option('x', "exclude", Required = false, Separator = ',', HelpText = "Types to exclude.")]
+			public IEnumerable<string> ExcludeTypes { get; set; }
+
+			[Option('b', "nominal-types", Required = false, Separator = ',', HelpText = "Types to include as nominal (opaque), if supported.")]
+			public IEnumerable<string> NominalTypes { get; set; }
 
 			[Option('o', "out-path", Required = true, HelpText = "Output file path")]
 			public string OutputPath { get; set; }
@@ -111,13 +117,9 @@ namespace Il2CppToolkit.ReverseCompiler.Cli
 				bool allTypes = opts.IncludeTypes.Count() == 0;
 				compiler.AddConfiguration(
 					ArtifactSpecs.TypeSelectors.MakeValue(new List<Func<TypeDescriptor, ArtifactSpecs.TypeSelectorResult>>{
-						{td => !td.FullName.StartsWith("<")
-							&& !td.FullName.StartsWith("System.")
-							&& !(td.TypeDef.IsEnum && td.GenericParameterNames?.Length > 0)
-							&& (allTypes || opts.IncludeTypes.Contains(td.Name))
-								? ArtifactSpecs.TypeSelectorResult.Include
-								: ArtifactSpecs.TypeSelectorResult.Default}
-
+						{td => opts.IncludeTypes.Any(typeName => td.Name.Contains(typeName)) ? ArtifactSpecs.TypeSelectorResult.Include : ArtifactSpecs.TypeSelectorResult.None},
+						{td => opts.ExcludeTypes.Any(typeName => td.Name.Contains(typeName)) ? ArtifactSpecs.TypeSelectorResult.Exclude : ArtifactSpecs.TypeSelectorResult.None},
+						{td => opts.NominalTypes.Any(typeName => td.Name.Contains(typeName)) ? ArtifactSpecs.TypeSelectorResult.Nominal : ArtifactSpecs.TypeSelectorResult.None},
 					}),
 					ArtifactSpecs.AssemblyName.MakeValue(opts.AssemblyName),
 					ArtifactSpecs.AssemblyVersion.MakeValue(Version.Parse(opts.AssemblyVersion)),

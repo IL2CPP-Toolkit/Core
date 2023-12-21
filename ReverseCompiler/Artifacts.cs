@@ -7,11 +7,13 @@ namespace Il2CppToolkit.ReverseCompiler
 {
     public static class ArtifactSpecs
     {
+        [Flags]
         public enum TypeSelectorResult
         {
-            Default = 0,
-            Include = 1,
-            Exclude = 2,
+            None = 0,
+            Include = 1 << 0,
+            Nominal = 1 << 1,
+            Exclude = 1 << 2,
         }
         public static SynchronousVariableSpecification<IReadOnlyList<Func<TypeDescriptor, TypeSelectorResult>>> TypeSelectors = new("TypeSelectors");
         public static SynchronousVariableSpecification<string> AssemblyName = new("AssemblyName");

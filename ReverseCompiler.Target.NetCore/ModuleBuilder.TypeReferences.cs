@@ -47,7 +47,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 		{
 			foreach (var kvp in IncludedDescriptors)
 			{
-				if (kvp.Value != ArtifactSpecs.TypeSelectorResult.Include)
+				if (!kvp.Value.HasFlag(ArtifactSpecs.TypeSelectorResult.Include))
 					continue;
 				IncludeTypeDefinition(kvp.Key);
 			}
@@ -60,7 +60,7 @@ namespace Il2CppToolkit.ReverseCompiler.Target.NetCore
 
 		private TypeReference UseTypeDefinition(Il2CppTypeDefinition cppTypeDef)
 		{
-			if (!IncludedDescriptors.TryGetValue(cppTypeDef, out var typeSelectorResult) || typeSelectorResult == ArtifactSpecs.TypeSelectorResult.Exclude)
+			if (!IncludedDescriptors.TryGetValue(cppTypeDef, out var typeSelectorResult) || typeSelectorResult.HasFlag(ArtifactSpecs.TypeSelectorResult.Exclude))
 			{
 				string typeName = Metadata.GetStringFromIndex(cppTypeDef.nameIndex);
 				Context.Logger?.LogInfo($"Excluding '{typeName}' based on exclusion rule");
