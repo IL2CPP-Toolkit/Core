@@ -204,7 +204,7 @@ public class TSInterface : TSTypeDefinition
 		}
 		if (Parent != null)
 		{
-			sb.Append(" extends");
+			sb.Append(" extends ");
 			Parent.AsReference().Emit(sb);
 		}
 		sb.AppendLine(" {");

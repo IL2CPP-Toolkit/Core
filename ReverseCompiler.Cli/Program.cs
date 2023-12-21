@@ -39,9 +39,6 @@ namespace Il2CppToolkit.ReverseCompiler.Cli
 			[Option('b', "nominal-types", Required = false, Separator = ',', HelpText = "Types to include as nominal (opaque), if supported.")]
 			public IEnumerable<string> NominalTypes { get; set; }
 
-			[Option('m', "implicit-types", Required = false, Separator = ',', HelpText = "Types to include only if referenced by another included type.")]
-			public IEnumerable<string> ImplicitTypes { get; set; }
-
 			[Option('o', "out-path", Required = true, HelpText = "Output file path")]
 			public string OutputPath { get; set; }
 
@@ -121,6 +118,8 @@ namespace Il2CppToolkit.ReverseCompiler.Cli
 				compiler.AddConfiguration(
 					ArtifactSpecs.TypeSelectors.MakeValue(new List<Func<TypeDescriptor, ArtifactSpecs.TypeSelectorResult>>{
 						{td => opts.IncludeTypes.Any(typeName => td.Name.Contains(typeName)) ? ArtifactSpecs.TypeSelectorResult.Include : ArtifactSpecs.TypeSelectorResult.None},
+						{td => opts.ExcludeTypes.Any(typeName => td.Name.Contains(typeName)) ? ArtifactSpecs.TypeSelectorResult.Exclude : ArtifactSpecs.TypeSelectorResult.None},
+						{td => opts.NominalTypes.Any(typeName => td.Name.Contains(typeName)) ? ArtifactSpecs.TypeSelectorResult.Nominal : ArtifactSpecs.TypeSelectorResult.None},
 					}),
 					ArtifactSpecs.AssemblyName.MakeValue(opts.AssemblyName),
 					ArtifactSpecs.AssemblyVersion.MakeValue(Version.Parse(opts.AssemblyVersion)),

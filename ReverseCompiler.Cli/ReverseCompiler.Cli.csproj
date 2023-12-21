@@ -1,34 +1,37 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <ItemGroup>
-    <ProjectReference Include="..\Common\Common.csproj" />
-    <ProjectReference Include="..\Metadata\Metadata.csproj" />
-    <ProjectReference Include="..\ReverseCompiler\ReverseCompiler.csproj" />
-    <ProjectReference Include="..\ReverseCompiler.Target.NetCore\ReverseCompiler.Target.NetCore.csproj" />
-    <ProjectReference Include="..\ReverseCompiler.Target.TSDef\ReverseCompiler.Target.TSDef.csproj" />
-    <ProjectReference Include="..\Runtime\Runtime.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\Common\Common.csproj" />
+		<ProjectReference Include="..\Metadata\Metadata.csproj" />
+		<ProjectReference Include="..\ReverseCompiler\ReverseCompiler.csproj" />
+		<ProjectReference Include="..\ReverseCompiler.Target.NetCore\ReverseCompiler.Target.NetCore.csproj" />
+		<ProjectReference Include="..\ReverseCompiler.Target.TSDef\ReverseCompiler.Target.TSDef.csproj" />
+		<ProjectReference Include="..\Runtime\Runtime.csproj" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="CommandLineParser" Version="2.8.0" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="CommandLineParser" Version="2.8.0" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <None Update="test.config">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
+	<ItemGroup>
+		<None Update="test.config">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
 
-  <PropertyGroup>
-    <TargetFrameworks>net6.0;net7.0</TargetFrameworks>
-    <LangVersion>10.0</LangVersion>
-    <OutputType>Exe</OutputType>
-    <AssemblyName>Il2CppToolkit.ReverseCompiler.Cli</AssemblyName>
-    <RootNamespace>Il2CppToolkit.ReverseCompiler.Cli</RootNamespace>
-    <RepositoryUrl>https://github.com/IL2CPP-Toolkit/Core</RepositoryUrl>
-    <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
-    <Platforms>x64</Platforms>
-    <RuntimeIdentifiers>win7-x64</RuntimeIdentifiers>
-  </PropertyGroup>
-
+	<PropertyGroup>
+		<TargetFrameworks>net6.0;net7.0</TargetFrameworks>
+		<LangVersion>10.0</LangVersion>
+		<OutputType>Exe</OutputType>
+		<AssemblyName>Il2CppToolkit.ReverseCompiler.Cli</AssemblyName>
+		<RootNamespace>Il2CppToolkit.ReverseCompiler.Cli</RootNamespace>
+		<RepositoryUrl>https://github.com/IL2CPP-Toolkit/Core</RepositoryUrl>
+		<AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
+		<Platforms>x64</Platforms>
+		<RuntimeIdentifiers>win7-x64</RuntimeIdentifiers>
+	</PropertyGroup>
+	<PropertyGroup>
+		<PackAsTool>true</PackAsTool>
+		<ToolCommandName>il2cppre</ToolCommandName>
+	</PropertyGroup>
 </Project>
