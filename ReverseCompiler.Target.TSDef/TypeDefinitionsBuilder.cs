@@ -1,12 +1,13 @@
 using Il2CppToolkit.Model;
 using Il2CppToolkit.ReverseCompiler;
-using Mono.Cecil;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Diagnostics.CodeAnalysis;
 using Il2CppToolkit.Common.Errors;
 using System.Text;
+using System.Reflection;
+using System.Text.RegularExpressions;
 
 namespace Il2CppToolkit.Target.TSDef;
 
@@ -22,13 +23,21 @@ public class TypeDefinitionsBuilder
 	private readonly ICompileContext Context;
 	private readonly IReadOnlyList<Func<TypeDescriptor, ArtifactSpecs.TypeSelectorResult>> TypeSelectors;
 	private Queue<Il2CppTypeDefinition> TypeDefinitionQueue = new();
+	private readonly HashSet<Il2CppTypeDefinition> VisitedTypes = new();
+	private readonly HashSet<string> UsedTypeNames = new();
 	private readonly Dictionary<Il2CppTypeDefinition, TSTypeDefinition> TypeDefinitions = new();
 	private readonly IReadOnlyDictionary<Il2CppTypeDefinition, ArtifactSpecs.TypeSelectorResult> IncludedDescriptors;
 	private readonly Dictionary<Il2CppTypeEnum, TSValueType> BuiltInTypes = new();
 	private readonly Queue<TSTypeDefinition> TypesToEmit = new();
+	private readonly TSExternalReference Record = new("Record");
+	private readonly TSExternalReference Array = new("Array");
+	private readonly TSExternalReference Nullable = new("Nullable");
+	private readonly TSExternalReference Date = new("Date");
+	private readonly TSExternalReference Number = new("number");
 
 	private Il2Cpp Il2Cpp => Context.Model.Il2Cpp;
 	private Metadata Metadata => Context.Model.Metadata;
+
 
 	#region Progress
 	private int Completed = 0;
@@ -75,14 +84,15 @@ public class TypeDefinitionsBuilder
 	protected IReadOnlyDictionary<Il2CppTypeDefinition, ArtifactSpecs.TypeSelectorResult> FilterTypes(IReadOnlyList<Func<TypeDescriptor, ArtifactSpecs.TypeSelectorResult>> typeSelectors)
 	{
 		return Context.Model.TypeDescriptors.GroupBy(
-			descriptor => descriptor.TypeDef, descriptor => typeSelectors.Select(selector => selector(descriptor)).Max())
-			.ToDictionary(group => group.Key, group => group.Max());
+			descriptor => descriptor.TypeDef,
+			descriptor => typeSelectors.Select(selector => selector(descriptor)).Aggregate((a, b) => a | b))
+			.ToDictionary(group => group.Key, group => group.Aggregate((a, b) => a | b));
 	}
 
 	public string Generate()
 	{
 		StringBuilder sb = new();
-		while (TypesToEmit.TryDequeue(out TSTypeDefinition tsDef))
+		while (TypesToEmit.TryDequeue(out TSTypeDefinition? tsDef))
 		{
 			CompleteWork();
 			Context.Logger?.LogInfo($"[{tsDef}] Emitting");
@@ -96,7 +106,7 @@ public class TypeDefinitionsBuilder
 	{
 		foreach (var kvp in IncludedDescriptors)
 		{
-			if (kvp.Value != ArtifactSpecs.TypeSelectorResult.Include)
+			if (!kvp.Value.HasFlag(ArtifactSpecs.TypeSelectorResult.Include))
 				continue;
 			IncludeTypeDefinition(kvp.Key);
 		}
@@ -119,7 +129,7 @@ public class TypeDefinitionsBuilder
 			{
 				Queue<Il2CppTypeDefinition> currentQueue = TypeDefinitionQueue;
 				TypeDefinitionQueue = new();
-				while (currentQueue.TryDequeue(out Il2CppTypeDefinition cppTypeDef))
+				while (currentQueue.TryDequeue(out Il2CppTypeDefinition? cppTypeDef))
 				{
 					CompleteWork();
 					if (TryUseTypeDefinition(cppTypeDef, out TSTypeDefinition? tsDef) == TypeDefinitionState.Excluded)
@@ -134,7 +144,8 @@ public class TypeDefinitionsBuilder
 					InitializeTypeDefinition(cppTypeDef, tsDef);
 
 					Context.Logger?.LogInfo($"[{tsDef}] Marked->Build");
-					typesToBuild.Enqueue(cppTypeDef);
+					if (VisitedTypes.Add(cppTypeDef))
+						typesToBuild.Enqueue(cppTypeDef);
 					AddWork();
 				}
 			}
@@ -142,7 +153,7 @@ public class TypeDefinitionsBuilder
 
 			Context.Logger?.LogInfo($"Building marked types");
 			SetAction("Compiling");
-			while (typesToBuild.TryDequeue(out Il2CppTypeDefinition cppTypeDef))
+			while (typesToBuild.TryDequeue(out Il2CppTypeDefinition? cppTypeDef))
 			{
 				CompleteWork();
 				if (TryUseTypeDefinition(cppTypeDef, out TSTypeDefinition? tsDef) == TypeDefinitionState.Excluded || tsDef == null)
@@ -154,6 +165,7 @@ public class TypeDefinitionsBuilder
 				if (tsDef is TSInterface tsInterface)
 				{
 					DefineProperties(cppTypeDef, tsInterface);
+					DefineFields(cppTypeDef, tsInterface);
 				}
 				else if (tsDef is TSEnum tsEnum)
 				{
@@ -182,33 +194,51 @@ public class TypeDefinitionsBuilder
 		if (TypeDefinitions.ContainsKey(cppTypeDef))
 			throw new Exception("Type already defined");
 
-		TSTypeDefinition? parentType = null;
-		if (cppTypeDef.parentIndex != -1 && cppTypeDef.parentIndex < Metadata.typeDefs.Length)
-		{
-			TryUseTypeDefinition(Metadata.typeDefs[cppTypeDef.parentIndex], out parentType);
-		}
-
 		string typeName = Metadata.GetStringFromIndex(cppTypeDef.nameIndex);
+		int nName = 0;
+		while (UsedTypeNames.Contains(typeName))
+			typeName = $"{typeName}_{++nName}";
+		UsedTypeNames.Add(typeName);
 
 		TSTypeDefinition tsDef;
-		if (cppTypeDef.IsEnum)
+		if (IncludedDescriptors.TryGetValue(cppTypeDef, out var typeSelectorResult) && typeSelectorResult.HasFlag(ArtifactSpecs.TypeSelectorResult.Nominal))
 		{
-			tsDef = new TSEnum(typeName);
+			tsDef = new TSNominalType(typeName);
 		}
 		else
 		{
-			tsDef = new TSInterface(typeName) { Parent = parentType as TSInterface };
+			TSTypeDefinition? parentType = null;
+			if (cppTypeDef.parentIndex != -1 && cppTypeDef.parentIndex < Metadata.typeDefs.Length)
+			{
+				TryUseTypeDefinition(Metadata.typeDefs[cppTypeDef.parentIndex], out parentType);
+			}
+
+			if (cppTypeDef.IsEnum)
+			{
+				tsDef = new TSEnum(typeName);
+			}
+			else
+			{
+				tsDef = new TSInterface(typeName) { Parent = parentType as TSInterface };
+			}
 		}
 		TypesToEmit.Enqueue(tsDef);
-		TypeDefinitions.Add(cppTypeDef, tsDef);
 		return tsDef;
 	}
 
 	protected TypeDefinitionState TryUseTypeDefinition(Il2CppTypeDefinition cppTypeDef, out TSTypeDefinition? tsDef)
 	{
-		if (!IncludedDescriptors.TryGetValue(cppTypeDef, out var typeSelectorResult) || typeSelectorResult == ArtifactSpecs.TypeSelectorResult.Exclude)
+		string typeNamespace = Metadata.GetStringFromIndex(cppTypeDef.namespaceIndex);
+		if (Regex.IsMatch(typeNamespace, @"^System(\.|$)"))
+		{
+			tsDef = null;
+			return TypeDefinitionState.Excluded;
+		}
+
+		if (!IncludedDescriptors.TryGetValue(cppTypeDef, out var typeSelectorResult) || typeSelectorResult.HasFlag(ArtifactSpecs.TypeSelectorResult.Exclude))
 		{
 			string typeName = Metadata.GetStringFromIndex(cppTypeDef.nameIndex);
+			Metadata.GetStringFromIndex(cppTypeDef.nameIndex);
 			Context.Logger?.LogInfo($"Excluding '{typeName}' based on exclusion rule");
 			tsDef = null;
 			return TypeDefinitionState.Excluded;
@@ -222,6 +252,23 @@ public class TypeDefinitionsBuilder
 		if (value == null)
 			throw new StructuredException<CompilerError>(CompilerError.InternalError, "Value is null");
 		return value;
+	}
+
+	protected bool TryUseTypeReference(Il2CppTypeDefinition cppTypeDef, [NotNullWhen(true)] out TSTypeReference? tsRef)
+	{
+		if (Context.Model.TryGetTypeDescriptor(cppTypeDef, out TypeDescriptor? typeDescriptor)
+			&& TryReplaceType(typeDescriptor, out tsRef))
+		{
+			return true;
+		}
+
+		if (TryUseTypeDefinition(cppTypeDef, out TSTypeDefinition? tsDef) == TypeDefinitionState.Excluded)
+		{
+			tsRef = null;
+			return false;
+		}
+		tsRef = AssertDefined(tsDef).AsReference();
+		return true;
 	}
 
 	protected bool TryUseTypeReference(Il2CppType cppType, [NotNullWhen(true)] out TSTypeReference? tsRef)
@@ -238,13 +285,7 @@ public class TypeDefinitionsBuilder
 			case Il2CppTypeEnum.IL2CPP_TYPE_VALUETYPE:
 				{
 					Il2CppTypeDefinition cppTypeDef = Context.Model.GetTypeDefinitionFromIl2CppType(cppType);
-					if (TryUseTypeDefinition(cppTypeDef, out TSTypeDefinition? tsDef) == TypeDefinitionState.Excluded)
-					{
-						tsRef = null;
-						return false;
-					}
-					tsRef = AssertDefined(tsDef).AsReference();
-					return true;
+					return TryUseTypeReference(cppTypeDef, out tsRef);
 				}
 			case Il2CppTypeEnum.IL2CPP_TYPE_ARRAY:
 				{
@@ -263,13 +304,12 @@ public class TypeDefinitionsBuilder
 				{
 					Il2CppGenericClass cppGenericClass = Context.Model.Il2Cpp.MapVATR<Il2CppGenericClass>(cppType.data.generic_class);
 					Il2CppTypeDefinition cppTypeDef = Context.Model.GetGenericClassTypeDefinition(cppGenericClass);
-					if (TryUseTypeDefinition(cppTypeDef, out TSTypeDefinition? tsDef) == TypeDefinitionState.Excluded)
+
+					if (!TryUseTypeReference(cppTypeDef, out TSTypeReference? tsGeneric))
 					{
 						tsRef = null;
 						return false;
 					}
-					if (tsDef is not TSInterface tsGeneric)
-						throw new StructuredException<CompilerError>(CompilerError.InternalError, "Generic class is not an interface");
 
 					Il2CppGenericInst cppGenericInst = Context.Model.Il2Cpp.MapVATR<Il2CppGenericInst>(cppGenericClass.context.class_inst);
 					ulong[] pointers = Context.Model.Il2Cpp.MapVATR<ulong>(cppGenericInst.type_argv, cppGenericInst.type_argc);
@@ -341,7 +381,8 @@ public class TypeDefinitionsBuilder
 			if ((fieldAttrs.HasFlag(FieldAttributes.Literal) || fieldAttrs.HasFlag(FieldAttributes.HasDefault))
 				&& Metadata.GetFieldDefaultValueFromIndex(i, out Il2CppFieldDefaultValue cppDefaultValue)
 				&& cppDefaultValue.dataIndex != -1
-				&& Context.Model.TryGetDefaultValue(cppDefaultValue, out object defaultValue))
+				&& Context.Model.TryGetDefaultValue(cppDefaultValue, out object defaultValue)
+				&& defaultValue != null)
 			{
 				tsEnum.Values.Add(new(name, defaultValue.ToString()));
 			}
@@ -357,13 +398,40 @@ public class TypeDefinitionsBuilder
 			Il2CppPropertyDefinition cppPropertyDef = Metadata.propertyDefs[i];
 			if (cppPropertyDef.get < 0)
 				continue;
+
 			string name = Metadata.GetStringFromIndex(cppPropertyDef.nameIndex);
 			Il2CppMethodDefinition cppMethodDef = Metadata.methodDefs[cppTypeDef.methodStart + cppPropertyDef.get];
 			Il2CppType cppReturnType = Il2Cpp.Types[cppMethodDef.returnType];
+			MethodAttributes attrs = (MethodAttributes)cppMethodDef.flags;
+
+			if (!attrs.HasFlag(MethodAttributes.Public) || (attrs & MethodAttributes.Static) != 0)
+				continue;
+
 			if (!TryUseTypeReference(cppReturnType, out TSTypeReference? tsRef))
 				continue;
 
 			tsInterface.Fields.Add(new(name, tsRef));
+		}
+	}
+
+	private void DefineFields(Il2CppTypeDefinition cppTypeDef, TSInterface tsInterface)
+	{
+		int fieldEnd = cppTypeDef.fieldStart + cppTypeDef.field_count;
+		for (var i = cppTypeDef.fieldStart; i < fieldEnd; ++i)
+		{
+
+			Il2CppFieldDefinition cppFieldDef = Metadata.fieldDefs[i];
+			Il2CppType cppFieldType = Il2Cpp.Types[cppFieldDef.typeIndex];
+			string fieldName = Metadata.GetStringFromIndex(cppFieldDef.nameIndex);
+			FieldAttributes fieldAttrs = (FieldAttributes)cppFieldType.attrs;
+			if (!fieldAttrs.HasFlag(FieldAttributes.Public)
+				|| (fieldAttrs & (FieldAttributes.Static | FieldAttributes.SpecialName | FieldAttributes.RTSpecialName | FieldAttributes.Literal)) != 0)
+				continue;
+
+			if (!TryUseTypeReference(cppFieldType, out TSTypeReference? tsRef))
+				continue;
+
+			tsInterface.Fields.Add(new(fieldName, tsRef));
 		}
 	}
 
@@ -388,6 +456,37 @@ public class TypeDefinitionsBuilder
 				// TODO: add constraints
 			}
 		}
+	}
+
+	public bool TryReplaceType(TypeDescriptor td, [NotNullWhen(true)] out TSTypeReference? typeRef)
+	{
+		if (td.Name == "System.Collections.Generic.Dictionary`2" ||
+			td.Name == "System.Collections.Generic.IReadOnlyDictionary`2")
+		{
+			typeRef = Record;
+			return true;
+		}
+		if (td.Name == "System.Nullable`1")
+		{
+			typeRef = Nullable;
+			return true;
+		}
+		if (td.Name == "System.DateTime")
+		{
+			typeRef = Date;
+			return true;
+		}
+		if (td.Name == "System.Collections.Generic.List`1" ||
+			td.Name == "System.Collections.Generic.Queue`1" ||
+			td.Name == "System.Collections.Generic.IReadOnlyList`1" ||
+			td.Name == "System.Collections.Generic.IEnumerable`1" ||
+			td.Name == "System.Collections.Generic.HashSet`1")
+		{
+			typeRef = Array;
+			return true;
+		}
+		typeRef = null;
+		return false;
 	}
 
 	private void AddBuiltInTypes()

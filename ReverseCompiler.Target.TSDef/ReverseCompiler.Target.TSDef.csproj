@@ -8,7 +8,6 @@
   <ItemGroup>
     <ProjectReference Include="..\Common\Common.csproj" />
     <ProjectReference Include="..\Metadata\Metadata.csproj" />
-    <ProjectReference Include="..\ReverseCompiler.Target.NetCore\ReverseCompiler.Target.NetCore.csproj" />
     <ProjectReference Include="..\ReverseCompiler\ReverseCompiler.csproj" />
   </ItemGroup>
 

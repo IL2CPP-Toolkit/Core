@@ -1,6 +1,5 @@
 ﻿using Il2CppToolkit.Model;
 using Il2CppToolkit.ReverseCompiler;
-using Il2CppToolkit.ReverseCompiler.Target.NetCore;
 using Mono.Cecil;
 using System;
 using System.Collections.Generic;
@@ -56,7 +55,7 @@ namespace Il2CppToolkit.Target.TSDef
 			}
 			if (Path.GetExtension(outputFile) != ".ts")
 			{
-				outputFile = Path.Combine(m_outputPath, $"{m_assemblyName}.ts.d");
+				outputFile = Path.Combine(m_outputPath, $"{m_assemblyName}.ts");
 			}
 			Directory.CreateDirectory(Path.GetDirectoryName(outputFile));
 			File.WriteAllText(outputFile, m_typeDefinitionsBuilder.Generate());
@@ -68,7 +67,7 @@ namespace Il2CppToolkit.Target.TSDef
 
 		private void OnBuilderProgressUpdated(object sender, ProgressUpdatedEventArgs e)
 		{
-			OnProgressUpdated((int)((double)e.Completed / e.Total * 100), 100, e.DisplayName);
+			OnProgressUpdated(e.Completed, e.Total, e.DisplayName);
 		}
 
 	}
