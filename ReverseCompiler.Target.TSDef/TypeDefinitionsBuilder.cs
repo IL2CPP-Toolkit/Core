@@ -229,14 +229,14 @@ public class TypeDefinitionsBuilder
 	protected TypeDefinitionState TryUseTypeDefinition(Il2CppTypeDefinition cppTypeDef, out TSTypeDefinition? tsDef)
 	{
 		string typeNamespace = Metadata.GetStringFromIndex(cppTypeDef.namespaceIndex);
-		if (Regex.IsMatch(typeNamespace, @"^System(\.|$)"))
-		{
-			tsDef = null;
-			return TypeDefinitionState.Excluded;
-		}
-
 		if (!IncludedDescriptors.TryGetValue(cppTypeDef, out var typeSelectorResult) || typeSelectorResult.HasFlag(ArtifactSpecs.TypeSelectorResult.Exclude))
 		{
+			if (Regex.IsMatch(typeNamespace, @"^System(\.|$)") && !typeSelectorResult.HasFlag(ArtifactSpecs.TypeSelectorResult.Nominal))
+			{
+				tsDef = null;
+				return TypeDefinitionState.Excluded;
+			}
+
 			string typeName = Metadata.GetStringFromIndex(cppTypeDef.nameIndex);
 			Metadata.GetStringFromIndex(cppTypeDef.nameIndex);
 			Context.Logger?.LogInfo($"Excluding '{typeName}' based on exclusion rule");
@@ -256,10 +256,13 @@ public class TypeDefinitionsBuilder
 
 	protected bool TryUseTypeReference(Il2CppTypeDefinition cppTypeDef, [NotNullWhen(true)] out TSTypeReference? tsRef)
 	{
-		if (Context.Model.TryGetTypeDescriptor(cppTypeDef, out TypeDescriptor? typeDescriptor)
-			&& TryReplaceType(typeDescriptor, out tsRef))
+		if (!IncludedDescriptors.TryGetValue(cppTypeDef, out var typeSelectorResult) || !typeSelectorResult.HasFlag(ArtifactSpecs.TypeSelectorResult.Nominal))
 		{
-			return true;
+			if (Context.Model.TryGetTypeDescriptor(cppTypeDef, out TypeDescriptor? typeDescriptor)
+				&& TryReplaceType(typeDescriptor, out tsRef))
+			{
+				return true;
+			}
 		}
 
 		if (TryUseTypeDefinition(cppTypeDef, out TSTypeDefinition? tsDef) == TypeDefinitionState.Excluded)
