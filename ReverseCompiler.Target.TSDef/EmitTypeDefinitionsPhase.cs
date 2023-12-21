@@ -58,6 +58,7 @@ namespace Il2CppToolkit.Target.TSDef
 			{
 				outputFile = Path.Combine(m_outputPath, $"{m_assemblyName}.ts.d");
 			}
+			Directory.CreateDirectory(Path.GetDirectoryName(outputFile));
 			File.WriteAllText(outputFile, m_typeDefinitionsBuilder.Generate());
 
 			OnProgressUpdated(100, 100, "");
