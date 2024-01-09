@@ -15,7 +15,6 @@ namespace Il2CppToolkit.Model
 	public partial class TypeModel
 	{
 		private readonly Dictionary<Il2CppMethodDefinition, ulong> methodAddresses = new();
-		private readonly Dictionary<Il2CppMethodSpec, ulong> methodSpecAddresses = new();
 		private readonly Dictionary<Il2CppTypeDefinition, ulong> m_typeDefToAddress = new();
 		private readonly Dictionary<Il2CppType, ulong> m_typeToAddress = new();
 		private readonly Dictionary<int, TypeDescriptor> m_parentTypeIndexToTypeInstDescriptor = new();
@@ -188,12 +187,11 @@ namespace Il2CppToolkit.Model
 						foreach (Il2CppMethodSpec methodSpec in MethodSpecs)
 						{
 							if (methodSpec.classIndexIndex == -1) continue;
-							if (!methodSpecAddresses.TryGetValue(methodSpec, out ulong address)) continue;
 
 							Il2CppGenericInst classInst = m_loader.Il2Cpp.GenericInsts[methodSpec.classIndexIndex];
 							ulong[] pointers = m_loader.Il2Cpp.MapVATR<ulong>(classInst.type_argv, classInst.type_argc);
 
-							MethodDescriptor md = new(methodName, address);
+							MethodDescriptor md = new(methodName);
 							for (int i = 0; i < classInst.type_argc; i++)
 							{
 								Il2CppType il2CppType = m_loader.Il2Cpp.GetIl2CppType(pointers[i]);
@@ -209,7 +207,7 @@ namespace Il2CppToolkit.Model
 						string imageName = m_loader.Metadata.GetStringFromIndex(td.ImageDef.nameIndex);
 						ulong methodPointer = m_loader.Il2Cpp.GetMethodPointer(imageName, methodDef);
 						ulong address = m_loader.Il2Cpp.GetRVA(methodPointer);
-						MethodDescriptor md = new(methodName, address);
+						MethodDescriptor md = new(methodName);
 						td.Methods.Add(md);
 					}
 				}
@@ -233,7 +231,7 @@ namespace Il2CppToolkit.Model
 		{
 			Dictionary<Il2CppMetadataUsage, Action<uint, ulong>> usageHandlers = new()
 			{
-				{ Il2CppMetadataUsage.kIl2CppMetadataUsageMethodRef, HandleMethodRefUsage },
+				//{ Il2CppMetadataUsage.kIl2CppMetadataUsageMethodRef, HandleMethodRefUsage },
 				{ Il2CppMetadataUsage.kIl2CppMetadataUsageMethodDef, HandleMethodDefUsage },
 				{ Il2CppMetadataUsage.kIl2CppMetadataUsageTypeInfo, HandleTypeInfoUsage }
 			};
@@ -285,13 +283,12 @@ namespace Il2CppToolkit.Model
 			}
 		}
 
-		public void HandleMethodRefUsage(uint methodSpecIndex, ulong address)
-		{
-			if (methodSpecIndex >= m_loader.Il2Cpp.MethodSpecs.Length) return;
-			Il2CppMethodSpec methodSpec = m_loader.Il2Cpp.MethodSpecs[methodSpecIndex];
-			address = m_loader.Il2Cpp.GetRVA(address);
-			methodSpecAddresses.Add(methodSpec, address);
-		}
+		//public void HandleMethodRefUsage(uint methodSpecIndex, ulong address)
+		//{
+		//	if (methodSpecIndex >= m_loader.Il2Cpp.MethodSpecs.Length) return;
+		//	Il2CppMethodSpec methodSpec = m_loader.Il2Cpp.MethodSpecs[methodSpecIndex];
+		//	address = m_loader.Il2Cpp.GetRVA(address);
+		//}
 
 		public void HandleMethodDefUsage(uint methodDefIndex, ulong address)
 		{

@@ -10,7 +10,6 @@ namespace Il2CppToolkit.Model
 		string ModuleName { get; }
 		IReadOnlyList<TypeDescriptor> TypeDescriptors { get; }
 		IReadOnlyDictionary<Il2CppMethodDefinition, ulong> MethodAddresses { get; }
-		IReadOnlyDictionary<Il2CppMethodSpec, ulong> MethodSpecAddresses { get; }
 		IReadOnlyDictionary<Il2CppTypeDefinition, ulong> TypeDefToAddress { get; }
 		IReadOnlyDictionary<Il2CppType, ulong> TypeToTypeInfoAddress { get; }
 		IReadOnlyDictionary<int, TypeDescriptor> TypeDefsByIndex { get; }
