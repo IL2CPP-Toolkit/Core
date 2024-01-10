@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Il2CppToolkit.Metadata")]
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("Il2CppToolkit.Target.TSDef")]
 
 namespace System
 {
@@ -47,7 +49,7 @@ namespace System.Diagnostics.CodeAnalysis
 	//     Specifies that when a method returns System.Diagnostics.CodeAnalysis.NotNullWhenAttribute.ReturnValue,
 	//     the parameter will not be null even if the corresponding type allows it.
 	[AttributeUsage(AttributeTargets.Parameter, AllowMultiple = false)]
-	public sealed class NotNullWhenAttribute : Attribute
+	public internal class NotNullWhenAttribute : Attribute
 	{
 		//
 		// Summary:
