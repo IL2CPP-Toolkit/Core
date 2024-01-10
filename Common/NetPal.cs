@@ -49,7 +49,7 @@ namespace System.Diagnostics.CodeAnalysis
 	//     Specifies that when a method returns System.Diagnostics.CodeAnalysis.NotNullWhenAttribute.ReturnValue,
 	//     the parameter will not be null even if the corresponding type allows it.
 	[AttributeUsage(AttributeTargets.Parameter, AllowMultiple = false)]
-	public internal class NotNullWhenAttribute : Attribute
+	internal class NotNullWhenAttribute : Attribute
 	{
 		//
 		// Summary:
