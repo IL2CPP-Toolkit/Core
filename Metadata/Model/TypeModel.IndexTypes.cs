@@ -14,13 +14,9 @@ namespace Il2CppToolkit.Model
 {
 	public partial class TypeModel
 	{
-		private readonly Dictionary<Il2CppMethodDefinition, ulong> methodAddresses = new();
-		private readonly Dictionary<Il2CppTypeDefinition, ulong> m_typeDefToAddress = new();
-		private readonly Dictionary<Il2CppType, ulong> m_typeToAddress = new();
 		private readonly Dictionary<int, TypeDescriptor> m_parentTypeIndexToTypeInstDescriptor = new();
 		private readonly Dictionary<int, TypeDescriptor> m_typeCache = new();
 		private readonly Dictionary<Il2CppTypeDefinition, TypeDescriptor> m_cppTypeToDescriptor = new();
-		private Dictionary<Il2CppTypeDefinition, Il2CppType[]> m_genericClassList = new();
 		private readonly List<TypeDescriptor> m_typeDescriptors = new();
 
 		private void IndexTypeDescriptors()
@@ -31,7 +27,7 @@ namespace Il2CppToolkit.Model
 				return;
 			}
 
-			ProcessTypeMetadata();
+			//ProcessTypeMetadata();
 
 			// Declare all types before associating dependencies
 			for (int imageIndex = 0; imageIndex < m_loader.Metadata.imageDefs.Length; ++imageIndex)
@@ -212,76 +208,63 @@ namespace Il2CppToolkit.Model
 					}
 				}
 			}
-
-			// build generic instances map
-			m_genericClassList = Il2Cpp.Types
-				.Where(type => type.type == Il2CppTypeEnum.IL2CPP_TYPE_GENERICINST)
-				.Select(type =>
-				{
-					ulong pointer = type.data.generic_class;
-					var genericClass = Il2Cpp.MapVATR<Il2CppGenericClass>(type.data.generic_class);
-					var typeDef = GetGenericClassTypeDefinition(genericClass);
-					return new Tuple<Il2CppTypeDefinition, Il2CppType>(typeDef, type);
-				})
-				.GroupBy(tuple => tuple.Item1, tuple => tuple.Item2)
-				.ToDictionary(group => group.Key, group => group.ToArray());
 		}
 
-		private void ProcessTypeMetadata()
-		{
-			Dictionary<Il2CppMetadataUsage, Action<uint, ulong>> usageHandlers = new()
-			{
-				//{ Il2CppMetadataUsage.kIl2CppMetadataUsageMethodRef, HandleMethodRefUsage },
-				{ Il2CppMetadataUsage.kIl2CppMetadataUsageMethodDef, HandleMethodDefUsage },
-				{ Il2CppMetadataUsage.kIl2CppMetadataUsageTypeInfo, HandleTypeInfoUsage }
-			};
+		//private void ProcessTypeMetadata()
+		//{
+		//	Dictionary<Il2CppMetadataUsage, Action<uint, ulong>> usageHandlers = new()
+		//	{
+		//		//{ Il2CppMetadataUsage.kIl2CppMetadataUsageMethodRef, HandleMethodRefUsage },
+		//		//{ Il2CppMetadataUsage.kIl2CppMetadataUsageMethodDef, HandleMethodDefUsage },
+		//		//{ Il2CppMetadataUsage.kIl2CppMetadataUsageTypeInfo, HandleTypeInfoUsage }
+		//	};
 
-			if (m_loader.Il2Cpp.Version >= 27)
-			{
-				var sectionHelper = GetSectionHelper();
-				foreach (var sec in sectionHelper.Data)
-				{
-					m_loader.Il2Cpp.Position = sec.offset;
-					while (m_loader.Il2Cpp.Position < sec.offsetEnd - m_loader.Il2Cpp.PointerSize)
-					{
-						var addr = m_loader.Il2Cpp.Position;
-						var metadataValue = m_loader.Il2Cpp.ReadUIntPtr();
-						var position = m_loader.Il2Cpp.Position;
-						if (metadataValue < uint.MaxValue)
-						{
-							var encodedToken = (uint)metadataValue;
-							var usage = Metadata.GetEncodedIndexType(encodedToken);
-							if (usage > 0 && usage <= 6)
-							{
-								var decodedIndex = m_loader.Metadata.GetDecodedMethodIndex(encodedToken);
-								if (metadataValue == ((usage << 29) | (decodedIndex << 1)) + 1)
-								{
-									if (!usageHandlers.TryGetValue((Il2CppMetadataUsage)usage, out var handler))
-										continue;
-									var va = m_loader.Il2Cpp.MapRTVA(addr);
-									if (va > 0)
-									{
-										handler(decodedIndex, va);
-									}
-									if (m_loader.Il2Cpp.Position != position)
-									{
-										m_loader.Il2Cpp.Position = position;
-									}
-								}
-							}
-						}
-					}
-				}
-			}
-			else
-			{
-				foreach (var kvp in usageHandlers)
-				{
-					foreach (var i in m_loader.Metadata.metadataUsageDic[kvp.Key])
-						kvp.Value(i.Value, m_loader.Il2Cpp.MetadataUsages[i.Key]);
-				}
-			}
-		}
+		//	if (m_loader.Il2Cpp.Version >= 27)
+		//	{
+		//		var sectionHelper = GetSectionHelper();
+		//		foreach (var sec in sectionHelper.Data)
+		//		{
+		//			m_loader.Il2Cpp.Position = sec.offset;
+		//			while (m_loader.Il2Cpp.Position < sec.offsetEnd - m_loader.Il2Cpp.PointerSize)
+		//			{
+		//				var addr = m_loader.Il2Cpp.Position;
+		//				var metadataValue = m_loader.Il2Cpp.ReadUIntPtr();
+		//				var position = m_loader.Il2Cpp.Position;
+		//				if (metadataValue < uint.MaxValue)
+		//				{
+		//					var encodedToken = (uint)metadataValue;
+		//					var usage = Metadata.GetEncodedIndexType(encodedToken);
+		//					if (usage > 0 && usage <= 6)
+		//					{
+		//						var decodedIndex = m_loader.Metadata.GetDecodedMethodIndex(encodedToken);
+		//						if (metadataValue == ((usage << 29) | (decodedIndex << 1)) + 1)
+		//						{
+		//							if (!usageHandlers.TryGetValue((Il2CppMetadataUsage)usage, out var handler))
+		//								continue;
+		//							var va = m_loader.Il2Cpp.MapRTVA(addr);
+		//							if (va > 0)
+		//							{
+		//								handler(decodedIndex, va);
+		//							}
+		//							if (m_loader.Il2Cpp.Position != position)
+		//							{
+		//								m_loader.Il2Cpp.Position = position;
+		//							}
+		//						}
+		//					}
+		//				}
+		//			}
+		//		}
+		//	}
+		//	else
+		//	{
+		//		foreach (var kvp in usageHandlers)
+		//		{
+		//			foreach (var i in m_loader.Metadata.metadataUsageDic[kvp.Key])
+		//				kvp.Value(i.Value, m_loader.Il2Cpp.MetadataUsages[i.Key]);
+		//		}
+		//	}
+		//}
 
 		//public void HandleMethodRefUsage(uint methodSpecIndex, ulong address)
 		//{
@@ -290,31 +273,23 @@ namespace Il2CppToolkit.Model
 		//	address = m_loader.Il2Cpp.GetRVA(address);
 		//}
 
-		public void HandleMethodDefUsage(uint methodDefIndex, ulong address)
-		{
-			if (methodDefIndex >= m_loader.Metadata.methodDefs.Length) return;
-			Il2CppMethodDefinition methodDef = m_loader.Metadata.methodDefs[methodDefIndex];
-			address = m_loader.Il2Cpp.GetRVA(address);
-			methodAddresses[methodDef] = address;
-		}
+		//public void HandleMethodDefUsage(uint methodDefIndex, ulong address)
+		//{
+		//	if (methodDefIndex >= m_loader.Metadata.methodDefs.Length) return;
+		//	Il2CppMethodDefinition methodDef = m_loader.Metadata.methodDefs[methodDefIndex];
+		//	address = m_loader.Il2Cpp.GetRVA(address);
+		//	methodAddresses[methodDef] = address;
+		//}
 
 		public void HandleTypeInfoUsage(uint typeIndex, ulong address)
 		{
 			if (typeIndex >= m_loader.Il2Cpp.Types.Length) return;
 			Il2CppType il2CppType = m_loader.Il2Cpp.Types[typeIndex];
-			Il2CppTypeDefinition typeDef = GetTypeDefinitionFromIl2CppType(il2CppType, false);
-			address = m_loader.Il2Cpp.GetRVA(address);
-
-			m_typeToAddress.Add(il2CppType, address);
 			if (il2CppType.type == Il2CppTypeEnum.IL2CPP_TYPE_GENERICINST)
 			{
 				TypeDescriptor td = MakeGenericTypeInstDescriptor(typeIndex);
 				if (td.Attributes.HasFlag(TypeAttributes.Interface)) return;
 				m_typeDescriptors.Add(td);
-			}
-			else if (typeDef != null)
-			{
-				m_typeDefToAddress.TryAdd(typeDef, address);
 			}
 		}
 
@@ -330,15 +305,6 @@ namespace Il2CppToolkit.Model
 			string typeName = GetTypeDefName(typeDef);
 			TypeDescriptor td = new(typeName, typeDef, imageDef);
 			td.SizeInBytes = (uint)m_loader.Il2Cpp.TypeDefinitionSizes[typeIndex].instance_size;
-			if (m_typeDefToAddress.TryGetValue(typeDef, out ulong address))
-			{
-				td.TypeInfo = new()
-				{
-					Address = address,
-					ModuleName = ModuleName,
-				};
-			}
-
 			m_typeCache.Add(typeIndex, td);
 			m_cppTypeToDescriptor.Add(typeDef, td);
 			return td;
@@ -355,14 +321,6 @@ namespace Il2CppToolkit.Model
 			Il2CppTypeDefinition genericTypeDef = m_loader.Metadata.typeDefs[genericTypeDefIdx];
 			TypeDescriptor td = new(typeName, genericTypeDef, null, genericClass, typeIndex);
 			td.SizeInBytes = (uint)m_loader.Il2Cpp.TypeDefinitionSizes[genericTypeDefIdx].instance_size;
-			if (m_typeToAddress.TryGetValue(il2CppType, out ulong address))
-			{
-				td.TypeInfo = new()
-				{
-					Address = address,
-					ModuleName = ModuleName,
-				};
-			}
 
 			m_parentTypeIndexToTypeInstDescriptor[(int)typeIndex] = td;
 			return td;

@@ -10,10 +10,5 @@ namespace Il2CppToolkit.Model
 
 		public string ModuleName => m_loader.ModuleName;
 		public IReadOnlyList<TypeDescriptor> TypeDescriptors => m_typeDescriptors;
-		public IReadOnlyDictionary<Il2CppMethodDefinition, ulong> MethodAddresses => methodAddresses;
-		public IReadOnlyDictionary<Il2CppTypeDefinition, ulong> TypeDefToAddress => m_typeDefToAddress;
-		public IReadOnlyDictionary<Il2CppType, ulong> TypeToTypeInfoAddress => m_typeToAddress;
-		public IReadOnlyDictionary<int, TypeDescriptor> TypeDefsByIndex => m_typeCache;
-		public IReadOnlyDictionary<Il2CppTypeDefinition, Il2CppType[]> GenericClassList => m_genericClassList;
 	}
 }

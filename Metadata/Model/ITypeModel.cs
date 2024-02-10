@@ -9,11 +9,6 @@ namespace Il2CppToolkit.Model
 		Metadata Metadata { get; }
 		string ModuleName { get; }
 		IReadOnlyList<TypeDescriptor> TypeDescriptors { get; }
-		IReadOnlyDictionary<Il2CppMethodDefinition, ulong> MethodAddresses { get; }
-		IReadOnlyDictionary<Il2CppTypeDefinition, ulong> TypeDefToAddress { get; }
-		IReadOnlyDictionary<Il2CppType, ulong> TypeToTypeInfoAddress { get; }
-		IReadOnlyDictionary<int, TypeDescriptor> TypeDefsByIndex { get; }
-		IReadOnlyDictionary<Il2CppTypeDefinition, Il2CppType[]> GenericClassList { get; }
 	}
 
 	public interface ITypeModelMetadata : ITypeModel
